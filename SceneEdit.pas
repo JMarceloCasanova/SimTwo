@@ -5,9 +5,9 @@ unit SceneEdit;
 interface
 
 uses
-  LCLIntf, Windows, SysUtils, Variants, Classes, Graphics, Controls,
+  LCLIntf, SysUtils, Variants, Classes, Graphics, Controls, //Windows,
   Forms, Dialogs, ComCtrls, SynEditHighlighter, SynHighlighterXML, SynEdit,
-  Menus, ExtCtrls, StdCtrls, IniPropStorage, ShellAPI, SynEditTypes, process,
+  Menus, ExtCtrls, StdCtrls, IniPropStorage, SynEditTypes, process, //jm: maybe ShellAPI,
   SynEditMiscClasses, SynEditSearch, SynCompletion, UTF8Process, ProjConfig,
   StrUtils;
 
@@ -554,8 +554,9 @@ end;
 procedure TFSceneEdit.MenuNewSceneClick(Sender: TObject);
 var s, od: string;
     i: integer;
-    fo: SHFILEOPSTRUCT;
+    //jm: maybefo: SHFILEOPSTRUCT;
 begin
+  {jm
   i := 1;
   s := 'Project' + inttostr(i);
   while true do begin
@@ -587,6 +588,7 @@ begin
   ReSpawnPars := ansiquotedstr(s,'"');
   MustReSpawn := true;
   FViewer.Close;
+  jm}
 end;
 
 

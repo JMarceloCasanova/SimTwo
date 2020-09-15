@@ -26,7 +26,7 @@ unit AStar;
 
 interface
 
-uses windows, extctrls, sysutils, classes, Graphics, Math;
+uses extctrls, sysutils, classes, Graphics, Math;  //windows,
 
 
 const
@@ -355,7 +355,8 @@ end;
 
 procedure AStarInit(var Map: TAStarMap);
 begin
-  zeromemory(@(Map.Profile),sizeof(Map.Profile));
+  //jm:zeromemory(@(Map.Profile),sizeof(Map.Profile));
+  fillbyte((Map.Profile),sizeof(Map.Profile),9);
   AddToAStarList(Map, Map.InitialPoint);
   Map.Grid[Map.InitialPoint.x, Map.InitialPoint.y].H:= CalcH( Map, Map.InitialPoint, Map.TargetPoint);
 end;

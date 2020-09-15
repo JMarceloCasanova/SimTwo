@@ -41,8 +41,8 @@ implementation
 
 
 uses
-   windows
-  ,extctrls
+   //windows
+  extctrls
   ,Graphics
   ,Math
   ,AStar

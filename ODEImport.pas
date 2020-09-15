@@ -167,7 +167,7 @@ const
   ODEDLL = 'ode.dll';
   {$ENDIF}
   {$IFDEF UNIX}
-  ODEDLL = 'libode.so';
+  ODEDLL = 'libode_32.so';
   {$ENDIF}
   {$IFDEF MACOS}
   ODEDLL = 'libode.dylib';

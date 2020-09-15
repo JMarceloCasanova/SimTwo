@@ -5,7 +5,7 @@ unit ODERobots;
 interface
 
 uses
-  Windows, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  SysUtils, Variants, Classes, Graphics, Controls, Forms, //jm:Windows,
   Dialogs, GLScene, GLObjects, {GLMisc,} GLLCLViewer, ODEImport, OpenGL1x,
   GLVectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls, GLTexture, GLGraphics,
   keyboard, math, GLMaterial;
@@ -1115,7 +1115,7 @@ begin
     dJointGetSliderAxis(ParentLink.joint, result);
     //ZeroMemory(@(result[0]), sizeof(result));
   end else if dJointGetType(ParentLink.joint) = ord(dJointTypeFixed) then begin
-    ZeroMemory(@(result[0]), sizeof(result));
+    FillByte((result[0]), sizeof(result), 0);
     result[2] := 1; //TODO set the direction to the vector from one solid to the other
   end;
   //TODO more Joint types

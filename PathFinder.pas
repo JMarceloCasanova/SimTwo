@@ -4,7 +4,7 @@ unit PathFinder;
 
 interface
 
-uses windows, extctrls, sysutils, classes, Graphics, Math, AStar;
+uses extctrls, sysutils, classes, Graphics, Math, AStar; //windows,
 
 const
   AStarVirgin = 0;

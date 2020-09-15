@@ -37,7 +37,7 @@ uses
 {$R *.res}
 
 begin
-  Application.Scaled := True;
+  //jm:Application.Scaled := True;
   Application.Initialize;
   Application.CreateForm(TFViewer, FViewer);
   Application.CreateForm(TFParams, FParams);

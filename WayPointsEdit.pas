@@ -5,7 +5,7 @@ unit WayPointsEdit;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, //Windows,
   Dialogs, StdCtrls;
 
 type

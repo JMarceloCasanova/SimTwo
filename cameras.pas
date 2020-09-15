@@ -5,7 +5,7 @@ unit cameras;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, //Windows,
   Dialogs, ExtCtrls, StdCtrls, ComCtrls, IniPropStorage,
   GLGraphics, GLLCLViewer, math;
 
@@ -52,7 +52,7 @@ uses Viewer, ProjConfig, Params;
 procedure TFCameras.FormCreate(Sender: TObject);
 begin
   IniPropStorage.IniFileName := GetIniFineName;
-  QueryPerformanceFrequency(t_delta);
+  //jm:QueryPerformanceFrequency(t_delta);
   t_delta := t_delta div 1000;
 end;
 
@@ -78,7 +78,7 @@ begin
       end else exit;
     end;
 
-    QueryPerformanceCounter(t_start);
+    //jm:QueryPerformanceCounter(t_start);
     GLBmp32 := GLSceneViewer.Buffer.CreateSnapShot;
     Bmp32 := GLBmp32.Create32BitsBitmap;
     //FDimensions.ImageCam.Canvas.Draw(0,0, Bmp32);
@@ -126,7 +126,7 @@ begin
     Bmp32.free;
     GLBmp32.Free;
 
-    QueryPerformanceCounter(t_end);
+    //jm:QueryPerformanceCounter(t_end);
     EditDeltaT.text := format('%.2f [%.2f]',[(t_end - t_start)/t_delta, (t_start - t_last)/t_delta]);
     t_last := t_start;
   end;
@@ -139,7 +139,7 @@ var hMapFile: THandle;
     fname: string;
 begin
   fname := 'SimTwo_Camera_0';
-
+  {jm: TODO find substitute for windows :(
   hMapFile := CreateFileMapping(
                  INVALID_HANDLE_VALUE,    // use paging file
                  nil,                     // default security
@@ -157,7 +157,7 @@ begin
                         0,
                         GLBmp32.DataSize);
   if pBuf = nil then begin
-    FileClose(hMapFile); { *Converted from CloseHandle* }
+    FileClose(hMapFile); // *Converted from CloseHandle*
     raise Exception.Create('Unable to map memory file: ' + fname);
   end;
 
@@ -165,7 +165,9 @@ begin
 
   UnmapViewOfFile(pBuf);
 
-  FileClose(hMapFile); { *Converted from CloseHandle* }
+  FileClose(hMapFile); // *Converted from CloseHandle*
+
+  jm}
 end;
 
 

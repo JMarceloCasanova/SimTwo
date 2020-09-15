@@ -5,7 +5,7 @@ unit Editor;
 interface
 
 uses
-  Windows, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  SysUtils, Variants, Classes, Graphics, Controls, Forms,//jm:Windows,
   Dialogs, SynEdit, SynEditHighlighter, SynHighlighterPas, StdCtrls, SynMemo,
   ExtCtrls, ComCtrls, SynEditTypes, Menus, math,
   uPSComponent, uPSUtils, uPSRuntime, SynCompletion, uPSComponent_Default,
@@ -317,7 +317,7 @@ begin
   if PSScript.Exec.Status <> isLoaded then exit;
 
   ScriptCyclesCount:=0;
-  queryperformancecounter(i64_start);
+  //jm:queryperformancecounter(i64_start);
 
   ClearExceptions(false);
   //Saved8087CW := Get8087CW;
@@ -386,11 +386,11 @@ begin
   PSScript.Exec.RaiseCurrentException;
   //StatusBar.Panels[4].Text := inttostr(PSScript.Exec.ExceptionPos);
 
-  queryperformancecounter(i64_end);
+  //jm:queryperformancecounter(i64_end);
 
   inc(ProgCyclesCount);
 
-  QueryPerformanceFrequency(i64_freq);
+  //jm:QueryPerformanceFrequency(i64_freq);
   StatusBar.Panels[3].Text := format('%f',[1000*(i64_end-i64_start)/i64_freq]);
 
 end;
@@ -401,7 +401,7 @@ var i: integer;
 begin
 
   SynEditPascal.Text := SynMemoHeader.Text + crlf + SynEditST.text + crlf + crlf + 'begin Control; end.';
-  queryperformancecounter(i64_start);
+  //jm:queryperformancecounter(i64_start);
 
   PSScript.Comp.Clear;
   PSScript.Script.Text := SynEditPascal.Text;
@@ -418,8 +418,8 @@ begin
     result := false;
 
   end else begin
-    queryperformancecounter(i64_end);
-    QueryPerformanceFrequency(i64_freq);
+    //jm:queryperformancecounter(i64_end);
+    //jm:QueryPerformanceFrequency(i64_freq);
     //EditDebug.Text:=format('%f',[1000*(i64_end-i64_start)/i64_freq]);
 
     LBErrors.Items.clear;
@@ -1470,7 +1470,7 @@ end;
 procedure TFEditor.MenuCutClick(Sender: TObject);
 begin
   CopySelectedToClipboard(LBResult);
-  LBResult.DeleteSelected;
+  //jm maybe:LBResult.DeleteSelected;
 end;
 
 procedure TFEditor.MenuDecreaseFontClick(Sender: TObject);

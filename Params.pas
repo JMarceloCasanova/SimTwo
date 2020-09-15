@@ -5,7 +5,7 @@ unit Params;
 interface
 
 uses
-  LCLIntf, Windows, SysUtils, Variants, Classes, Graphics, Controls,
+  LCLIntf, SysUtils, Variants, Classes, Graphics, Controls,//Windows,
   Forms, Dialogs, StdCtrls, ComCtrls, ExtCtrls, GLLCLViewer, GLcontext, Math,
   ODERobots, OdeImport, Grids, GLCadencer, SdpoSerial,  Sockets,
   GLShadowVolume, GLScene, Buttons, IniPropStorage, enum_serial,

@@ -5,15 +5,15 @@ unit Viewer;
 interface
 
 uses
-  Windows, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  SysUtils, Variants, Classes, Graphics, Controls, Forms, //jm:Windows,
   Dialogs, GLScene, GLObjects, {GLMisc,} GLCadencer, ODEImport,
   GLShadowPlane, GLVectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls,
-  GLWindowsFont, keyboard, GLTexture, math, GLSpaceText, Remote,
+  GLWindowsFont, keyboard, GLTexture, math, Remote, //jm:GLSpaceText,
   GLShadowVolume, GLSkydome, GLGraph, OmniXML, OmniXMLUtils,  ODERobots,
   ProjConfig, GLHUDObjects, Menus, IniPropStorage, GLVectorFileObjects,
   GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont,
-  GLMesh, GLWaterPlane, glzbuffer, GLLCLViewer, GLMaterial, GLColor,
-  GLKeyboard, GLFileOBJ, GLFileSTL, GLFilePLY;
+  GLMesh, GLWaterPlane, GLLCLViewer, GLMaterial, GLColor,// glzbuffer,
+  GLKeyboard, GLFileOBJ, GLFileSTL, GLFilePLY, LCLType;
 
 type
   TRemoteImage = packed record
@@ -1909,7 +1909,7 @@ begin
   // Initialize default parameters
   DefaGL.Radius := -1;
   DefaGL.height:= 0.05;
-  DefaGL.Color := RGB(0, 0, $80);
+  DefaGL.Color := 80;//jm:RGB(0, 0, $80);
 
   AxisCanWrap := true;
   AxisCanWrap2 := true;
@@ -4191,7 +4191,7 @@ begin
 //  GetProcessAffinityMask(
 //  SetThreadAffinityMask(GetCurrentThreadId(), 1);
 //  SetThreadAffinityMask(GetCurrentProcessId(), 1);
-  QueryPerformanceFrequency(t_delta);
+  //jm:QueryPerformanceFrequency(t_delta);
   t_delta := t_delta div 1000;
 
   //Execute Create physic
@@ -4665,11 +4665,11 @@ begin
   //GLScene.CurrentGLCamera.Position := GLDummyCamPos.Position;
   GLCamera.Position := GLDummyCamPos.Position;
   if WorldODE.ODEEnable <> False then begin
-    QueryPerformanceCounter(t_start);
+    //jm:QueryPerformanceCounter(t_start);
     t_itot := 0;
 
     t_last := t_act;
-    QueryPerformanceCounter(t_act);
+    //jm:QueryPerformanceCounter(t_act);
 
     // while WorldODE.physTime < newtime do begin
     newFixedTime := WorldODE.physTime + GLCadencer.FixedDeltaTime * WorldODE.TimeFactor;
@@ -4748,7 +4748,8 @@ begin
 
             // Call the selected Decision System
             if Fparams.RGControlBlock.ItemIndex = 0 then begin
-              zeromemory(@KeyVals[0], sizeof(KeyVals));
+              //jm:zeromemory(@KeyVals[0], sizeof(KeyVals));
+              fillbyte(KeyVals, sizeof(KeyVals), 0);
               ReadKeyVals(KeyVals);
               if r = Fparams.LBRobots.ItemIndex then begin
                 for i := 0 to WorldODE.Robots[r].Wheels.Count-1 do begin
@@ -4898,9 +4899,9 @@ begin
       end;
 
       // ODE in action Now!
-      QueryPerformanceCounter(t_i1);
+      //jm:QueryPerformanceCounter(t_i1);
       WorldODE.WorldUpdate;
-      QueryPerformanceCounter(t_i2);
+      //jm:QueryPerformanceCounter(t_i2);
       t_itot := t_itot + t_i2 - t_i1;
 
       // Post Process Sensors
@@ -4919,7 +4920,7 @@ begin
     end;
     //End Physics Loop
 
-    QueryPerformanceCounter(t_end);
+    //jm:QueryPerformanceCounter(t_end);
     //FParams.EditDebug.text := format('%.2f (%.2f)[%.2f]',[(t_end - t_start)/t_delta, t_itot/t_delta, (t_act - t_last)/t_delta]);
 
     // GLScene
@@ -4944,7 +4945,7 @@ begin
    // GLBmp32 := GLMemoryViewer.Buffer.CreateSnapShot;
     //FDimensions.GLSceneViewer.Refresh;
 
-    QueryPerformanceCounter(t_end_gl);
+    //jm:QueryPerformanceCounter(t_end_gl);
     FParams.EditDebug.text := format('%6.2f (%6.2f) %0.2f [%0.2f]',[(t_end_gl - t_start)/t_delta, t_itot/t_delta, (t_end_gl - t_end)/t_delta, (t_act - t_last)/t_delta]);
 
     //GLSceneViewer.Invalidate;
@@ -5206,8 +5207,8 @@ begin
   thebmp.Width := 128;
   thebmp.Height := 128;
   thebmp.PixelFormat := pf24bit;
-  QueryPerformanceFrequency(t_delta);
-  QueryPerformanceCounter(t_start);
+  //jm:QueryPerformanceFrequency(t_delta);
+  //jm:QueryPerformanceCounter(t_start);
   thebmp.Canvas.TextOut(0,0,'Hello World!');
   thebmp.Canvas.Ellipse(0,0,127,127);
   thebmp.Canvas.TextOut(0,0,floattostr(WorldODE.physTime));
@@ -5221,7 +5222,7 @@ begin
   img := GLPlane1.Material.Texture.Image.GetBitmap32();
 
   img.AssignFromBitmap24WithoutRGBSwap(thebmp);
-  QueryPerformanceCounter(t_end);
+  //jm:QueryPerformanceCounter(t_end);
   thebmp.Free;
   FParams.EditDebug2.text := format('Texture: %.2f ',[1e6*(t_end - t_start)/t_delta]);
 

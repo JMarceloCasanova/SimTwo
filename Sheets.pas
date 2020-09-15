@@ -5,9 +5,9 @@ unit Sheets;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,//Windows,
   Dialogs, Grids, ComCtrls, StdCtrls, ExtCtrls, Menus, Buttons, OmniXML,
-  OmniXMLUtils, SimpleParser, math, dynmatrix, clipbrd, IniPropStorage;
+  OmniXMLUtils, SimpleParser, math, dynmatrix, clipbrd, IniPropStorage, LCLType;
 
 type
   TSheet = class;
@@ -567,10 +567,10 @@ begin
   if SheetCell.CellType = ctButton then begin
     myTextColor := clBtnText;
     if SheetCell.CellButtonState = cstButtonDown then begin
-      DrawFrameControl(Grid.Canvas.Handle, Rect, DFC_BUTTON, DFCS_BUTTONPUSH or DFCS_PUSHED);
+      //jm maybe:DrawFrameControl(Grid.Canvas.Handle, Rect, DFC_BUTTON, DFCS_BUTTONPUSH or DFCS_PUSHED);
       DrawButtonText(Grid.Canvas, Rect, sText, SheetCell.Font, myBackColor, myTextColor, true);
     end else begin
-      DrawFrameControl(Grid.Canvas.Handle, Rect, DFC_BUTTON, DFCS_BUTTONPUSH);
+      //jm maybe:DrawFrameControl(Grid.Canvas.Handle, Rect, DFC_BUTTON, DFCS_BUTTONPUSH);
       DrawButtonText(Grid.Canvas, Rect, sText, SheetCell.Font, myBackColor, myTextColor, false);
     end;
   end;
@@ -1123,15 +1123,15 @@ begin
   ActSheet.EditCell(r, c).ParseText(newText);
   ActSheet.BuildCalcSequence;
 
-  QueryPerformanceCounter(i64_start);
+  //jm:QueryPerformanceCounter(i64_start);
 
   //ActSheet.ReCalc;
   while ActSheet.ReCalc <> ActSheet.CalcSequence.Count do begin
     ActSheet.BuildCalcSequence;
   end;
 
-  QueryPerformanceCounter(i64_end);
-  QueryPerformanceFrequency(i64_freq);
+  //jm:QueryPerformanceCounter(i64_end);
+  //jm:QueryPerformanceFrequency(i64_freq);
 
   StatusBar.Panels[3].Text := format('%f',[1e6*(i64_end-i64_start)/i64_freq]);
 //  ActSheet.SGrid.Invalidate;

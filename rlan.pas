@@ -7,7 +7,7 @@ interface
 //uses
 //  SysUtils, Classes, Graphics, Controls,
 //  StdCtrls, ExtCtrls, math;
-uses windows, extctrls, sysutils, classes, Math;
+uses extctrls, sysutils, classes, Math;//windows,
 
 const
   UDPBufSize=1500;
@@ -170,8 +170,11 @@ end;
 
 procedure ClearUDPBuffer(var Buf:TUDPBuffer);
 begin
-  zeroMemory(@(Buf.data[0]),UDPBufSize);
-  //fillbyte(Buf.data, sizeof(Buf.data), 0);
+  //jm:zeroMemory(@(Buf.data[0]),UDPBufSize);
+  fillbyte(Buf.data, sizeof(Buf.data), 0);
+  //jm
+
+
   Buf.MessSize:=0;
 end;
 
