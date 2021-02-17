@@ -8,7 +8,7 @@ uses
   Windows, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, GLScene, GLObjects, {GLMisc,} GLLCLViewer, ODEImport, OpenGL1x,
   GLVectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls, GLTexture, GLGraphics,
-  keyboard, math, GLMaterial;
+  keyboard, math, GLMaterial, GLVectorFileObjects;
 
 const
   //ODE world constants
@@ -83,6 +83,7 @@ type
     GLObj, AltGLObj, ShadowGlObj, CanvasGLObj, extraGLObj: TGLSceneObject;
     PaintBitmap: TBitmap;
     PaintBitmapCorner: TdVector3;
+    isPaintTarget: bool;
     kind: TSolidKind;
     MatterProperties: TMatterProperties;
     BeltSpeed: double;
@@ -343,7 +344,7 @@ type
   end;
 
   TSensorKind = (skGeneric, skIR, skIRSharp, skSonar, skCapacitive, skInductive,
-                 skBeacon, skFloorLine, skRanger2D, skPenTip, skIMU, skSolenoid, skRFID);
+                 skBeacon, skFloorLine, skRanger2D, skIMU, skRFID, skPenTip, skSolenoid, skSprayGun);
 
   TSensor = class
     ID: string;
@@ -374,7 +375,7 @@ type
     //property Measures[Index: Integer]: TSensorMeasure read GetMeasure write SetMeasure; default;
     property MeasuresCount: integer read GetMeasureCount;
     procedure PreProcess(dt: double);
-    procedure PostProcess;
+    procedure PostProcess(solids: TSolidList);
     procedure UpdateMeasures;
     procedure NoiseModel;
     procedure SetColorRGB(RGB: TColor);
@@ -386,7 +387,7 @@ type
 const
   SensorKindStrings: array[TSensorKind] of string =
   ('Generic', 'IR', 'IRSharp', 'Sonar', 'Capacitive', 'Inductive',
-   'Beacon', 'FloorLine', 'Ranger2D', 'PenTip', 'IMU', 'Solenoid', 'RFID');
+   'Beacon', 'FloorLine', 'Ranger2D', 'IMU', 'RFID', 'PenTip', 'Solenoid', 'SprayGun');
 
 type
   TSensorList = class(TList)
@@ -1524,9 +1525,9 @@ end;
 
 
 
-procedure TSensor.PostProcess;
-var HitSolid: TSolid;
-    SensorPos, HitSolidPos: PdVector3;
+procedure TSensor.PostProcess(solids: TSolidList);
+var HitSolid, solid: TSolid;
+    SensorPos, HitSolidPos, SensorDir: PdVector3;
     Vec: TdVector3;
     f, d: double;
 begin
@@ -1549,6 +1550,34 @@ begin
             dBodySetForce(Rays[0].Geom.Body, -Vec[0], -Vec[1], -Vec[2]);   // Reaction
         end;
       end;
+    end;
+
+    skSprayGun: begin
+      for solid in solids do begin
+        if solid.isPaintTarget then begin
+          SensorPos^ := Vector3Make(GLObj.Position.DirectX, GLObj.Position.DirectY, GLObj.Position.DirectZ);
+          SensorDir^ := Vector3Make(GLObj.Direction.DirectX, GLObj.Direction.DirectY, GLObj.Direction.DirectZ);
+
+          Vec := Vector3SUB(solid.GetPosition(), SensorPos^);
+          d := Vector3Length(Vec);
+
+          with (solid.AltGLObj as TGLFreeForm) do begin
+
+            {TagObject := newSolid;
+            MaterialLibrary := FViewer.GLMaterialLibrary3ds;
+            try
+              LoadFromFile(MeshFile);
+            except on e: Exception do
+              showmessage(E.Message);
+            end;
+            Scale.x := MeshScale;
+            Scale.y := MeshScale;
+            Scale.z := MeshScale;}
+          end;
+
+        end;
+      end;
+
     end;
 
   end;
@@ -1635,21 +1664,6 @@ begin
       end;
     end;
 
-    skSolenoid: begin
-      with Measures[0] do begin
-        dist := Rays[0].Measure.dist;
-        has_measure := true;
-        HitSolid := Rays[0].Measure.HitSolid;
-        value := 0;
-        if (Rays[0].Measure.has_measure) and
-           (HitSolid <> nil) and
-           (smFerroMagnetic in HitSolid.MatterProperties) then begin
-          value := 1
-        end;
-      end;
-    end;
-
-
     skFloorLine: begin
       with Measures[0] do begin
         dist := Rays[0].Measure.dist;
@@ -1675,6 +1689,36 @@ begin
          // if InsideGLPolygonsTaged(Rays[0].Measure.pos[0], Rays[0].Measure.pos[1], HitSolid.AltGLObj) then
          // value := 1
          //end;
+      end;
+    end;
+
+    skIMU: begin
+    end;
+
+    skRanger2D: begin
+      n := MeasuresCount;
+      for i := 0 to n - 1 do begin
+        Measures[i].value := Rays[i].Measure.dist;
+        {if assigned(Rays[i].Measure.HitSolid) then begin
+          G := 0;
+          Rays[i].Measure.HitSolid.GetColor(R, G, B, A);
+          Measures[i].value := Measures[i].value + G / (10000); // TODO
+          //Measures[i].value := G/1e6;
+        end;}
+      end;
+    end;
+
+    skRFID: begin
+      with Measures[0] do begin
+        dist := Rays[0].Measure.dist;
+        has_measure := true;
+        HitSolid := Rays[0].Measure.HitSolid;
+        value := 0;
+        if (Rays[0].Measure.has_measure) and
+           (HitSolid <> nil) and
+           (smRFIDTag in HitSolid.MatterProperties) then begin
+          value := StrToIntDef(HitSolid.ID, 0);
+        end;
       end;
     end;
 
@@ -1710,23 +1754,7 @@ begin
       end;
     end;
 
-    skIMU: begin
-    end;
-
-    skRanger2D: begin
-      n := MeasuresCount;
-      for i := 0 to n - 1 do begin
-        Measures[i].value := Rays[i].Measure.dist;
-        {if assigned(Rays[i].Measure.HitSolid) then begin
-          G := 0;
-          Rays[i].Measure.HitSolid.GetColor(R, G, B, A);
-          Measures[i].value := Measures[i].value + G / (10000); // TODO
-          //Measures[i].value := G/1e6;
-        end;}
-      end;
-    end;
-
-    skRFID: begin
+    skSolenoid: begin
       with Measures[0] do begin
         dist := Rays[0].Measure.dist;
         has_measure := true;
@@ -1734,11 +1762,15 @@ begin
         value := 0;
         if (Rays[0].Measure.has_measure) and
            (HitSolid <> nil) and
-           (smRFIDTag in HitSolid.MatterProperties) then begin
-          value := StrToIntDef(HitSolid.ID, 0);
+           (smFerroMagnetic in HitSolid.MatterProperties) then begin
+          value := 1
         end;
       end;
     end;
+
+    skSprayGun: begin
+    end;
+
   end;
 end;
 

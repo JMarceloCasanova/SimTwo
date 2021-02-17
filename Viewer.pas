@@ -1554,6 +1554,7 @@ var XMLSolid, prop: IXMLNode;
     dMass: TdMass;
     MatterProps: TMatterProperties;
     hasCanvas, isLiquid: boolean;
+    isPaintTarget: boolean;
     CanvasWidth, CanvasHeigth: integer;
     MotherSolidId: string;
     SolidIdx: integer;
@@ -1597,6 +1598,7 @@ begin
       Surf.bounce := 0; Surf.bounce_vel := 0;
       hasCanvas := false;
       isLiquid := false;
+      isPaintTarget := false;
       CanvasWidth := 256; CanvasHeigth := 256;
       MotherSolidId := '';
       thrust := 0.1;    // 0.01 ???
@@ -1618,6 +1620,9 @@ begin
           hasCanvas := true;
           CanvasWidth := round(GetNodeAttrRealParse(prop, 'width', CanvasWidth, Parser));
           CanvasHeigth := round(GetNodeAttrRealParse(prop, 'heigth', CanvasHeigth, Parser));
+        end;
+        if prop.NodeName = 'painting_target' then begin
+           isPaintTarget := true;
         end;
         if prop.NodeName = 'metallic' then begin
           MatterProps := MatterProps + [smMetallic];
@@ -1715,6 +1720,7 @@ begin
         newSolid.BuoyanceCenter[0] := BuoyanceX;
         newSolid.BuoyanceCenter[1] := BuoyanceY;
         newSolid.BuoyanceCenter[2] := Buoyancez;
+        newSolid.isPaintTarget := isPaintTarget;
 
         if (XMLSolid.NodeName = 'cuboid') or (XMLSolid.NodeName = 'belt') or (XMLSolid.NodeName = 'propeller')then begin
           CreateSolidBox(newSolid, mass, posX, posY, posZ, sizeX, sizeY, sizeZ);
@@ -2602,11 +2608,13 @@ begin
        (sensor.NodeName = 'inductive') or
        (sensor.NodeName = 'floorline') or
        (sensor.NodeName = 'ranger2d') or
-       (sensor.NodeName = 'pentip') or
        (sensor.NodeName = 'imu') or
-       (sensor.NodeName = 'solenoid') or
        (sensor.NodeName = 'RFID') or
-       (sensor.NodeName = 'beacon') then begin
+       (sensor.NodeName = 'beacon') or
+
+       (sensor.NodeName = 'pentip') or
+       (sensor.NodeName = 'solenoid') or
+       (sensor.NodeName = 'spraygun')then begin
       // default values
       IDValue := '';
       MotherSolidId := '';
@@ -2702,11 +2710,13 @@ begin
       else if sensor.NodeName = 'inductive' then newSensor.kind := skInductive
       else if sensor.NodeName = 'beacon' then newSensor.kind := skBeacon
       else if sensor.NodeName = 'floorline' then newSensor.kind := skFloorLine
-      else if sensor.NodeName = 'pentip' then newSensor.kind := skPenTip
       else if sensor.NodeName = 'ranger2d' then newSensor.kind := skRanger2D
       else if sensor.NodeName = 'imu' then newSensor.kind := skIMU
+      else if sensor.NodeName = 'RFID' then newSensor.kind := skRFID
+
+      else if sensor.NodeName = 'pentip' then newSensor.kind := skPenTip
       else if sensor.NodeName = 'solenoid' then newSensor.kind := skSolenoid
-      else if sensor.NodeName = 'RFID' then newSensor.kind := skRFID;
+      else if sensor.NodeName = 'spraygun' then newSensor.kind := skSprayGun;
 
       //newSensor.Tags.Delimiter := ';';
       //newSensor.Tags.DelimitedText := stags;
@@ -2737,7 +2747,8 @@ begin
         MotherGLObj := ODEScene;
       end;
 
-      if newSensor.kind in [skIRSharp, skCapacitive, skInductive, skPenTip, skIMU, skSolenoid, skRFID] then begin
+      if newSensor.kind in [skIRSharp, skCapacitive, skInductive, skIMU, skRFID,
+                        skPenTip, skSolenoid, skSprayGun] then begin
         newRay := CreateOneRaySensor(MotherBody, newSensor, SLen);
         newRay.Place(posX, posY, posZ, angX, angY, AngZ, AbsoluteCoords);
         CreateSensorBeamGLObj(newSensor, SLen, SInitialWidth, SFinalWidth);
@@ -4906,7 +4917,7 @@ begin
       // Post Process Sensors
       for i := 0 to WorldODE.Sensors.Count - 1 do begin
         with WorldODE.Sensors[i] do begin
-          PostProcess;
+          PostProcess(WorldODE.Things);
           TimeFromLastMeasure := TimeFromLastMeasure + WorldODE.Ode_dt;
           if TimeFromLastMeasure > Period then begin
             TimeFromLastMeasure := TimeFromLastMeasure - Period;

@@ -1,0 +1,33 @@
+<?xml version="1.0" ?>
+
+<robot>
+
+  <solids>
+  
+    <cuboid>
+      <ID value='Basegun'/>
+      <mass value='0.08'/>
+      <size x='0.03' y='0.08' z='0.08'/>
+      <pos x='0' y='0' z='0'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='150' g='150' b='150'/>
+    </cuboid>
+
+  </solids>
+
+  <sensors>
+
+    <spraygun>
+      <absolute_coords/>
+      <beam length='0.4' initial_width='0.004' final_width='0.005'/>
+      <pos x='0' y='0' z='0'/>
+      <rot_deg x='0' y='0' z='90'/>
+      <color_rgb r='200' g='0' b='0'/>
+    </spraygun>
+
+  </sensors>
+     
+</robot>
+    
+    
+    
