@@ -11,16 +11,18 @@
   </defines>
 
   <solids>-->
-    <cuboid>
+    <cylinder>
       <ID value='base'/>
-      <paint_target/>
+      <!--<painting_target/>-->
+      <painting_target/>
       <mass value='1'/>
-      <mesh file='GreenDice.obj' shadow='1' scale='0.04' x_offset='1.11' y_offset='-9.12' z_offset='9.13'/>
+      <mesh file='pepsi.obj' shadow='0' scale='6' x_offset='1.11' y_offset='-9.12' z_offset='9.13'/>
+      <!--<mesh file='BlueDice.obj' shadow='0' scale='0.04' x_offset='1.11' y_offset='-9.12' z_offset='9.13'/>-->
       <size x='0.3' y='0.3' z='0.3'/>
       <pos x='-0.5' y='-0.1' z='0.3/2'/>
       <rot_deg x='0' y='0' z='0'/>
       <color_rgb r='32' g='32' b='32'/>
-    </cuboid>
+    </cylinder>
 
 
   <!--

@@ -13,7 +13,7 @@ uses
   ProjConfig, GLHUDObjects, Menus, IniPropStorage, GLVectorFileObjects,
   GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont,
   GLMesh, GLWaterPlane, glzbuffer, GLLCLViewer, GLMaterial, GLColor,
-  GLKeyboard, GLFileOBJ, GLFileSTL, GLFilePLY;
+  GLKeyboard, GLFileOBJ, GLFileSTL, GLFilePLY, GLFileB3D, IntfGraphics;
 
 type
   TRemoteImage = packed record
@@ -1481,7 +1481,42 @@ begin
 
 end;
 }
+{ creating a material example
+var
+
+ lMaterial : TGLLibMaterial;
+
+begin
+
+ //Create material
+
+ lMaterial := TGLLibMaterial.Create(GLMaterialLibrary1.Materials);
+
+ lMaterial.Material.FrontProperties.Diffuse.Color := clrBrown;
+
+ lMaterial.Name := 'matbrown';
+
+ //Set material to scene object
+
+ GLCube1.Material.MaterialLibrary := GLMaterialLibrary1;
+
+ GLCube1.Material.LibMaterialName := 'matbrown';
+
+ GLCube1.NotifyChange(GLCube1);
+
+end;}
 procedure TWorld_ODE.LoadSolidMesh(newSolid: TSolid; MeshFile, MeshShadowFile: string; MeshScale: double; MeshCastsShadows: boolean);
+var temp: TGLMaterialLibrary;
+    temp1: TGLLibMaterials;
+    temp2: TGLMaterial;
+    temp_tex:TGLTexture;
+    name: TGLLibMaterialName;
+    name2: string;
+
+    dynamicHeatmapMaterial: TGLLibMaterial;
+    originalBitmap: TGLImage;
+    heatmapBitmap: TBitmap;
+    nada: TGLMesh;
 begin
   // create mesh file
   if MeshFile <> '' then begin
@@ -1490,17 +1525,126 @@ begin
     with (newSolid.AltGLObj as TGLFreeForm) do begin
       TagObject := newSolid;
       MaterialLibrary := FViewer.GLMaterialLibrary3ds;
-      //Material.MaterialLibrary := FViewer.GLMaterialLibrary3ds; //???
-      //LightmapLibrary := FViewer.GLMaterialLibrary3ds;
       try
         LoadFromFile(MeshFile);
       except on e: Exception do
         showmessage(E.Message);
       end;
+      temp_tex := Material.Texture;
+      //temp_mapmode := Material.TextureEX.Items[0].Texture.MappingMode;
       Scale.x := MeshScale;
       Scale.y := MeshScale;
       Scale.z := MeshScale;
     end;
+    if newSolid.isPaintTarget then begin
+      newSolid.PaintBitmap := TBitmap.Create;
+      newSolid.PaintBitmap.Width := 512;
+      newSolid.PaintBitmap.Height := 512;
+      newSolid.PaintBitmap.PixelFormat := pf24bit;
+      newSolid.PaintBitmap.Canvas.Brush.Color := clRed;// clWhite;
+      newSolid.PaintBitmap.Canvas.pen.Color := clRed;//clblack;
+      newSolid.PaintBitmap.Canvas.FillRect(0, 0, 512, 512);
+      newSolid.PaintBitmap.Canvas.TextOut(0,0,'Hello World!');
+      //newSolid.PaintBitmap.Canvas.Ellipse(0,0,127,127);
+
+      (newSolid.AltGLObj as TGLFreeForm).MaterialLibrary.materials.items[0].name := 'paintTarget';
+      //newSolid.SetTexture('squares.bmp', 1);
+      //newSolid.PaintBitmap.LoadFromFile('monster.bmp');
+      //newSolid.PaintBitmap.LoadFromFile('pepsi_tex.bmp');
+      //newSolid.PaintBitmap.LoadFromFile('squares2.bmp');
+      //newSolid.PaintBitmap.LoadFromFile('nada.bmp');
+      newSolid.PaintBitmap.Width := 512;
+      newSolid.PaintBitmap.Height := 512;
+      newSolid.AltGLObj.Material.TextureEx.Add;
+      //newSolid.AltGLObj.Material.TextureEX.Items[0].Texture.Image.LoadFromFile('squares.bmp');
+      newSolid.AltGLObj.Material.TextureEX.Items[0].Texture.Image.Assign(newSolid.PaintBitmap);
+
+      newSolid.PaintBitmap.SaveToFile('nada.bmp');
+      with newSolid.AltGLObj.Material.TextureEx.Items[0] do begin
+        TextureIndex := 0;
+        Texture.Disabled := false;
+        //use_texture_loaded_from_model
+        if true then begin
+           Texture.TextureMode := TmDecal; //transparencies
+           Texture.MappingMode := tmmUser; //model tex coords
+           Texture.TextureWrap := twBoth; //tilling active
+        end else begin
+           Texture.TextureMode := TmReplace; //no transparencies//
+           Texture.MappingMode := tmmObjectLinear; //tmmObjectLinear; projection
+           Texture.TextureWrap := twNone; //no tilling
+        end;
+        Texture.DepthTextureMode := dtmLuminance;
+        with Texture.MappingSCoordinates do begin
+          W := 0; X := 0; Y := 1; Z := 0;
+        end;
+        with Texture.MappingTCoordinates do begin
+          W := 0; X := 1; Y := 0; Z := 0;
+        end;
+        with TextureOffset do begin
+          X := 0.5; Y := 0.5; Z := 0;
+        end;
+        temp_tex := Texture;
+        temp2 := newSolid.AltGLObj.Material;
+      end;
+
+      newSolid.AltGLObj.Material.TextureEx.Items[0].TextureScale.x := 1;
+      newSolid.AltGLObj.Material.TextureEx.Items[0].TextureScale.y := 1;
+
+      //DISABLE Materials (including textures?)
+      //(newSolid.AltGLObj as TGLFreeForm).UseMeshMaterials := false;
+
+
+      //Material.Texture.Image.Assign(newSolid.PaintBitmap);
+      //Material.Texture.Disabled := false;
+      //Material.Texture.TextureMode := tmModulate;
+
+      with newSolid do begin
+        PaintBitmapCorner[0] := 0;//sizeX/2;
+        PaintBitmapCorner[1] := 0;//sizeY/2;
+        PaintBitmapCorner[2] := 0;//sizeZ/2;
+      end;
+
+      //temp := MaterialLibrary;
+      //temp1 := MaterialLibrary.materials;
+      //temp2 := MaterialLibrary.materials.items[0];
+    end;
+      {
+      //delete:MaterialLibrary.materials.items[0].Material.LibMaterialName := 'paintTarget';
+      //name := MaterialLibrary.materials.items[0].name;
+
+      //TODO: manter a original e usar uma textura por cima com blend pra ser mais realista
+      //MaterialLibrary.materials.items[0].Texture2Name := 'paintTarget'; //multitexture
+
+      //change name of the original texture
+      MaterialLibrary.materials.items[0].name := 'paintTarget';
+      //activate the paintTarget texture
+      Material.LibMaterialName := 'paintTarget';
+
+      {originalBitmap := MaterialLibrary.materials.items[0].Material.Texture.Image.GetBitmap32;
+      }  {
+      //MaterialLibrary.materials.Add;
+      //MaterialLibrary.materials.items[1].name := 'paintTargetHeatmap';
+      heatmapBitmap := TBitmap.Create;
+      heatmapBitmap.PixelFormat := pf24bit;
+      heatmapBitmap.Width := originalBitmap.Width;
+      heatmapBitmap.Height := originalBitmap.Height;
+      FViewer.GLMaterialLibrary3ds.AddTextureMaterial('paintTargetHeatmap', heatmapBitmap);
+      heatmapBitmap.Free;
+
+      //dynamicHeatmapMaterial := TGLLibMaterial.Create(FViewer.GLMaterialLibrary3ds.Materials);
+      //dynamicHeatmapMaterial.Name := 'paintTargetHeatmap';
+
+      //TODO: se a original não tiver textura isto falha
+      FViewer.GLMaterialLibrary3ds.AddTextureMaterial('originalTexture',
+                      MaterialLibrary.materials.items[0].Material.Texture.Image.ResourceName);
+
+      //MaterialLibrary.materials.items[2].name := 'originalTexture';
+
+    if newSolid.isPaintTarget then begin
+       newSolid.AltGLObj.Material.MaterialLibrary := FViewer.GLMaterialLibrary3ds;
+       //newSolid.AltGLObj.Material.LibMaterialName := 'paintTarget';
+       //newSolid.AltGLObj.NotifyChange(newSolid.AltGLObj);
+    end;}
     PositionSceneObject(newSolid.AltGLObj, newSolid.Geom);
 
     if MeshCastsShadows and (MeshShadowFile = '') then
@@ -4553,7 +4697,32 @@ begin
 end;
 
 procedure TFViewer.UpdateGLScene;
-var r, i, n: integer;
+var r, j, i, n: integer;
+    img: TGLBitmap32;
+    sensor: TSensor;
+    SensorPos, HitSolidPos: PdVector3;
+
+    Vec: TdVector3;
+    Vert: TAffineVector;
+    f, d: double;
+    angle: double;
+    //i: integer;
+    GunPos, GunDir: TdVector3;
+    paintTex, heatmapTex: TGLTexture;
+    //paintImg, heatmapImg: TGLDynamicTextureImage;
+    paintImg: TGLTextureImage;
+    p: PRGBQuad;
+    //X, Y: integer;
+    x, y, ix, iy: integer;
+    a,b,c: double;
+    intensity: double;
+    IntfImg: TLazIntfImage;
+    BmpHnd,MaskHnd: HBitmap;
+    //img: TGLBitmap32;
+
+    temp_thing: TSolid;
+    temp_mesh: TGLMeshObject;
+    temp_int: integer;
 begin
     if GLHUDTextObjName.TagFloat > 0 then begin
       GLHUDTextObjName.TagFloat := GLHUDTextObjName.TagFloat - GLCadencer.FixedDeltaTime;
@@ -4596,7 +4765,15 @@ begin
             PositionSceneObject(Solids[i].ShadowGlObj, Solids[i].Geom);
           end;
           Solids[i].UpdateGLCanvas;
+          if Solids[i].isPaintTarget then begin
 
+            if assigned(Solids[i].AltGLObj) and assigned(Solids[i].PaintBitmap) then begin
+              Solids[i].AltGLObj.Material.Texture.Image.BeginUpdate;
+              img := Solids[i].AltGLObj.Material.Texture.Image.GetBitmap32();
+              img.Assign(Solids[i].PaintBitmap);
+              Solids[i].AltGLObj.Material.Texture.Image.endUpdate;
+            end;
+          end;
           {if Solids[i].CanvasGLObj <> nil then begin
             //Solids[i].PaintBitmap.Canvas.TextOut(0,0,floattostr(WorldODE.physTime));
             //Solids[i].CanvasGLObj.Material.Texture.Image.Invalidate;
@@ -4636,6 +4813,141 @@ begin
         end;
 
         Things[i].UpdateGLCanvas;
+
+        temp_thing :=Things[i];
+
+        if Things[i].isPaintTarget then begin
+          for sensor in Sensors do begin
+            if sensor.kind=skSprayGun then begin//jm
+              GunPos := Vector3Make(sensor.GLObj.Position.DirectX, sensor.GLObj.Position.DirectY, sensor.GLObj.Position.DirectZ);
+              GunDir := Vector3Make(sensor.GLObj.Direction.DirectX, sensor.GLObj.Direction.DirectY, sensor.GLObj.Direction.DirectZ);
+              Vec := Vector3SUB(Things[i].GetPosition(), GunPos);
+              d := Vector3Length(Vec);
+
+              with (Things[i].AltGLObj as TGLFreeForm) do begin
+                //Not right texture? The paintTarget texture that's in theAltGLObj.Material
+                //is different from the one that's on the MaterialLibrary, why?
+                //paintTex := MaterialLibrary.TextureByName('paintTarget');
+                //paintTex := solid.AltGLObj.Material.Texture;
+                //paintImg := solid.AltGLObj.Material.Texture.Image;
+
+                //Things[i].PaintBitmap.Canvas.Brush.Color := clWhite;
+                //Things[i].PaintBitmap.Canvas.pen.Color := clblack;
+                x := 150;
+                y := 150;
+                r := 260;
+                //If Random<0.01 then
+                //Solid.PaintBitmap.Canvas.Ellipse(rect(round(x-r), round(y-r), round(x+r), round(y+r)));
+                //Solid.PaintBitmap.Canvas.FillRect(10, 10, 500, 500);
+                //Solid.PaintBitmap.SaveToFile('nada1.bmp');
+                //solid.PaintBitmap.Canvas.Ellipse(0, 0, 500, 500);
+
+                //TODO: list of meshes for j:=0 to MeshObjects.Count do begin
+                if (random<0.01) and false then begin
+                for j:=0 to MeshObjects.Items[0].Vertices.Count - 1 do begin
+                    vert := MeshObjects.Items[0].Vertices.Items[j];
+                    Vec := Vector3SUB(Vector3Make(vert.V[0], vert.V[1], vert.V[2]), GunPos);
+
+                    angle := arccos((Vec[0]*GunDir[0] + Vec[1]*GunDir[1] + Vec[2]*GunDir[2])/
+                          (Vector3Length(vec)*Vector3Length(GunDir)));
+
+                    if (angle < (3.14/3)) then begin
+                      x := round(370*MeshObjects.Items[0].TexCoords.Items[j].V[0]);
+                      y := round(200*MeshObjects.Items[0].TexCoords.Items[j].V[1]);
+                      r := 60;
+                      a := 1;
+                      b := 1;
+                      c := 1;
+                      intensity := a*exp((-(angle-b)*(angle-b))/(2*c*c));
+                      Things[i].PaintBitmap.Canvas.Ellipse(rect(round(x-r), round(y-r), round(x+r), round(y+r)));
+                    end;
+                end;
+                end;
+
+                temp_int := MeshObjects.Items[0].Vertices.Count;
+                temp_int := MeshObjects.Items[0].TexCoords.Count;
+                //acima de um Z=1.2
+                if (random<0.01) then begin
+                for j:=0 to MeshObjects.Items[0].Vertices.Count - 1 do begin
+                    vert := MeshObjects.Items[0].Vertices.Items[j];
+                    Vec := Vector3SUB(Vector3Make(vert.V[0], vert.V[1], vert.V[2]), GunPos);
+
+                    angle := arccos((Vec[0]*GunDir[0] + Vec[1]*GunDir[1] + Vec[2]*GunDir[2])/
+                          (Vector3Length(vec)*Vector3Length(GunDir)));
+
+                    if (vert.V[2] > 0.09) or true then begin
+                      temp_mesh := MeshObjects.Items[0];
+                      ix := round(370*MeshObjects.Items[0].TexCoords.Items[j].V[0]);
+                      iy := round(200*(MeshObjects.Items[0].TexCoords.Items[j].V[1]));
+                      if ix<0 then ix:=ix+370;
+                      if iy<0 then iy:=iy+200;
+
+                      r := 15;
+                      IntfImg:=TLazIntfImage.Create(0,0,[]);
+                      IntfImg.LoadFromBitmap(Things[i].PaintBitmap.Handle,Things[i].PaintBitmap.MaskHandle);
+
+                      IntfImg.BeginUpdate;
+                      for x:=ix-r to ix+r do begin
+                        for y:=iy-r to iy+r do begin  
+                          if not((x<0) or (x>370)) then
+                          if not((y<0) or (y>200)) then
+                          IntfImg.TColors[round(x),round(y)] := $7FFFFFFF;
+                        end;
+                      end;
+
+                      IntfImg.TColors[round(ix),round(iy)] := $7FAACCAA;
+
+                      IntfImg.EndUpdate;
+
+                      // create the bitmap handles
+                      IntfImg.CreateBitmaps(BmpHnd,MaskHnd);
+                      // apply handles to the Bitmap1
+                      Things[i].PaintBitmap.Handle:=BmpHnd;
+                      Things[i].PaintBitmap.MaskHandle:=MaskHnd;
+                      IntfImg.Free;
+                      if (random<0.01) then Things[i].PaintBitmap.SaveToFile('intf.bmp');
+                      //Things[i].PaintBitmap.Canvas.Ellipse(rect(round(x-r), round(y-r), round(x+r), round(y+r)));
+                    end;
+                end;
+                end;
+
+                //paintImg := TGLDynamicTextureImage(paintTex.Image);
+                //paintImg := solid.AltGLObj.Material.Texture.Image;
+                //heatmapTex := MaterialLibrary.TextureByName('paintTargetHeatmap');
+                //heatmapImg := TGLDynamicTextureImage(heatmapTex.Image);
+                //paintImg.UsePBO := False;
+                //heatmapImg.UsePBO := False;
+
+                //Rendering context must be active! como??
+                {paintImg.BeginUpdate;
+                paintTex.BeginUpdate;
+                p := paintImg.Data;
+                for Y := paintImg.DirtyRectangle.Top to paintImg.DirtyRectangle.Bottom - 1 do
+                begin
+                  for X := paintImg.DirtyRectangle.Left to paintImg.DirtyRectangle.Right - 1 do
+                  begin
+                    p^.rgbRed := ((X xor Y) + 50) and 255;
+                    p^.rgbGreen := ((X + 50) xor Y) and 255;
+                    p^.rgbBlue := ((X - 50) xor (Y + 50)) and 255;
+                    Inc(p);
+                  end;
+                end;
+                paintImg.EndUpdate;
+                paintTex.EndUpdate;}
+              end;
+            end;
+          end;
+
+          if assigned(Things[i].AltGLObj) and assigned(Things[i].PaintBitmap) then begin
+            //Things[i].PaintBitmap.SaveToFile('nada.bmp');
+            Things[i].AltGLObj.Material.Texture.Image.BeginUpdate;
+            img := Things[i].AltGLObj.Material.Texture.Image.GetBitmap32();
+            img.Assign(Things[i].PaintBitmap);
+            Things[i].AltGLObj.Material.TextureEX.Items[0].Texture.Image.Assign(Things[i].PaintBitmap);
+            Things[i].AltGLObj.Material.Texture.Image.endUpdate;
+          end;
+        end;
+        //end isPaintTarget
       end;
 
       //Sensors
@@ -4917,7 +5229,7 @@ begin
       // Post Process Sensors
       for i := 0 to WorldODE.Sensors.Count - 1 do begin
         with WorldODE.Sensors[i] do begin
-          PostProcess(WorldODE.Things);
+          PostProcess;
           TimeFromLastMeasure := TimeFromLastMeasure + WorldODE.Ode_dt;
           if TimeFromLastMeasure > Period then begin
             TimeFromLastMeasure := TimeFromLastMeasure - Period;
