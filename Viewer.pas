@@ -1536,73 +1536,22 @@ begin
       Scale.y := MeshScale;
       Scale.z := MeshScale;
     end;
-    if newSolid.isPaintTarget then begin
-      newSolid.PaintBitmap := TBitmap.Create;
-      newSolid.PaintBitmap.Width := 512;
-      newSolid.PaintBitmap.Height := 512;
-      newSolid.PaintBitmap.PixelFormat := pf24bit;
-      newSolid.PaintBitmap.Canvas.Brush.Color := clRed;// clWhite;
-      newSolid.PaintBitmap.Canvas.pen.Color := clRed;//clblack;
-      newSolid.PaintBitmap.Canvas.FillRect(0, 0, 512, 512);
-      newSolid.PaintBitmap.Canvas.TextOut(0,0,'Hello World!');
-      //newSolid.PaintBitmap.Canvas.Ellipse(0,0,127,127);
+    if newSolid.isPaintTarget and false then begin
 
-      (newSolid.AltGLObj as TGLFreeForm).MaterialLibrary.materials.items[0].name := 'paintTarget';
-      //newSolid.SetTexture('squares.bmp', 1);
-      //newSolid.PaintBitmap.LoadFromFile('monster.bmp');
-      //newSolid.PaintBitmap.LoadFromFile('pepsi_tex.bmp');
-      //newSolid.PaintBitmap.LoadFromFile('squares2.bmp');
-      //newSolid.PaintBitmap.LoadFromFile('nada.bmp');
-      newSolid.PaintBitmap.Width := 512;
-      newSolid.PaintBitmap.Height := 512;
-      newSolid.AltGLObj.Material.TextureEx.Add;
-      //newSolid.AltGLObj.Material.TextureEX.Items[0].Texture.Image.LoadFromFile('squares.bmp');
-      newSolid.AltGLObj.Material.TextureEX.Items[0].Texture.Image.Assign(newSolid.PaintBitmap);
+      //(newSolid.AltGLObj as TGLFreeForm).MaterialLibrary.materials.items[0].name := 'paintTarget';
+      //newSolid.AltGLObj.Material.TextureEx.Add;
+      //newSolid.AltGLObj.Material.TextureEX.Items[0].Texture.Image.Assign(newSolid.PaintBitmap);
 
-      newSolid.PaintBitmap.SaveToFile('nada.bmp');
-      with newSolid.AltGLObj.Material.TextureEx.Items[0] do begin
-        TextureIndex := 0;
-        Texture.Disabled := false;
-        //use_texture_loaded_from_model
-        if true then begin
-           Texture.TextureMode := TmDecal; //transparencies
-           Texture.MappingMode := tmmUser; //model tex coords
-           Texture.TextureWrap := twBoth; //tilling active
-        end else begin
-           Texture.TextureMode := TmReplace; //no transparencies//
-           Texture.MappingMode := tmmObjectLinear; //tmmObjectLinear; projection
-           Texture.TextureWrap := twNone; //no tilling
-        end;
-        Texture.DepthTextureMode := dtmLuminance;
-        with Texture.MappingSCoordinates do begin
-          W := 0; X := 0; Y := 1; Z := 0;
-        end;
-        with Texture.MappingTCoordinates do begin
-          W := 0; X := 1; Y := 0; Z := 0;
-        end;
-        with TextureOffset do begin
-          X := 0.5; Y := 0.5; Z := 0;
-        end;
-        temp_tex := Texture;
-        temp2 := newSolid.AltGLObj.Material;
-      end;
+      //with newSolid.AltGLObj.Material.TextureEx.Items[0] do begin
+      //  TextureIndex := 0;
+      //  Texture.Disabled := false;
+      //end;
 
-      newSolid.AltGLObj.Material.TextureEx.Items[0].TextureScale.x := 1;
-      newSolid.AltGLObj.Material.TextureEx.Items[0].TextureScale.y := 1;
-
-      //DISABLE Materials (including textures?)
-      //(newSolid.AltGLObj as TGLFreeForm).UseMeshMaterials := false;
-
-
-      //Material.Texture.Image.Assign(newSolid.PaintBitmap);
+      //DISABLE Materials (including textures? yes...)
+      (newSolid.AltGLObj as TGLFreeForm).UseMeshMaterials := false;
+      (newSolid.AltGLObj as TGLFreeForm).MeshObjects.Items[0].TexCoords.Clear;
+      //newSolid.AltGLObj.Material := None;
       //Material.Texture.Disabled := false;
-      //Material.Texture.TextureMode := tmModulate;
-
-      with newSolid do begin
-        PaintBitmapCorner[0] := 0;//sizeX/2;
-        PaintBitmapCorner[1] := 0;//sizeY/2;
-        PaintBitmapCorner[2] := 0;//sizeZ/2;
-      end;
 
       //temp := MaterialLibrary;
       //temp1 := MaterialLibrary.materials;
@@ -1615,13 +1564,12 @@ begin
       //TODO: manter a original e usar uma textura por cima com blend pra ser mais realista
       //MaterialLibrary.materials.items[0].Texture2Name := 'paintTarget'; //multitexture
 
-      //change name of the original texture
+      //change name of the original material
       MaterialLibrary.materials.items[0].name := 'paintTarget';
       //activate the paintTarget texture
       Material.LibMaterialName := 'paintTarget';
 
-      {originalBitmap := MaterialLibrary.materials.items[0].Material.Texture.Image.GetBitmap32;
-      }  {
+       {
       //MaterialLibrary.materials.Add;
       //MaterialLibrary.materials.items[1].name := 'paintTargetHeatmap';
       heatmapBitmap := TBitmap.Create;
@@ -4723,6 +4671,7 @@ var r, j, i, n: integer;
     temp_thing: TSolid;
     temp_mesh: TGLMeshObject;
     temp_int: integer;
+    Mesh: TGLMeshObject;
 begin
     if GLHUDTextObjName.TagFloat > 0 then begin
       GLHUDTextObjName.TagFloat := GLHUDTextObjName.TagFloat - GLCadencer.FixedDeltaTime;
@@ -4767,12 +4716,12 @@ begin
           Solids[i].UpdateGLCanvas;
           if Solids[i].isPaintTarget then begin
 
-            if assigned(Solids[i].AltGLObj) and assigned(Solids[i].PaintBitmap) then begin
+            {if assigned(Solids[i].AltGLObj) and assigned(Solids[i].PaintBitmap) then begin
               Solids[i].AltGLObj.Material.Texture.Image.BeginUpdate;
               img := Solids[i].AltGLObj.Material.Texture.Image.GetBitmap32();
               img.Assign(Solids[i].PaintBitmap);
               Solids[i].AltGLObj.Material.Texture.Image.endUpdate;
-            end;
+            end;}
           end;
           {if Solids[i].CanvasGLObj <> nil then begin
             //Solids[i].PaintBitmap.Canvas.TextOut(0,0,floattostr(WorldODE.physTime));
@@ -4824,7 +4773,48 @@ begin
               Vec := Vector3SUB(Things[i].GetPosition(), GunPos);
               d := Vector3Length(Vec);
 
+              (Things[i].AltGLObj as TGLFreeForm).MaterialLibrary := nil;
+              Mesh := (Things[i].AltGLObj as TGLFreeForm).MeshObjects[0];
+              Mesh.TexCoords.Clear;
+              Mesh.Colors.Clear;
+              for j:=0 to Mesh.Vertices.Count - 1 do begin
+                  if (Mesh.Vertices[j].V[2] < (0.2)) then begin
+                     Mesh.Colors.Add(ConvertRGBColor([0,255,0]));
+                  end else begin
+                      Mesh.Colors.Add(ConvertRGBColor([255,0,0]));
+                  end;
+              end;
+
+
               with (Things[i].AltGLObj as TGLFreeForm) do begin
+
+                {MeshObjects.Clear;
+                Skeleton.Clear;
+                StructureChanged;
+
+                Mesh := TGLMeshObject.CreateOwned(MeshObjects);
+                Mesh.Mode := momTriangles;
+                Mesh.Vertices.Clear;
+                Mesh.Colors.Clear;
+
+                Mesh.Vertices.Add(0, 0, 0);     
+                Mesh.Vertices.Add(10, 0, 0);
+                Mesh.Vertices.Add(5, 5, 0);
+                Mesh.Colors.Add(ConvertRGBColor([255,0,0]));
+                Mesh.Colors.Add(ConvertRGBColor([0,255,0]));
+                Mesh.Colors.Add(ConvertRGBColor([255,0,0]));
+                Mesh.Normals.Add(0, 0, 1);
+                Mesh.Normals.Add(0, 0, 1);
+                Mesh.Normals.Add(0, 0, 1);}
+
+                {Mesh.Vertices.clear;
+                Mesh.vertices.Add(affinevectormake(0,0,0),nullvector,ConvertRGBColor([255,0,0]));
+                Mesh.vertices.Add(affinevectormake(1,0,0),nullvector,ConvertRGBColor([255,0,0]));
+                Mesh.vertices.Add(affinevectormake(1,1,0),nullvector,clrRed);
+                Mesh.vertices.Add(affinevectormake(0,1,0),nullvector,clrRed);}
+
+                //temp_int := Mesh.Colors.Count;
+                //temp_int := MeshObjects.Items[0].Colors.Count;
                 //Not right texture? The paintTarget texture that's in theAltGLObj.Material
                 //is different from the one that's on the MaterialLibrary, why?
                 //paintTex := MaterialLibrary.TextureByName('paintTarget');
@@ -4842,8 +4832,14 @@ begin
                 //Solid.PaintBitmap.SaveToFile('nada1.bmp');
                 //solid.PaintBitmap.Canvas.Ellipse(0, 0, 500, 500);
 
+                //Get all Vertices from kind of thoot
+                {for I := 0 to GLFreeForm1.MeshObjects[11].Vertices.Count -1 do
+                begin
+                        GLFreeForm1.MeshObjects[11].Colors.add(ConvertRGBColor([255,0,0]));
+                end }
+
                 //TODO: list of meshes for j:=0 to MeshObjects.Count do begin
-                if (random<0.01) and false then begin
+                {if (random<0.01) and false then begin
                 for j:=0 to MeshObjects.Items[0].Vertices.Count - 1 do begin
                     vert := MeshObjects.Items[0].Vertices.Items[j];
                     Vec := Vector3SUB(Vector3Make(vert.V[0], vert.V[1], vert.V[2]), GunPos);
@@ -4862,12 +4858,16 @@ begin
                       Things[i].PaintBitmap.Canvas.Ellipse(rect(round(x-r), round(y-r), round(x+r), round(y+r)));
                     end;
                 end;
-                end;
+                end;}
 
                 temp_int := MeshObjects.Items[0].Vertices.Count;
                 temp_int := MeshObjects.Items[0].TexCoords.Count;
-                //acima de um Z=1.2
-                if (random<0.01) then begin
+                temp_int := MeshObjects.Items[0].Colors.Count;
+
+                (Things[i].AltGLObj as TGLFreeForm).MaterialLibrary := nil;
+                MeshObjects.Items[0].Colors.Clear;
+
+                if (random<0.01) and false then begin
                 for j:=0 to MeshObjects.Items[0].Vertices.Count - 1 do begin
                     vert := MeshObjects.Items[0].Vertices.Items[j];
                     Vec := Vector3SUB(Vector3Make(vert.V[0], vert.V[1], vert.V[2]), GunPos);
@@ -4876,41 +4876,13 @@ begin
                           (Vector3Length(vec)*Vector3Length(GunDir)));
 
                     if (vert.V[2] > 0.09) or true then begin
-                      temp_mesh := MeshObjects.Items[0];
-                      ix := round(370*MeshObjects.Items[0].TexCoords.Items[j].V[0]);
-                      iy := round(200*(MeshObjects.Items[0].TexCoords.Items[j].V[1]));
-                      if ix<0 then ix:=ix+370;
-                      if iy<0 then iy:=iy+200;
-
-                      r := 15;
-                      IntfImg:=TLazIntfImage.Create(0,0,[]);
-                      IntfImg.LoadFromBitmap(Things[i].PaintBitmap.Handle,Things[i].PaintBitmap.MaskHandle);
-
-                      IntfImg.BeginUpdate;
-                      for x:=ix-r to ix+r do begin
-                        for y:=iy-r to iy+r do begin  
-                          if not((x<0) or (x>370)) then
-                          if not((y<0) or (y>200)) then
-                          IntfImg.TColors[round(x),round(y)] := $7FFFFFFF;
-                        end;
-                      end;
-
-                      IntfImg.TColors[round(ix),round(iy)] := $7FAACCAA;
-
-                      IntfImg.EndUpdate;
-
-                      // create the bitmap handles
-                      IntfImg.CreateBitmaps(BmpHnd,MaskHnd);
-                      // apply handles to the Bitmap1
-                      Things[i].PaintBitmap.Handle:=BmpHnd;
-                      Things[i].PaintBitmap.MaskHandle:=MaskHnd;
-                      IntfImg.Free;
-                      if (random<0.01) then Things[i].PaintBitmap.SaveToFile('intf.bmp');
-                      //Things[i].PaintBitmap.Canvas.Ellipse(rect(round(x-r), round(y-r), round(x+r), round(y+r)));
+                       MeshObjects.Items[0].Colors.add(255,0,0,1);
+                       MeshObjects[0].Colors.add(ConvertRGBColor([255,0,0]));
                     end;
                 end;
                 end;
 
+                temp_int := MeshObjects.Items[0].Colors.Count;
                 //paintImg := TGLDynamicTextureImage(paintTex.Image);
                 //paintImg := solid.AltGLObj.Material.Texture.Image;
                 //heatmapTex := MaterialLibrary.TextureByName('paintTargetHeatmap');
@@ -4938,14 +4910,14 @@ begin
             end;
           end;
 
-          if assigned(Things[i].AltGLObj) and assigned(Things[i].PaintBitmap) then begin
+          {if assigned(Things[i].AltGLObj) and assigned(Things[i].PaintBitmap) then begin
             //Things[i].PaintBitmap.SaveToFile('nada.bmp');
             Things[i].AltGLObj.Material.Texture.Image.BeginUpdate;
             img := Things[i].AltGLObj.Material.Texture.Image.GetBitmap32();
             img.Assign(Things[i].PaintBitmap);
             Things[i].AltGLObj.Material.TextureEX.Items[0].Texture.Image.Assign(Things[i].PaintBitmap);
             Things[i].AltGLObj.Material.Texture.Image.endUpdate;
-          end;
+          end;}
         end;
         //end isPaintTarget
       end;
@@ -5248,6 +5220,7 @@ begin
     // GLScene
 
     //Update all GLscene Parts.
+    //GLSceneViewer.buffer.shademodel := smSmooth;
     UpdateGLScene;
 
     // Update Camera Position
