@@ -4781,7 +4781,7 @@ begin
                   if (Mesh.Vertices[j].V[2] < (0.2)) then begin
                      Mesh.Colors.Add(ConvertRGBColor([0,255,0]));
                   end else begin
-                      Mesh.Colors.Add(ConvertRGBColor([255,0,0]));
+                     Mesh.Colors.Add(ConvertRGBColor([255,0,0]));
                   end;
               end;
 
@@ -4860,7 +4860,7 @@ begin
                 end;
                 end;}
 
-                temp_int := MeshObjects.Items[0].Vertices.Count;
+                {temp_int := MeshObjects.Items[0].Vertices.Count;
                 temp_int := MeshObjects.Items[0].TexCoords.Count;
                 temp_int := MeshObjects.Items[0].Colors.Count;
 
@@ -4880,7 +4880,7 @@ begin
                        MeshObjects[0].Colors.add(ConvertRGBColor([255,0,0]));
                     end;
                 end;
-                end;
+                end;}
 
                 temp_int := MeshObjects.Items[0].Colors.Count;
                 //paintImg := TGLDynamicTextureImage(paintTex.Image);
@@ -5243,7 +5243,7 @@ begin
     QueryPerformanceCounter(t_end_gl);
     FParams.EditDebug.text := format('%6.2f (%6.2f) %0.2f [%0.2f]',[(t_end_gl - t_start)/t_delta, t_itot/t_delta, (t_end_gl - t_end)/t_delta, (t_act - t_last)/t_delta]);
 
-    //GLSceneViewer.Invalidate;
+    GLSceneViewer.Invalidate;
 
   end;
 end;
