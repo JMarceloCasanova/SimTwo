@@ -13,7 +13,8 @@ uses
   ProjConfig, GLHUDObjects, Menus, IniPropStorage, GLVectorFileObjects,
   GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont,
   GLMesh, GLWaterPlane, glzbuffer, GLLCLViewer, GLMaterial, GLColor,
-  GLKeyboard, GLFileOBJ, GLFileSTL, GLFilePLY, GLFileB3D, IntfGraphics;
+  GLKeyboard, GLFileOBJ, GLFileSTL, GLFilePLY, GLFileB3D, IntfGraphics,
+  GLVectorTypes;
 
 type
   TRemoteImage = packed record
@@ -1517,6 +1518,8 @@ var temp: TGLMaterialLibrary;
     originalBitmap: TGLImage;
     heatmapBitmap: TBitmap;
     nada: TGLMesh;
+    Mesh: TGLMeshObject;
+    j: integer;
 begin
   // create mesh file
   if MeshFile <> '' then begin
@@ -1536,63 +1539,22 @@ begin
       Scale.y := MeshScale;
       Scale.z := MeshScale;
     end;
-    if newSolid.isPaintTarget and false then begin
-
-      //(newSolid.AltGLObj as TGLFreeForm).MaterialLibrary.materials.items[0].name := 'paintTarget';
-      //newSolid.AltGLObj.Material.TextureEx.Add;
-      //newSolid.AltGLObj.Material.TextureEX.Items[0].Texture.Image.Assign(newSolid.PaintBitmap);
-
-      //with newSolid.AltGLObj.Material.TextureEx.Items[0] do begin
-      //  TextureIndex := 0;
-      //  Texture.Disabled := false;
-      //end;
-
-      //DISABLE Materials (including textures? yes...)
+    if newSolid.isPaintTarget then begin
+      //disable original material (including textures)
       (newSolid.AltGLObj as TGLFreeForm).UseMeshMaterials := false;
       (newSolid.AltGLObj as TGLFreeForm).MeshObjects.Items[0].TexCoords.Clear;
-      //newSolid.AltGLObj.Material := None;
-      //Material.Texture.Disabled := false;
-
-      //temp := MaterialLibrary;
-      //temp1 := MaterialLibrary.materials;
-      //temp2 := MaterialLibrary.materials.items[0];
+      (newSolid.AltGLObj as TGLFreeForm).MaterialLibrary := nil;
+      //TODO: support painting multiple mesh objects
+      if (newSolid.AltGLObj as TGLFreeForm).MeshObjects.Count > 1 then begin
+        showmessage('multiple mesh objects not supported yet, only the first mesh will be used');
+      end;
+      Mesh := (newSolid.AltGLObj as TGLFreeForm).MeshObjects[0];
+      Mesh.TexCoords.Clear;
+      Mesh.Colors.Clear;
+      for j:=0 to Mesh.Vertices.Count - 1 do begin
+          Mesh.Colors.Add(ConvertRGBColor([255,255,255]));
+      end;
     end;
-      {
-      //delete:MaterialLibrary.materials.items[0].Material.LibMaterialName := 'paintTarget';
-      //name := MaterialLibrary.materials.items[0].name;
-
-      //TODO: manter a original e usar uma textura por cima com blend pra ser mais realista
-      //MaterialLibrary.materials.items[0].Texture2Name := 'paintTarget'; //multitexture
-
-      //change name of the original material
-      MaterialLibrary.materials.items[0].name := 'paintTarget';
-      //activate the paintTarget texture
-      Material.LibMaterialName := 'paintTarget';
-
-       {
-      //MaterialLibrary.materials.Add;
-      //MaterialLibrary.materials.items[1].name := 'paintTargetHeatmap';
-      heatmapBitmap := TBitmap.Create;
-      heatmapBitmap.PixelFormat := pf24bit;
-      heatmapBitmap.Width := originalBitmap.Width;
-      heatmapBitmap.Height := originalBitmap.Height;
-      FViewer.GLMaterialLibrary3ds.AddTextureMaterial('paintTargetHeatmap', heatmapBitmap);
-      heatmapBitmap.Free;
-
-      //dynamicHeatmapMaterial := TGLLibMaterial.Create(FViewer.GLMaterialLibrary3ds.Materials);
-      //dynamicHeatmapMaterial.Name := 'paintTargetHeatmap';
-
-      //TODO: se a original não tiver textura isto falha
-      FViewer.GLMaterialLibrary3ds.AddTextureMaterial('originalTexture',
-                      MaterialLibrary.materials.items[0].Material.Texture.Image.ResourceName);
-
-      //MaterialLibrary.materials.items[2].name := 'originalTexture';
-
-    if newSolid.isPaintTarget then begin
-       newSolid.AltGLObj.Material.MaterialLibrary := FViewer.GLMaterialLibrary3ds;
-       //newSolid.AltGLObj.Material.LibMaterialName := 'paintTarget';
-       //newSolid.AltGLObj.NotifyChange(newSolid.AltGLObj);
-    end;}
     PositionSceneObject(newSolid.AltGLObj, newSolid.Geom);
 
     if MeshCastsShadows and (MeshShadowFile = '') then
@@ -2687,6 +2649,9 @@ var sensor, prop: IXMLNode;
     i, row, col, side, NumRays: integer;
     fmax, k1, k2: double;
     MaxDist, MinDist, StartAngle, EndAngle: double;
+
+    paintColor: TColorvector;
+    paintRate: single;
 begin
   if root = nil then exit;
 
@@ -2728,6 +2693,8 @@ begin
       MinDist := 0;
       StartAngle := rad(-90);
       EndAngle := rad(90);
+      paintColor := ConvertRGBColor([255,0,0]);
+      paintRate := 0.01;
 
       prop := sensor.FirstChild;
       while prop <> nil do begin
@@ -2786,6 +2753,12 @@ begin
           colorG := GetNodeAttrInt(prop, 'g', 128)/255;
           colorB := GetNodeAttrInt(prop, 'b', 128)/255;
         end;
+        if prop.NodeName = 'paint_color_rgb' then begin
+          paintColor := ConvertRGBColor([GetNodeAttrInt(prop, 'r', 0),GetNodeAttrInt(prop, 'g', 0),GetNodeAttrInt(prop, 'b', 255)]);;
+        end;
+        if prop.NodeName = 'paint_rate' then begin
+          paintRate := GetNodeAttrRealParse(prop, 'value', 0.01, Parser);
+        end;
         prop := prop.NextSibling;
       end;
       // Create and position the sensor
@@ -2819,6 +2792,9 @@ begin
       newSensor.Fmax := fmax;
       newSensor.k1 := k1;
       newSensor.k2 := k2;
+
+      newSensor.paintColor := paintColor;
+      newSensor.paintRate := paintRate;
 
       Sensors.Add(newSensor);
 
@@ -2876,7 +2852,12 @@ begin
         CreateSensorBeamGLObj(newSensor, SLen, SInitialWidth, SFinalWidth);
       end;
 
-      newSensor.SetColor(colorR, colorG, colorB);
+      if newSensor.kind in [skSprayGun] then begin
+        newSensor.SetColor(paintColor.V[0], paintColor.V[1], paintColor.V[2]);
+        //newSensor.SetColor(newSensor.paintColor.V[0], newSensor.paintColor.V[1], newSensor.paintColor.V[2]);
+      end else begin
+        newSensor.SetColor(colorR, colorG, colorB);
+      end;
     end;
 
     sensor := sensor.NextSibling;
@@ -4646,32 +4627,17 @@ end;
 
 procedure TFViewer.UpdateGLScene;
 var r, j, i, n: integer;
-    img: TGLBitmap32;
     sensor: TSensor;
-    SensorPos, HitSolidPos: PdVector3;
-
-    Vec: TdVector3;
-    Vert: TAffineVector;
-    f, d: double;
-    angle: double;
-    //i: integer;
-    GunPos, GunDir: TdVector3;
-    paintTex, heatmapTex: TGLTexture;
-    //paintImg, heatmapImg: TGLDynamicTextureImage;
-    paintImg: TGLTextureImage;
-    p: PRGBQuad;
-    //X, Y: integer;
-    x, y, ix, iy: integer;
-    a,b,c: double;
-    intensity: double;
-    IntfImg: TLazIntfImage;
-    BmpHnd,MaskHnd: HBitmap;
-    //img: TGLBitmap32;
-
-    temp_thing: TSolid;
-    temp_mesh: TGLMeshObject;
-    temp_int: integer;
     Mesh: TGLMeshObject;
+    GunPos, GunDir: TVector3f;
+    VertPos, VertDir: TVector3f;
+    GunVert: TVector3f;
+    Dist, angle_side, angle: double;
+    intensity, a, b, c: double;
+    resultColor: TColorVector;
+
+    temp_int: integer;
+
 begin
     if GLHUDTextObjName.TagFloat > 0 then begin
       GLHUDTextObjName.TagFloat := GLHUDTextObjName.TagFloat - GLCadencer.FixedDeltaTime;
@@ -4763,163 +4729,52 @@ begin
 
         Things[i].UpdateGLCanvas;
 
-        temp_thing :=Things[i];
-
-        if Things[i].isPaintTarget then begin
+        if Things[i].isPaintTarget then begin// and (random()<0.1)
           for sensor in Sensors do begin
-            if sensor.kind=skSprayGun then begin//jm
-              GunPos := Vector3Make(sensor.GLObj.Position.DirectX, sensor.GLObj.Position.DirectY, sensor.GLObj.Position.DirectZ);
-              GunDir := Vector3Make(sensor.GLObj.Direction.DirectX, sensor.GLObj.Direction.DirectY, sensor.GLObj.Direction.DirectZ);
-              Vec := Vector3SUB(Things[i].GetPosition(), GunPos);
-              d := Vector3Length(Vec);
-
-              (Things[i].AltGLObj as TGLFreeForm).MaterialLibrary := nil;
+            if sensor.kind=skSprayGun then begin
+              //(Things[i].AltGLObj as TGLFreeForm).MaterialLibrary := nil;
               Mesh := (Things[i].AltGLObj as TGLFreeForm).MeshObjects[0];
-              Mesh.TexCoords.Clear;
-              Mesh.Colors.Clear;
               for j:=0 to Mesh.Vertices.Count - 1 do begin
-                  if (Mesh.Vertices[j].V[2] < (0.2)) then begin
-                     Mesh.Colors.Add(ConvertRGBColor([0,255,0]));
-                  end else begin
-                     Mesh.Colors.Add(ConvertRGBColor([255,0,0]));
-                  end;
+                //TODO: calculate normals for meshes without normals
+                if Mesh.Normals.Count <> Mesh.Vertices.Count then begin
+                   showmessage('meshes without normals not supported yet, only the first mesh will be used');
+                end;
+                //GunDir := Vector3fMake(sensor.GLObj.Direction.X, sensor.GLObj.Direction.Y, sensor.GLObj.Direction.Z);
+                GunDir := Vector3fMake(-sensor.GLObj.Up.X, -sensor.GLObj.Up.Y, -sensor.GLObj.Up.Z);
+                //GunDir := Vector3fMake(1,0,0);
+                //GunDir := VectorRotateAroundX(GunDir, sensor.GLObj.RollAngle);
+                //GunDir := VectorRotateAroundY(GunDir, sensor.GLObj.PitchAngle);
+                //GunDir := VectorRotateAroundZ(GunDir, sensor.GLObj.TurnAngle);
+                GunPos := Vector3fMake(sensor.GLObj.Position.X, sensor.GLObj.Position.Y, sensor.GLObj.Position.Z);
+                VertPos := Mesh.Vertices[j];
+                VertDir := Mesh.Normals[j];
+                GunVert := VectorSubtract(VertPos, GunPos);
+                angle_side := arccos((VertDir.V[0]*GunDir.V[0] + VertDir.V[1]*GunDir.V[1] + VertDir.V[2]*GunDir.V[2])/
+                            (VectorLength(VertDir)*VectorLength(GunDir)));
+                //angle := arccos((VertGun.V[0]*-GunDir.V[0] + VertGun.V[1]*-GunDir.V[1] + VertGun.V[2]*-GunDir.V[2])/(VectorLength(VertGun)*VectorLength(GunDir)));
+                //angle := arccos(VectorAngleCosine(GunVert, GunDir));//NormalizeAngle() -> [-pi,pi]
+                //angle := NormalizeAngle(angle);
+                angle := arccos((GunVert.V[0]*GunDir.V[0] + GunVert.V[1]*GunDir.V[1] + GunVert.V[2]*GunDir.V[2])/(VectorLength(GunVert)*VectorLength(GunDir)));
+                Dist := VectorLength(GunVert);
+                if (abs(angle_side) > pi/2) and (abs(angle) < 0.2) then begin
+                //if VertPos.z < GunPos.z then begin
+                //if Dist < 0.1 then begin
+                  Dist := VectorLength(GunVert);
+                  a := 1;b := 1;c := 1;
+                  intensity := a*exp((-(angle-b)*(angle-b))/(2*c*c));
+                  resultColor := VectorAdd(Mesh.Colors[j], VectorScale(VectorSubtract(sensor.paintColor,Mesh.Colors[j]), sensor.paintRate));
+                  //resultColor := VectorScale(resultColor, intensity);
+                  //Mesh.Colors[j] := resultColor;
+                  Mesh.Colors[j] := sensor.paintColor;
+                end else begin
+                  Mesh.Colors[j] := ConvertRGBColor([255,255,255]);
+                end;
               end;
-
-
-              with (Things[i].AltGLObj as TGLFreeForm) do begin
-
-                {MeshObjects.Clear;
-                Skeleton.Clear;
-                StructureChanged;
-
-                Mesh := TGLMeshObject.CreateOwned(MeshObjects);
-                Mesh.Mode := momTriangles;
-                Mesh.Vertices.Clear;
-                Mesh.Colors.Clear;
-
-                Mesh.Vertices.Add(0, 0, 0);     
-                Mesh.Vertices.Add(10, 0, 0);
-                Mesh.Vertices.Add(5, 5, 0);
-                Mesh.Colors.Add(ConvertRGBColor([255,0,0]));
-                Mesh.Colors.Add(ConvertRGBColor([0,255,0]));
-                Mesh.Colors.Add(ConvertRGBColor([255,0,0]));
-                Mesh.Normals.Add(0, 0, 1);
-                Mesh.Normals.Add(0, 0, 1);
-                Mesh.Normals.Add(0, 0, 1);}
-
-                {Mesh.Vertices.clear;
-                Mesh.vertices.Add(affinevectormake(0,0,0),nullvector,ConvertRGBColor([255,0,0]));
-                Mesh.vertices.Add(affinevectormake(1,0,0),nullvector,ConvertRGBColor([255,0,0]));
-                Mesh.vertices.Add(affinevectormake(1,1,0),nullvector,clrRed);
-                Mesh.vertices.Add(affinevectormake(0,1,0),nullvector,clrRed);}
-
-                //temp_int := Mesh.Colors.Count;
-                //temp_int := MeshObjects.Items[0].Colors.Count;
-                //Not right texture? The paintTarget texture that's in theAltGLObj.Material
-                //is different from the one that's on the MaterialLibrary, why?
-                //paintTex := MaterialLibrary.TextureByName('paintTarget');
-                //paintTex := solid.AltGLObj.Material.Texture;
-                //paintImg := solid.AltGLObj.Material.Texture.Image;
-
-                //Things[i].PaintBitmap.Canvas.Brush.Color := clWhite;
-                //Things[i].PaintBitmap.Canvas.pen.Color := clblack;
-                x := 150;
-                y := 150;
-                r := 260;
-                //If Random<0.01 then
-                //Solid.PaintBitmap.Canvas.Ellipse(rect(round(x-r), round(y-r), round(x+r), round(y+r)));
-                //Solid.PaintBitmap.Canvas.FillRect(10, 10, 500, 500);
-                //Solid.PaintBitmap.SaveToFile('nada1.bmp');
-                //solid.PaintBitmap.Canvas.Ellipse(0, 0, 500, 500);
-
-                //Get all Vertices from kind of thoot
-                {for I := 0 to GLFreeForm1.MeshObjects[11].Vertices.Count -1 do
-                begin
-                        GLFreeForm1.MeshObjects[11].Colors.add(ConvertRGBColor([255,0,0]));
-                end }
-
-                //TODO: list of meshes for j:=0 to MeshObjects.Count do begin
-                {if (random<0.01) and false then begin
-                for j:=0 to MeshObjects.Items[0].Vertices.Count - 1 do begin
-                    vert := MeshObjects.Items[0].Vertices.Items[j];
-                    Vec := Vector3SUB(Vector3Make(vert.V[0], vert.V[1], vert.V[2]), GunPos);
-
-                    angle := arccos((Vec[0]*GunDir[0] + Vec[1]*GunDir[1] + Vec[2]*GunDir[2])/
-                          (Vector3Length(vec)*Vector3Length(GunDir)));
-
-                    if (angle < (3.14/3)) then begin
-                      x := round(370*MeshObjects.Items[0].TexCoords.Items[j].V[0]);
-                      y := round(200*MeshObjects.Items[0].TexCoords.Items[j].V[1]);
-                      r := 60;
-                      a := 1;
-                      b := 1;
-                      c := 1;
-                      intensity := a*exp((-(angle-b)*(angle-b))/(2*c*c));
-                      Things[i].PaintBitmap.Canvas.Ellipse(rect(round(x-r), round(y-r), round(x+r), round(y+r)));
-                    end;
-                end;
-                end;}
-
-                {temp_int := MeshObjects.Items[0].Vertices.Count;
-                temp_int := MeshObjects.Items[0].TexCoords.Count;
-                temp_int := MeshObjects.Items[0].Colors.Count;
-
-                (Things[i].AltGLObj as TGLFreeForm).MaterialLibrary := nil;
-                MeshObjects.Items[0].Colors.Clear;
-
-                if (random<0.01) and false then begin
-                for j:=0 to MeshObjects.Items[0].Vertices.Count - 1 do begin
-                    vert := MeshObjects.Items[0].Vertices.Items[j];
-                    Vec := Vector3SUB(Vector3Make(vert.V[0], vert.V[1], vert.V[2]), GunPos);
-
-                    angle := arccos((Vec[0]*GunDir[0] + Vec[1]*GunDir[1] + Vec[2]*GunDir[2])/
-                          (Vector3Length(vec)*Vector3Length(GunDir)));
-
-                    if (vert.V[2] > 0.09) or true then begin
-                       MeshObjects.Items[0].Colors.add(255,0,0,1);
-                       MeshObjects[0].Colors.add(ConvertRGBColor([255,0,0]));
-                    end;
-                end;
-                end;}
-
-                temp_int := MeshObjects.Items[0].Colors.Count;
-                //paintImg := TGLDynamicTextureImage(paintTex.Image);
-                //paintImg := solid.AltGLObj.Material.Texture.Image;
-                //heatmapTex := MaterialLibrary.TextureByName('paintTargetHeatmap');
-                //heatmapImg := TGLDynamicTextureImage(heatmapTex.Image);
-                //paintImg.UsePBO := False;
-                //heatmapImg.UsePBO := False;
-
-                //Rendering context must be active! como??
-                {paintImg.BeginUpdate;
-                paintTex.BeginUpdate;
-                p := paintImg.Data;
-                for Y := paintImg.DirtyRectangle.Top to paintImg.DirtyRectangle.Bottom - 1 do
-                begin
-                  for X := paintImg.DirtyRectangle.Left to paintImg.DirtyRectangle.Right - 1 do
-                  begin
-                    p^.rgbRed := ((X xor Y) + 50) and 255;
-                    p^.rgbGreen := ((X + 50) xor Y) and 255;
-                    p^.rgbBlue := ((X - 50) xor (Y + 50)) and 255;
-                    Inc(p);
-                  end;
-                end;
-                paintImg.EndUpdate;
-                paintTex.EndUpdate;}
-              end;
+              (Things[i].AltGLObj as TGLFreeForm).StructureChanged;
             end;
           end;
+        end; //end isPaintTarget
 
-          {if assigned(Things[i].AltGLObj) and assigned(Things[i].PaintBitmap) then begin
-            //Things[i].PaintBitmap.SaveToFile('nada.bmp');
-            Things[i].AltGLObj.Material.Texture.Image.BeginUpdate;
-            img := Things[i].AltGLObj.Material.Texture.Image.GetBitmap32();
-            img.Assign(Things[i].PaintBitmap);
-            Things[i].AltGLObj.Material.TextureEX.Items[0].Texture.Image.Assign(Things[i].PaintBitmap);
-            Things[i].AltGLObj.Material.Texture.Image.endUpdate;
-          end;}
-        end;
-        //end isPaintTarget
       end;
 
       //Sensors

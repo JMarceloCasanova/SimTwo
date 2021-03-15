@@ -6,10 +6,43 @@
   
     <cuboid>
       <ID value='Basegun'/>
+      <mass value='0.001'/>
+      <size x='0.02' y='0.04' z='0.08'/>
+      <pos x='0' y='0' z='0.04'/>
+      <rot_deg x='0' y='45' z='0'/>
+      <color_rgb r='150' g='150' b='150'/>
+    </cuboid>
+
+  </solids>
+
+  <sensors>
+
+    <spraygun>
+      <absolute_coords/>
+      <beam length='0.5' initial_width='0' final_width='0.1'/>
+      <pos x='0' y='0' z='0.04'/>
+      <rot_deg x='0' y='45' z='0'/>
+      <color_rgb r='200' g='0' b='0'/>
+      <paint_color_rgb r='0' g='100' b='255'/>
+      <paint_rate value='0.001'/>
+    </spraygun>
+
+  </sensors>
+     
+</robot>
+    
+    
+ <!--   
+<robot>
+
+  <solids>
+  
+    <cuboid>
+      <ID value='Basegun'/>
       <mass value='0.08'/>
       <size x='0.03' y='0.08' z='0.08'/>
-      <pos x='0' y='0' z='0.05'/>
-      <rot_deg x='0' y='0' z='0'/>
+      <pos x='0' y='0' z='0.04'/>
+      <rot_deg x='-45' y='0' z='0'/>
       <color_rgb r='150' g='150' b='150'/>
     </cuboid>
 
@@ -20,14 +53,13 @@
     <spraygun>
       <absolute_coords/>
       <beam length='0.4' initial_width='0.004' final_width='0.1'/>
-      <pos x='0' y='0' z='0'/>
-      <rot_deg x='0' y='0' z='90'/>
+      <pos x='0' y='0' z='0.04'/>
+      <rot_deg x='-45' y='0' z='90'/>
       <color_rgb r='200' g='0' b='0'/>
+      <paint_color_rgb r='0' g='100' b='255'/>
+      <paint_rate value='0.001'/>
     </spraygun>
 
   </sensors>
      
-</robot>
-    
-    
-    
+</robot>-->

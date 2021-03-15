@@ -17,6 +17,11 @@ var
   ReqThetas: matrix;
   Tol, tis: double;
 
+  //JM
+  lr_mode: integer;
+  ud_mode: integer;
+  //spray gun
+  sg_x, sg_y, sg_z, sg_theta: double;
 
 function DHMat(a, alpha, d, theta: double): Matrix;
 var ct, st, ca, sa: double;
@@ -124,6 +129,81 @@ var i: integer;
 
     HeadPos, HeadRot: matrix;
 begin
+//jm
+  if RCButtonPressed(6, 9) then lr_mode:=1;
+  if RCButtonPressed(6, 10) then lr_mode:=3;
+  if RCButtonPressed(6, 11) then lr_mode:=5;
+  if RCButtonPressed(6, 12) then lr_mode:=7;
+  if RCButtonPressed(7, 9) then ud_mode:=2;
+  if RCButtonPressed(7, 10) then ud_mode:=4;
+  if RCButtonPressed(7, 11) then ud_mode:=6;
+  if RCButtonPressed(7, 12) then ud_mode:=8;
+
+  case lr_mode of
+    1: begin
+        if KeyPressed(vk_left) then begin
+          sg_x := sg_x-0.05;
+        end else if KeyPressed(vk_right) then begin
+          sg_x := sg_x+0.05;
+        end
+       end;
+    3: begin
+        if KeyPressed(vk_left) then begin
+          sg_y := sg_y-0.05;
+        end else if KeyPressed(vk_right) then begin
+          sg_y := sg_y+0.05;
+        end
+       end;
+    5: begin
+        if KeyPressed(vk_left) then begin
+          sg_z := sg_z-0.05;
+        end else if KeyPressed(vk_right) then begin
+          sg_z := sg_z+0.05;
+        end
+       end;
+    7: begin
+        if KeyPressed(vk_left) then begin
+          sg_theta := sg_theta+0.05;
+        end else if KeyPressed(vk_right) then begin
+          sg_theta := sg_theta-0.05;
+        end
+       end;
+  end;
+  case ud_mode of
+    2: begin
+        if KeyPressed(vk_down) then begin
+          sg_x := sg_x-0.05;
+        end else if KeyPressed(vk_up) then begin
+          sg_x := sg_x+0.05;
+        end
+       end;
+    4: begin
+        if KeyPressed(vk_down) then begin
+          sg_y := sg_y-0.05;
+        end else if KeyPressed(vk_up) then begin
+          sg_y := sg_y+0.05;
+        end
+       end;
+    6: begin
+        if KeyPressed(vk_down) then begin
+          sg_z := sg_z-0.05;
+        end else if KeyPressed(vk_up) then begin
+          sg_z := sg_z+0.05;
+        end
+       end;
+    8: begin
+        if KeyPressed(vk_down) then begin
+          sg_theta := sg_theta-0.05;
+        end else if KeyPressed(vk_up) then begin
+          sg_theta := sg_theta+0.05;
+        end
+       end;
+  end;
+
+  SetRobotPos(2, sg_x, sg_y, sg_z, sg_theta);
+
+  //end jm
+
   UpdateScrew(1);
 
   B5Pos := GetSolidPosMat(iRobot, iB5);
@@ -183,6 +263,15 @@ end;
 procedure Initialize;
 var i: integer;
 begin
+    //JM
+  lr_mode:=1;
+  ud_mode:= 4;
+  //spray gun
+  sg_x:=0;
+  sg_y:=-0.5;
+  sg_z:=0.6;
+  sg_theta:=0;
+
   irobot := 0;
   iScrew := 1;
 

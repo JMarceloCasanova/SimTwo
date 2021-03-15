@@ -8,18 +8,18 @@
     <col num="4" width="54" />
     <col num="5" width="47" />
     <col num="6" width="46" />
-    <col num="7" width="45" />
-    <col num="8" width="56" />
+    <col num="7" width="62" />
+    <col num="8" width="76" />
     <col num="9" width="54" />
   </columns>
   <cells>
     <cell r="2" c="2" text="Pos (deg)" />
-    <cell r="3" c="2" text="-0.00675" />
-    <cell r="4" c="2" text="-0.00651" />
-    <cell r="5" c="2" text="0.0128" />
-    <cell r="6" c="2" text="-0.404" />
-    <cell r="7" c="2" text="-0.0141" />
-    <cell r="8" c="2" text="1.67" />
+    <cell r="3" c="2" text="-0.00107" />
+    <cell r="4" c="2" text="-0.0197" />
+    <cell r="5" c="2" text="0.0476" />
+    <cell r="6" c="2" text="0.307" />
+    <cell r="7" c="2" text="-0.0155" />
+    <cell r="8" c="2" text="-1.3" />
     <cell r="2" c="1" text="Joint" />
     <cell r="4" c="1" text="1" />
     <cell r="3" c="1" text="0" />
@@ -27,25 +27,25 @@
     <cell r="6" c="1" text="3" />
     <cell r="7" c="1" text="4" />
     <cell r="8" c="1" text="5" />
-    <cell r="13" c="2" text="0.5499712" />
+    <cell r="13" c="2" text="0.5499452" />
     <cell r="11" c="1" text="X:" />
     <cell r="12" c="1" text="Y:" />
     <cell r="13" c="1" text="Z:" />
-    <cell r="11" c="2" text="0.7700274" />
-    <cell r="12" c="2" text="-0.00008860978" />
+    <cell r="11" c="2" text="-1.229971" />
+    <cell r="12" c="2" text="-0.00003450124" />
     <cell r="10" c="2" text="B5" />
     <cell r="15" c="2" text="B6" />
-    <cell r="16" c="2" text="0.8050282" />
-    <cell r="17" c="2" text="-0.0001000922" />
-    <cell r="18" c="2" text="0.5499558" />
+    <cell r="16" c="2" text="-1.194969" />
+    <cell r="17" c="2" text="-0.00003914416" />
+    <cell r="18" c="2" text="0.5499138" />
     <cell r="16" c="4" text="1.000" />
     <cell r="16" c="5" text="0.000" />
-    <cell r="16" c="6" text="0.000" />
+    <cell r="16" c="6" text="0.001" />
     <cell r="17" c="4" text="0.000" />
     <cell r="17" c="5" text="1.000" />
-    <cell r="17" c="6" text="-0.022" />
-    <cell r="18" c="4" text="0.000" />
-    <cell r="18" c="5" text="0.022" />
+    <cell r="17" c="6" text="0.017" />
+    <cell r="18" c="4" text="-0.001" />
+    <cell r="18" c="5" text="-0.017" />
     <cell r="18" c="6" text="1.000" />
     <cell r="21" c="2" text="30" />
     <cell r="24" c="1" text="LTool:" />
@@ -58,7 +58,7 @@
     <cell r="30" c="2" text="0.5" />
     <cell r="15" c="4" text="B6 Rot" />
     <cell r="2" c="4" text="[Place]" />
-    <cell r="3" c="4" text="1.5E-7" />
+    <cell r="3" c="4" text="-3.2E-6" />
     <cell r="3" c="7" text="idle" />
     <cell r="27" c="4" text="RotT" />
     <cell r="28" c="4" text="1" />
@@ -70,5 +70,22 @@
     <cell r="30" c="4" text="0" />
     <cell r="29" c="5" text="1" />
     <cell r="30" c="6" text="1" />
+    <cell r="5" c="8" text="JM" />
+    <cell r="6" c="8" text="left and right" />
+    <cell r="7" c="8" text="up and down" />
+    <cell r="5" c="9" text="x" />
+    <cell r="5" c="10" text="y" />
+    <cell r="5" c="12" text="theta" />
+    <cell r="5" c="11" text="z" />
+    <cell r="6" c="9" text="[1]" />
+    <cell r="7" c="9" text="[2]" />
+    <cell r="6" c="10" text="[3]" />
+    <cell r="7" c="10" text="[4]" />
+    <cell r="6" c="11" text="[5]" />
+    <cell r="7" c="11" text="[6]" />
+    <cell r="6" c="12" text="[7]" />
+    <cell r="7" c="12" text="[8]" />
+    <cell r="6" c="7" text="(lr_mode)" />
+    <cell r="7" c="7" text="(ud_mode)" />
   </cells>
 </sheet>

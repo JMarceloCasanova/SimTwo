@@ -8,7 +8,7 @@ uses
   Windows, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, GLScene, GLObjects, {GLMisc,} GLLCLViewer, ODEImport, OpenGL1x,
   GLVectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls, GLTexture, GLGraphics,
-  keyboard, math, GLMaterial, GLVectorFileObjects, GLDynamicTexture;
+  keyboard, math, GLMaterial, GLVectorFileObjects, GLDynamicTexture, GLColor;
 
 const
   //ODE world constants
@@ -357,7 +357,8 @@ type
     Fmax, k1,k2: double;
     Vin: double;
     MaxDist, MinDist, StartAngle, EndAngle: double;
-
+    paintRate: single;
+    paintColor: TColorVector;
   private
     function InsideGLPolygonsTaged(x, y: double; GLFloor: TGLBaseSceneObject): boolean;
     procedure FreeMeasures;
