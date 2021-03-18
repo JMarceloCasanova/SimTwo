@@ -8,7 +8,9 @@ type
 
   TTrajectory = record
     points : array [0..500] of TPoint3D;
-
+    count: integer;
+    nextPoint: integer;
+    nextpointPerone: double;
   end;
 // Global Variables
 var
@@ -34,9 +36,46 @@ var
   paintMode: paintModes;
 
   ext: TExtents;
-
+  traj1 : TTrajectory;
   //spray gun
-  sg_x, sg_y, sg_z, sg_theta: double;
+  //sg_x, sg_y, sg_z,
+  sg : TPoint3D;
+  sg_theta: double;
+
+function diffTPoint3D(a, b:TPoint3D):TPoint3D;
+begin
+  result.x := a.x - b.x;
+  result.y := a.y - b.y;
+  result.z := a.z - b.z;
+end;
+function addTPoint3D(a, b:TPoint3D):TPoint3D;
+begin
+  result.x := a.x + b.x;
+  result.y := a.y + b.y;
+  result.z := a.z + b.z;
+end;
+function scaleTPoint3D(a:TPoint3D; scale: double):TPoint3D;
+begin
+  result.x := a.x * scale;
+  result.y := a.y * scale;
+  result.z := a.z * scale;
+end;
+function sizeTPoint3D(a:TPoint3D):double;
+begin
+  result := sqrt(a.x*a.x+a.y*a.y+a.z*a.z);
+end;
+function distTPoint3D(a, b:TPoint3D):double;
+begin
+  result := sizeTPoint3D(diffTPoint3D(a,b));
+end;
+function normTPoint3D(a:TPoint3D):TPoint3D;
+var dist: double;
+begin
+  dist := sizeTPoint3D(a);
+  result.x := a.x/dist;
+  result.y := a.y/dist;
+  result.z := a.z/dist;
+end;
 
 function DHMat(a, alpha, d, theta: double): Matrix;
 var ct, st, ca, sa: double;
@@ -134,10 +173,78 @@ begin
   tis := 0;
 end;
 
-procedure BoxRasterPaint(BoxSelectFace: faces; BoxOffset: double;BoxAngle: double;
-    BoxUStep: double);
+procedure RunTrajectory1(vel: double);
+var dist: double;
+    dirnorm: TPoint3D;
 begin
+  if traj1.nextPoint = 0 then begin
+    traj1.nextPoint := 1;
+    traj1.nextpointPerone := 0;
+    sg := traj1.points[0];
+  end else if traj1.nextPoint > traj1.count then begin
+    paintMode := pmNone;
+  end;
 
+  if traj1.nextpointPerone>0.95 then begin
+    traj1.nextPoint := traj1.nextPoint+1;
+    traj1.nextpointPerone := 0;
+  end;
+
+  dirnorm := normTPoint3D(diffTPoint3D(traj1.points[traj1.nextPoint], traj1.points[traj1.nextPoint-1]));
+  sg := AddTPoint3D(sg, scaleTPoint3D(dirnorm,vel));
+  traj1.nextpointPerone := distTPoint3D(sg, traj1.points[traj1.nextPoint-1])/distTPoint3D(traj1.points[traj1.nextPoint], traj1.points[traj1.nextPoint-1]);
+
+end;
+
+procedure DrawTrajectory(traj: TTrajectory);
+var i: integer;
+begin
+  ClearTrail(0);
+  SetTrailColor(0, 0, 255, 0);
+  for i:= 0 to traj.count-1 do begin
+    AddTrailNode(0, traj.points[i].X, traj.points[i].Y, traj.points[i].z);
+    SetRCValue(2,21+i, '[go]');
+    SetRCValue(3,21+i, FloatToStr(traj.points[i].X));
+    SetRCValue(4,21+i, FloatToStr(traj.points[i].Y));
+    SetRCValue(5,21+i, FloatToStr(traj.points[i].Z));
+  end;
+  SetRCValue(1, 22, IntToStr(traj.count));
+  SetRCValue(3,21, FloatToStr(traj.points[0].X));
+  SetRCValue(4,21, FloatToStr(traj.points[0].Y));
+  SetRCValue(5,21, FloatToStr(traj.points[0].Z));
+  sg := traj.points[0];
+end;
+
+function CalculateBoxRaster(BoxSelectFace: faces; BoxOffset: double; BoxUStep: double): TTrajectory;
+var traj: TTrajectory;
+    faceExt: TExtents;
+    i: integer;
+begin
+  if BoxSelectFace = fTop then begin
+    faceExt := ext;
+    faceExt.min.Z := ext.max.Z + BoxOffset;
+    faceExt.max.Z := ext.max.Z + BoxOffset;
+    faceExt.min.X := faceExt.min.X - BoxUStep;
+    faceExt.max.X := faceExt.max.X + BoxUStep;
+    faceExt.min.Y := faceExt.min.Y - BoxUStep;
+    faceExt.max.Y := faceExt.max.Y + BoxUStep;
+  end;
+  traj.count := 2*round((faceExt.max.X - faceExt.min.X) / BoxUStep) + 1+2+2;
+  for i:= 0 to traj.count-1 do begin
+    traj.points[i*4].X := faceExt.min.X + i*2*BoxUStep;
+    traj.points[i*4].Y := faceExt.min.Y;
+    traj.points[i*4].Z := faceExt.max.Z;
+    traj.points[i*4+1].X := faceExt.min.X + i*2*BoxUStep;
+    traj.points[i*4+1].Y := faceExt.max.Y;
+    traj.points[i*4+1].Z := faceExt.max.Z;
+    traj.points[i*4+2].X := faceExt.min.X + (i*2+1)*BoxUStep;
+    traj.points[i*4+2].Y := faceExt.max.Y;
+    traj.points[i*4+2].Z := faceExt.max.Z;
+    traj.points[i*4+3].X := faceExt.min.X + (i*2+1)*BoxUStep;
+    traj.points[i*4+3].Y := faceExt.min.Y;
+    traj.points[i*4+3].Z := faceExt.max.Z;
+  end;
+  result := traj;
 end;
 
 
@@ -151,8 +258,8 @@ var i: integer;
 
     BoxSelectFace: faces;
     BoxOffset: double;
-    BoxAngle: double;
     BoxUStep, BoxVStep: double;
+    traj: TTrajectory;
 begin
 //jm
   if RCButtonPressed(6, 9) then lr_mode:=1;
@@ -165,14 +272,10 @@ begin
   if RCButtonPressed(7, 12) then ud_mode:=8;
 
   if RCButtonPressed(6, 13) then begin
-    sg_x := ext.Max.x;
-    sg_y := ext.Max.y;
-    sg_z := ext.Max.z;
+    sg := ext.Max;
   end;
   if RCButtonPressed(7, 13) then begin
-    sg_x := ext.Min.x;
-    sg_y := ext.Min.y;
-    sg_z := ext.Min.z;
+    sg := ext.Min;
   end;
 
   if RCButtonPressed(1,9) then controlMode := cmManual;
@@ -184,12 +287,22 @@ begin
     SetRCBackColor(2, 9, $7FFFFFFF);
     SetRCBackColor(3, 8, $7FFFFFFF);
     if RCButtonPressed(3,9) then begin
+      paintMode := pmBoxRaster;
       BoxSelectFace := fTop;
-      BoxOffset := 0.35;
-      BoxAngle := 0;
-      BoxUStep := 0.2;
-      BoxRasterPaint(BoxSelectFace, BoxOffset, BoxAngle, BoxUStep);
-
+      BoxOffset := 0.4;
+      BoxUStep := 0.1;
+      traj := CalculateBoxRaster(BoxSelectFace, BoxOffset, BoxUStep);
+      traj1 := traj;
+      DrawTrajectory(traj);
+    end;
+    if paintMode = pmBoxRaster then begin
+      SetRCValue(4, 8, 'Box Raster');
+      for i:=0 to traj1.count-1 do begin
+        if RCButtonPressed(2,21+i) then begin
+          sg := traj1.points[i];
+        end;
+      end;
+      RunTrajectory1(0.01);
     end;
   end else if controlMode = cmManual then begin
     SetRCValue(2,8,'Manual');
@@ -199,23 +312,23 @@ begin
     case lr_mode of
       1: begin
           if KeyPressed(vk_left) then begin
-            sg_x := sg_x-0.05;
+            sg.x := sg.x-0.05;
           end else if KeyPressed(vk_right) then begin
-            sg_x := sg_x+0.05;
+            sg.x := sg.x+0.05;
           end
          end;
       3: begin
           if KeyPressed(vk_left) then begin
-            sg_y := sg_y-0.05;
+            sg.y := sg.y-0.05;
           end else if KeyPressed(vk_right) then begin
-            sg_y := sg_y+0.05;
+            sg.y := sg.y+0.05;
           end
          end;
       5: begin
           if KeyPressed(vk_left) then begin
-            sg_z := sg_z-0.05;
+            sg.z := sg.z-0.05;
           end else if KeyPressed(vk_right) then begin
-            sg_z := sg_z+0.05;
+            sg.z := sg.z+0.05;
           end
          end;
       7: begin
@@ -229,23 +342,23 @@ begin
     case ud_mode of
       2: begin
           if KeyPressed(vk_down) then begin
-            sg_x := sg_x-0.05;
+            sg.x := sg.x-0.05;
           end else if KeyPressed(vk_up) then begin
-            sg_x := sg_x+0.05;
+            sg.x := sg.x+0.05;
           end
          end;
       4: begin
           if KeyPressed(vk_down) then begin
-            sg_y := sg_y-0.05;
+            sg.y := sg.y-0.05;
           end else if KeyPressed(vk_up) then begin
-            sg_y := sg_y+0.05;
+            sg.y := sg.y+0.05;
           end
          end;
       6: begin
           if KeyPressed(vk_down) then begin
-            sg_z := sg_z-0.05;
+            sg.z := sg.z-0.05;
           end else if KeyPressed(vk_up) then begin
-            sg_z := sg_z+0.05;
+            sg.z := sg.z+0.05;
           end
          end;
       8: begin
@@ -258,7 +371,7 @@ begin
     end;
   end;
 
-  SetRobotPos(2, sg_x, sg_y, sg_z, sg_theta);
+  SetRobotPos(2, sg.x, sg.y, sg.z, sg_theta);
 
   //end jm
 
@@ -321,8 +434,6 @@ end;
 procedure Initialize;
 var i: integer;
 begin
-
-
   irobot := 0;
   iScrew := 1;
 
@@ -352,9 +463,9 @@ begin
   lr_mode:=1;
   ud_mode:= 4;
   //spray gun
-  sg_x:=0;
-  sg_y:=-0.5;
-  sg_z:=0.6;
+  sg.x:=0;
+  sg.y:=-1.5;
+  sg.z:=0.6;
   sg_theta:=0;
   controlMode := cmManual;
   paintMode := pmNone;

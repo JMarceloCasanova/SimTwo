@@ -1554,8 +1554,8 @@ begin
       newSolid.paintHeatmap := TVectorList.Create;
       newSolid.paintmap := TVectorList.Create;
       newSolid.paintThickness := TDoubleList.Create;
-      //newSolid.paintMode := pmPaint;
-      newSolid.paintMode := pmHeatmap;
+      newSolid.paintMode := pmPaint;
+      //newSolid.paintMode := pmHeatmap;
       for j:=0 to Mesh.Vertices.Count - 1 do begin
         newSolid.paintmap.Add(ConvertRGBColor([255,255,255]));
         newSolid.paintHeatmap.Add(newSolid.CalculateHeatmapColor(0));
