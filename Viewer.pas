@@ -14,7 +14,7 @@ uses
   GLFireFX, GlGraphics, OpenGL1x, SimpleParser, GLBitmapFont,
   GLMesh, GLWaterPlane, glzbuffer, GLLCLViewer, GLMaterial, GLColor,
   GLKeyboard, GLFileOBJ, GLFileSTL, GLFilePLY, GLFileB3D, IntfGraphics,
-  GLVectorTypes;
+  GLVectorTypes, GLVectorLists;
 
 type
   TRemoteImage = packed record
@@ -1551,8 +1551,20 @@ begin
       Mesh := (newSolid.AltGLObj as TGLFreeForm).MeshObjects[0];
       Mesh.TexCoords.Clear;
       Mesh.Colors.Clear;
+      newSolid.paintHeatmap := TVectorList.Create;
+      newSolid.paintmap := TVectorList.Create;
+      newSolid.paintThickness := TDoubleList.Create;
+      //newSolid.paintMode := pmPaint;
+      newSolid.paintMode := pmHeatmap;
       for j:=0 to Mesh.Vertices.Count - 1 do begin
-          Mesh.Colors.Add(ConvertRGBColor([255,255,255]));
+        newSolid.paintmap.Add(ConvertRGBColor([255,255,255]));
+        newSolid.paintHeatmap.Add(newSolid.CalculateHeatmapColor(0));
+        newSolid.paintThickness.Add(0);
+        if(newSolid.paintMode = pmPaint) then begin
+          Mesh.Colors.Add(newSolid.paintmap[j]);
+        end else if (newSolid.paintMode = pmHeatmap) then begin
+          Mesh.Colors.Add(newSolid.paintHeatmap[j]);
+        end;
       end;
     end;
     PositionSceneObject(newSolid.AltGLObj, newSolid.Geom);
@@ -4633,7 +4645,7 @@ var r, j, i, n: integer;
     VertPos, VertDir: TVector3f;
     GunVert: TVector3f;
     Dist, angle_side, angle: double;
-    intensity, a, b, c: double;
+    intensity, sd: double;
     resultColor: TColorVector;
 
     temp_int: integer;
@@ -4740,40 +4752,41 @@ begin
                    showmessage('meshes without normals not supported yet, only the first mesh will be used');
                 end;
                 //GunDir := Vector3fMake(sensor.GLObj.Direction.X, sensor.GLObj.Direction.Y, sensor.GLObj.Direction.Z);
-                GunDir := Vector3fMake(-sensor.GLObj.Up.X, -sensor.GLObj.Up.Y, -sensor.GLObj.Up.Z);
-                //GunDir := Vector3fMake(1,0,0);
-                //GunDir := VectorRotateAroundX(GunDir, sensor.GLObj.RollAngle);
-                //GunDir := VectorRotateAroundY(GunDir, sensor.GLObj.PitchAngle);
-                //GunDir := VectorRotateAroundZ(GunDir, sensor.GLObj.TurnAngle);
+                GunDir := Vector3fMake(-sensor.GLObj.Up.X, -sensor.GLObj.Up.Y, -sensor.GLObj.Up.Z);//Assuming the ray is on the X axis
                 GunPos := Vector3fMake(sensor.GLObj.Position.X, sensor.GLObj.Position.Y, sensor.GLObj.Position.Z);
                 VertPos := Mesh.Vertices[j];
+                //corrections for scene settings:
+                //VertPos := VectorScale(VertPos, (Things[i].AltGLObj as TGLFreeForm).AbsoluteAffineScale);
+                //VertPos := VectorAdd(VertPos, (Things[i].AltGLObj as TGLFreeForm).AbsoluteAffinePosition);
+                VertPos := VectorTransform(VertPos, (Things[i].AltGLObj as TGLFreeForm).AbsoluteMatrix);
                 VertDir := Mesh.Normals[j];
                 GunVert := VectorSubtract(VertPos, GunPos);
                 angle_side := arccos((VertDir.V[0]*GunDir.V[0] + VertDir.V[1]*GunDir.V[1] + VertDir.V[2]*GunDir.V[2])/
-                            (VectorLength(VertDir)*VectorLength(GunDir)));
-                //angle := arccos((VertGun.V[0]*-GunDir.V[0] + VertGun.V[1]*-GunDir.V[1] + VertGun.V[2]*-GunDir.V[2])/(VectorLength(VertGun)*VectorLength(GunDir)));
-                //angle := arccos(VectorAngleCosine(GunVert, GunDir));//NormalizeAngle() -> [-pi,pi]
-                //angle := NormalizeAngle(angle);
-                angle := arccos((GunVert.V[0]*GunDir.V[0] + GunVert.V[1]*GunDir.V[1] + GunVert.V[2]*GunDir.V[2])/(VectorLength(GunVert)*VectorLength(GunDir)));
-                Dist := VectorLength(GunVert);
+                                                               (VectorLength(VertDir)*VectorLength(GunDir)));
+                angle := arccos((GunVert.V[0]*GunDir.V[0] + GunVert.V[1]*GunDir.V[1] + GunVert.V[2]*GunDir.V[2])/
+                                                          (VectorLength(GunVert)*VectorLength(GunDir)));
                 if (abs(angle_side) > pi/2) and (abs(angle) < 0.2) then begin
-                //if VertPos.z < GunPos.z then begin
-                //if Dist < 0.1 then begin
                   Dist := VectorLength(GunVert);
-                  a := 1;b := 1;c := 1;
-                  intensity := a*exp((-(angle-b)*(angle-b))/(2*c*c));
-                  resultColor := VectorAdd(Mesh.Colors[j], VectorScale(VectorSubtract(sensor.paintColor,Mesh.Colors[j]), sensor.paintRate));
-                  //resultColor := VectorScale(resultColor, intensity);
-                  //Mesh.Colors[j] := resultColor;
-                  Mesh.Colors[j] := sensor.paintColor;
+                  sd := 0.1;
+                  intensity := exp(-0.5*(angle/sd)*(angle/sd));
+                  resultColor := VectorAdd(Mesh.Colors[j], VectorScale(VectorSubtract(sensor.paintColor, Mesh.Colors[j]), sensor.paintRate*intensity));
+                  Things[i].paintmap[j] := resultColor;
+                  Things[i].paintThickness[j] := Things[i].paintThickness[j] + sensor.paintRate*0.00015*intensity;
+                  Things[i].paintHeatmap[j] := Things[i].CalculateHeatmapColor(Things[i].paintThickness[j]);
+                  if(Things[i].paintMode = pmPaint) then begin
+                    Mesh.Colors[j] := Things[i].paintmap[j];
+                  end else if (Things[i].paintMode = pmHeatmap) then begin
+                    Mesh.Colors[j] := Things[i].paintHeatmap[j];
+                  end;
+                  //binary option: Mesh.Colors[j] := sensor.paintColor;
                 end else begin
-                  Mesh.Colors[j] := ConvertRGBColor([255,255,255]);
+                  //only spray cone (paint doesn't stick) Mesh.Colors[j] := ConvertRGBColor([255,255,255]);
                 end;
               end;
               (Things[i].AltGLObj as TGLFreeForm).StructureChanged;
             end;
           end;
-        end; //end isPaintTarget
+        end;
 
       end;
 

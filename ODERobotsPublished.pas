@@ -4,7 +4,8 @@ unit ODERobotsPublished;
 
 interface
 
-uses Graphics, Types, ODERobots, PathFinder, dynmatrix, GLKeyboard, ODEGL;
+uses Graphics, Types, ODERobots, PathFinder, dynmatrix, GLKeyboard, ODEGL,
+  GLVectorFileObjects, GLGeometryBB;
 
 type
   TAxisPoint = record
@@ -67,6 +68,11 @@ type
     Green: integer;
     Blue: integer;
     alpha: integer;
+  end;
+
+  TExtents = record
+    Min: TPoint3D;
+    Max: TPoint3D;
   end;
 
 procedure SetFireScale(x, y, z: double);
@@ -134,6 +140,8 @@ function GetSolidCanvas(R, i: integer): TCanvas;
 procedure SolidCanvasClear(R, i: integer);
 //function GetSolidBitmap(R, i: integer): TBitmap;
 //procedure SolidCanvasDrawText(R, i: integer; x, y: integer; txt: string);
+
+function GetPaintTargetExtents(i: integer): TExtents;
 
 procedure SetSolidSurfaceFriction(R, i: integer; mu, mu2: double);
 
@@ -1074,6 +1082,31 @@ begin
     Canvas.FillRect(Rect(0,0, Width, Height) );
   end;
 end;
+
+function GetPaintTargetExtents(i: integer): TExtents;
+var j,k: integer;
+    aabb: TAABB;
+begin
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          (WorldODE.Things[i].AltGLObj as TGLFreeForm).MeshObjects[0].GetExtents(aabb);
+          result.Max.x := aabb.Max.X;
+          result.Max.y := aabb.Max.Y;
+          result.Max.z := aabb.Max.Z;
+          result.Min.x := aabb.Min.X;
+          result.Min.y := aabb.Min.Y;
+          result.Min.z := aabb.Min.Z;
+       end;
+    end;
+  end;
+end;
+
+//GetExtents(out min, max: TAffineVector);
+//GetExtents(out aabb: TAABB);
+
 
 procedure SetSolidSurfaceFriction(R, i: integer; mu, mu2: double);
 begin

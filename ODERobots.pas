@@ -8,7 +8,8 @@ uses
   Windows, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, GLScene, GLObjects, {GLMisc,} GLLCLViewer, ODEImport, OpenGL1x,
   GLVectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls, GLTexture, GLGraphics,
-  keyboard, math, GLMaterial, GLVectorFileObjects, GLDynamicTexture, GLColor;
+  keyboard, math, GLMaterial, GLVectorFileObjects, GLDynamicTexture, GLColor,
+  GLVectorLists;
 
 const
   //ODE world constants
@@ -75,6 +76,8 @@ type
   TMatterProperty = (smMetallic, smFerroMagnetic, smRFIDTag);
   TMatterProperties = set of TMatterProperty;
 
+  TPaintMode = (pmPaint, pmHeatmap);//pmOriginal
+
   { TSolid }
 
   TSolid = class
@@ -84,6 +87,10 @@ type
     PaintBitmap: TBitmap;
     PaintBitmapCorner: TdVector3;
     isPaintTarget: bool;
+    paintThickness: TDoubleList;
+    paintHeatmap: TVectorList;
+    paintmap: TVectorList;
+    paintMode: TPaintMode;
     kind: TSolidKind;
     MatterProperties: TMatterProperties;
     BeltSpeed: double;
@@ -120,6 +127,7 @@ type
     procedure SetSurfaceFriction(mu, mu2: double);
     procedure SetSurfacePars(mu, mu2, softness, bounce, bounce_tresh: double);
     procedure UpdateGLCanvas;
+    function CalculateHeatmapColor(paintThickness: double): TColorVector;
   end;
 
   TSolidList = class(TList)
@@ -993,6 +1001,28 @@ begin
   end;
 end;
 
+function TSolid.CalculateHeatmapColor(paintThickness: double): TColorVector;
+var r,g,b:integer;
+    max, min, avg: double;
+begin
+  min := 0;
+  max := 0.00015*50;
+  avg := (max-min)/2;
+  if paintThickness > max then begin
+    result := ConvertRGBColor([255,0,0]);
+  end else begin
+    if paintThickness < avg then begin
+      b := round((0-255)/(avg-min)*paintThickness + 255);
+      g := round(255/(avg-min)*paintThickness);
+      r:=0;
+    end else begin
+      b:=0;
+      g := round((0-255)/(avg-min)*paintThickness - (0-255)/(avg-min)*max);
+      r:= round(255/(max-avg)*paintThickness - 255/(max-avg)*avg);
+    end;
+    result := ConvertRGBColor([r,g,b]);
+  end;
+end;
 
 procedure TSolid.SetSurfacePars(mu, mu2, softness, bounce, bounce_tresh: double);
 begin

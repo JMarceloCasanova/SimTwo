@@ -1,9 +1,18 @@
 const
  NumJoints = 6;
  NumScrews = 1;
+type
+  faces = (fTop, fBottom, fLeft, fRight, fBack, fFront);
+  controlModes = (cmManual, cmPaintModes);
+  paintModes = (pmNone, pmBoxRaster);
 
+  TTrajectory = record
+    points : array [0..500] of TPoint3D;
+
+  end;
 // Global Variables
 var
+
   irobot, iScrew, iB5, iB6, iHead: integer;
   d1, d2, d3: double;
   
@@ -20,6 +29,12 @@ var
   //JM
   lr_mode: integer;
   ud_mode: integer;
+
+  controlMode: controlModes;
+  paintMode: paintModes;
+
+  ext: TExtents;
+
   //spray gun
   sg_x, sg_y, sg_z, sg_theta: double;
 
@@ -119,6 +134,12 @@ begin
   tis := 0;
 end;
 
+procedure BoxRasterPaint(BoxSelectFace: faces; BoxOffset: double;BoxAngle: double;
+    BoxUStep: double);
+begin
+
+end;
+
 
 procedure Control;
 var i: integer;
@@ -126,8 +147,12 @@ var i: integer;
     B6Rot, B6RotCalc: Matrix;
     xw, yw, zw: double;
     RTool, XTool, XWrist, LTool: matrix;
-
     HeadPos, HeadRot: matrix;
+
+    BoxSelectFace: faces;
+    BoxOffset: double;
+    BoxAngle: double;
+    BoxUStep, BoxVStep: double;
 begin
 //jm
   if RCButtonPressed(6, 9) then lr_mode:=1;
@@ -139,65 +164,98 @@ begin
   if RCButtonPressed(7, 11) then ud_mode:=6;
   if RCButtonPressed(7, 12) then ud_mode:=8;
 
-  case lr_mode of
-    1: begin
-        if KeyPressed(vk_left) then begin
-          sg_x := sg_x-0.05;
-        end else if KeyPressed(vk_right) then begin
-          sg_x := sg_x+0.05;
-        end
-       end;
-    3: begin
-        if KeyPressed(vk_left) then begin
-          sg_y := sg_y-0.05;
-        end else if KeyPressed(vk_right) then begin
-          sg_y := sg_y+0.05;
-        end
-       end;
-    5: begin
-        if KeyPressed(vk_left) then begin
-          sg_z := sg_z-0.05;
-        end else if KeyPressed(vk_right) then begin
-          sg_z := sg_z+0.05;
-        end
-       end;
-    7: begin
-        if KeyPressed(vk_left) then begin
-          sg_theta := sg_theta+0.05;
-        end else if KeyPressed(vk_right) then begin
-          sg_theta := sg_theta-0.05;
-        end
-       end;
+  if RCButtonPressed(6, 13) then begin
+    sg_x := ext.Max.x;
+    sg_y := ext.Max.y;
+    sg_z := ext.Max.z;
   end;
-  case ud_mode of
-    2: begin
-        if KeyPressed(vk_down) then begin
-          sg_x := sg_x-0.05;
-        end else if KeyPressed(vk_up) then begin
-          sg_x := sg_x+0.05;
-        end
-       end;
-    4: begin
-        if KeyPressed(vk_down) then begin
-          sg_y := sg_y-0.05;
-        end else if KeyPressed(vk_up) then begin
-          sg_y := sg_y+0.05;
-        end
-       end;
-    6: begin
-        if KeyPressed(vk_down) then begin
-          sg_z := sg_z-0.05;
-        end else if KeyPressed(vk_up) then begin
-          sg_z := sg_z+0.05;
-        end
-       end;
-    8: begin
-        if KeyPressed(vk_down) then begin
-          sg_theta := sg_theta-0.05;
-        end else if KeyPressed(vk_up) then begin
-          sg_theta := sg_theta+0.05;
-        end
-       end;
+  if RCButtonPressed(7, 13) then begin
+    sg_x := ext.Min.x;
+    sg_y := ext.Min.y;
+    sg_z := ext.Min.z;
+  end;
+
+  if RCButtonPressed(1,9) then controlMode := cmManual;
+  if RCButtonPressed(1,10) then controlMode := cmPaintModes;
+
+  if controlMode = cmPaintModes then begin
+    SetRCValue(2,8,'PaintModes');
+    SetRCBackColor(2, 10, $0000FF00);
+    SetRCBackColor(2, 9, $7FFFFFFF);
+    SetRCBackColor(3, 8, $7FFFFFFF);
+    if RCButtonPressed(3,9) then begin
+      BoxSelectFace := fTop;
+      BoxOffset := 0.35;
+      BoxAngle := 0;
+      BoxUStep := 0.2;
+      BoxRasterPaint(BoxSelectFace, BoxOffset, BoxAngle, BoxUStep);
+
+    end;
+  end else if controlMode = cmManual then begin
+    SetRCValue(2,8,'Manual');
+    SetRCBackColor(2, 9, $7F00FFFF);
+    SetRCBackColor(2,10, $7FFFFFFF);
+    SetRCBackColor(3, 8, $7FAAAAAA);
+    case lr_mode of
+      1: begin
+          if KeyPressed(vk_left) then begin
+            sg_x := sg_x-0.05;
+          end else if KeyPressed(vk_right) then begin
+            sg_x := sg_x+0.05;
+          end
+         end;
+      3: begin
+          if KeyPressed(vk_left) then begin
+            sg_y := sg_y-0.05;
+          end else if KeyPressed(vk_right) then begin
+            sg_y := sg_y+0.05;
+          end
+         end;
+      5: begin
+          if KeyPressed(vk_left) then begin
+            sg_z := sg_z-0.05;
+          end else if KeyPressed(vk_right) then begin
+            sg_z := sg_z+0.05;
+          end
+         end;
+      7: begin
+          if KeyPressed(vk_left) then begin
+            sg_theta := sg_theta+0.05;
+          end else if KeyPressed(vk_right) then begin
+            sg_theta := sg_theta-0.05;
+          end
+         end;
+    end;
+    case ud_mode of
+      2: begin
+          if KeyPressed(vk_down) then begin
+            sg_x := sg_x-0.05;
+          end else if KeyPressed(vk_up) then begin
+            sg_x := sg_x+0.05;
+          end
+         end;
+      4: begin
+          if KeyPressed(vk_down) then begin
+            sg_y := sg_y-0.05;
+          end else if KeyPressed(vk_up) then begin
+            sg_y := sg_y+0.05;
+          end
+         end;
+      6: begin
+          if KeyPressed(vk_down) then begin
+            sg_z := sg_z-0.05;
+          end else if KeyPressed(vk_up) then begin
+            sg_z := sg_z+0.05;
+          end
+         end;
+      8: begin
+          if KeyPressed(vk_down) then begin
+            sg_theta := sg_theta-0.05;
+          end else if KeyPressed(vk_up) then begin
+            sg_theta := sg_theta+0.05;
+          end
+         end;
+    end;
   end;
 
   SetRobotPos(2, sg_x, sg_y, sg_z, sg_theta);
@@ -263,14 +321,7 @@ end;
 procedure Initialize;
 var i: integer;
 begin
-    //JM
-  lr_mode:=1;
-  ud_mode:= 4;
-  //spray gun
-  sg_x:=0;
-  sg_y:=-0.5;
-  sg_z:=0.6;
-  sg_theta:=0;
+
 
   irobot := 0;
   iScrew := 1;
@@ -296,4 +347,24 @@ begin
 
   state := 'idle';
   Tol := 0.2;
+
+  //JM
+  lr_mode:=1;
+  ud_mode:= 4;
+  //spray gun
+  sg_x:=0;
+  sg_y:=-0.5;
+  sg_z:=0.6;
+  sg_theta:=0;
+  controlMode := cmManual;
+  paintMode := pmNone;
+
+  ext := GetPaintTargetExtents(0);
+
+  SetRCValue(11, 8, format('%.2f',[ext.Max.x]));
+  SetRCValue(11, 9, format('%.2f',[ext.Max.y]));
+  SetRCValue(11, 10, format('%.2f',[ext.Max.z]));
+  SetRCValue(12, 8, format('%.2f',[ext.Min.x]));
+  SetRCValue(12, 9, format('%.2f',[ext.Min.y]));
+  SetRCValue(12, 10, format('%.2f',[ext.Min.z]));
 end;
