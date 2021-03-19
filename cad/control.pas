@@ -215,7 +215,7 @@ begin
   sg := traj.points[0];
 end;
 
-function CalculateBoxRaster(BoxSelectFace: faces; BoxOffset: double; BoxUStep: double): TTrajectory;
+function CalculateBoxRaster(BoxSelectFace: faces; BoxOffset: double; BoxUStep, BoxVExtend: double): TTrajectory;
 var traj: TTrajectory;
     faceExt: TExtents;
     i: integer;
@@ -226,10 +226,10 @@ begin
     faceExt.max.Z := ext.max.Z + BoxOffset;
     faceExt.min.X := faceExt.min.X - BoxUStep;
     faceExt.max.X := faceExt.max.X + BoxUStep;
-    faceExt.min.Y := faceExt.min.Y - BoxUStep;
-    faceExt.max.Y := faceExt.max.Y + BoxUStep;
+    faceExt.min.Y := faceExt.min.Y - BoxVExtend;
+    faceExt.max.Y := faceExt.max.Y + BoxVExtend;
   end;
-  traj.count := 2*round((faceExt.max.X - faceExt.min.X) / BoxUStep) + 1+2+2;
+  traj.count := 2*round((faceExt.max.X - faceExt.min.X) / BoxUStep) + 2;
   for i:= 0 to traj.count-1 do begin
     traj.points[i*4].X := faceExt.min.X + i*2*BoxUStep;
     traj.points[i*4].Y := faceExt.min.Y;
@@ -258,7 +258,7 @@ var i: integer;
 
     BoxSelectFace: faces;
     BoxOffset: double;
-    BoxUStep, BoxVStep: double;
+    BoxUStep, BoxVExtend: double;
     traj: TTrajectory;
 begin
 //jm
@@ -270,6 +270,10 @@ begin
   if RCButtonPressed(7, 10) then ud_mode:=4;
   if RCButtonPressed(7, 11) then ud_mode:=6;
   if RCButtonPressed(7, 12) then ud_mode:=8;
+
+  if RCButtonPressed(6, 4) then ResetPaintTargetPaint(0);
+  if RCButtonPressed(7, 4) then SetPaintTargetPaintMode(0, pmPaint);
+  if RCButtonPressed(8, 4) then SetPaintTargetPaintMode(0, pmHeatmap);
 
   if RCButtonPressed(6, 13) then begin
     sg := ext.Max;
@@ -291,7 +295,8 @@ begin
       BoxSelectFace := fTop;
       BoxOffset := 0.4;
       BoxUStep := 0.1;
-      traj := CalculateBoxRaster(BoxSelectFace, BoxOffset, BoxUStep);
+      BoxVExtend := 0.3;
+      traj := CalculateBoxRaster(BoxSelectFace, BoxOffset, BoxUStep, BoxVExtend);
       traj1 := traj;
       DrawTrajectory(traj);
     end;
@@ -302,7 +307,7 @@ begin
           sg := traj1.points[i];
         end;
       end;
-      RunTrajectory1(0.01);
+      RunTrajectory1(0.015);
     end;
   end else if controlMode = cmManual then begin
     SetRCValue(2,8,'Manual');

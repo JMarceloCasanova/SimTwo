@@ -5,7 +5,7 @@ unit ODERobotsPublished;
 interface
 
 uses Graphics, Types, ODERobots, PathFinder, dynmatrix, GLKeyboard, ODEGL,
-  GLVectorFileObjects, GLGeometryBB;
+  GLVectorFileObjects, GLGeometryBB, GLColor;
 
 type
   TAxisPoint = record
@@ -75,6 +75,8 @@ type
     Max: TPoint3D;
   end;
 
+  TPaintVisuals = (pmPaint, pmHeatmap);
+
 procedure SetFireScale(x, y, z: double);
 procedure SetFirePosition(x, y, z: double);
 procedure StartFire;
@@ -142,6 +144,8 @@ procedure SolidCanvasClear(R, i: integer);
 //procedure SolidCanvasDrawText(R, i: integer; x, y: integer; txt: string);
 
 function GetPaintTargetExtents(i: integer): TExtents;
+procedure ResetPaintTargetPaint(i: integer);
+procedure SetPaintTargetPaintMode(i:integer; paintMode: TPaintVisuals);
 
 procedure SetSolidSurfaceFriction(R, i: integer; mu, mu2: double);
 
@@ -1104,9 +1108,36 @@ begin
   end;
 end;
 
-//GetExtents(out min, max: TAffineVector);
-//GetExtents(out aabb: TAABB);
+procedure ResetPaintTargetPaint(i: integer);
+var j, k, l: integer;
+begin
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to (WorldODE.Things[i].AltGLObj as TGLFreeForm).MeshObjects[0].Vertices.Count - 1 do begin
+              WorldODE.Things[j].paintmap[l] := ConvertRGBColor([255,255,255]);
+              WorldODE.Things[j].paintHeatmap[l] := WorldODE.Things[j].CalculateHeatmapColor(0);
+          end;
+       end;
+    end;
+  end;
+end;
 
+procedure SetPaintTargetPaintMode(i:integer; paintMode: TPaintVisuals);
+var j, k, l: integer;
+begin
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          WorldODE.Things[j].paintMode := TPaintMode(paintMode);
+       end;
+    end;
+  end;
+end;
 
 procedure SetSolidSurfaceFriction(R, i: integer; mu, mu2: double);
 begin

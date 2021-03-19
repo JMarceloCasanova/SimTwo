@@ -4646,7 +4646,6 @@ var r, j, i, n: integer;
     GunVert: TVector3f;
     Dist, angle_side, angle: double;
     intensity, sd: double;
-    resultColor: TColorVector;
 
     temp_int: integer;
 
@@ -4769,19 +4768,22 @@ begin
                   Dist := VectorLength(GunVert);
                   sd := 0.1;
                   intensity := exp(-0.5*(angle/sd)*(angle/sd));
-                  resultColor := VectorAdd(Mesh.Colors[j], VectorScale(VectorSubtract(sensor.paintColor, Mesh.Colors[j]), sensor.paintRate*intensity));
-                  Things[i].paintmap[j] := resultColor;
+                  Things[i].paintmap[j] := VectorAdd(Things[i].paintmap[j],
+                                        VectorScale(VectorSubtract(sensor.paintColor, Things[i].paintmap[j]), sensor.paintRate*intensity));;
                   Things[i].paintThickness[j] := Things[i].paintThickness[j] + sensor.paintRate*0.00015*intensity;
                   Things[i].paintHeatmap[j] := Things[i].CalculateHeatmapColor(Things[i].paintThickness[j]);
-                  if(Things[i].paintMode = pmPaint) then begin
-                    Mesh.Colors[j] := Things[i].paintmap[j];
-                  end else if (Things[i].paintMode = pmHeatmap) then begin
-                    Mesh.Colors[j] := Things[i].paintHeatmap[j];
-                  end;
+
                   //binary option: Mesh.Colors[j] := sensor.paintColor;
                 end else begin
                   //only spray cone (paint doesn't stick) Mesh.Colors[j] := ConvertRGBColor([255,255,255]);
                 end;
+
+                if(Things[i].paintMode = pmPaint) then begin
+                  Mesh.Colors[j] := Things[i].paintmap[j];
+                end else if (Things[i].paintMode = pmHeatmap) then begin
+                  Mesh.Colors[j] := Things[i].paintHeatmap[j];
+                end;
+
               end;
               (Things[i].AltGLObj as TGLFreeForm).StructureChanged;
             end;

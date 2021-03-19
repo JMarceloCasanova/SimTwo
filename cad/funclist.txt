@@ -153,6 +153,8 @@
  function GetSolidCanvas(R: LongInt; i: LongInt): TCanvas;
  procedure SolidCanvasClear(R: LongInt; i: LongInt);
  function GetPaintTargetExtents(i: LongInt): TExtents;
+ procedure ResetPaintTargetPaint(i: LongInt);
+ procedure SetPaintTargetPaintMode(i: LongInt; paintMode: TPaintVisuals);
  procedure SetSolidSurfaceFriction(R: LongInt; i: LongInt; mu: Double; mu2: Double);
  procedure SetSolidForce(R: LongInt; i: LongInt; Fx: Double; Fy: Double; Fz: Double);
  function GetSolidSize(R: LongInt; i: LongInt): TPoint3D;

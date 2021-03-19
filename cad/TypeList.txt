@@ -162,6 +162,7 @@ TOwnedCollection
 TOwnerDrawState
 TPage
 TPaintBox
+TPaintVisuals
 TPanel
 TPanelBevel
 TParser

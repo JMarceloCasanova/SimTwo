@@ -47,6 +47,7 @@ uses
   ,ODEGL
   ,GLVectorFileObjects
   ,GLGeometryBB
+  ,GLColor
   ,ODERobotsPublished
   ;
  
@@ -77,6 +78,7 @@ begin
   CL.AddTypeS('TRGBAColor', 'record Red : integer; Green : integer; Blue : inte'
    +'ger; alpha : integer; end');
   CL.AddTypeS('TExtents', 'record Min : TPoint3D; Max : TPoint3D; end');
+  CL.AddTypeS('TPaintVisuals', '( pmPaint, pmHeatmap )');
  CL.AddDelphiFunction('Procedure SetFireScale( x, y, z : double)');
  CL.AddDelphiFunction('Procedure SetFirePosition( x, y, z : double)');
  CL.AddDelphiFunction('Procedure StartFire');
@@ -120,6 +122,8 @@ begin
  CL.AddDelphiFunction('Function GetSolidCanvas( R, i : integer) : TCanvas');
  CL.AddDelphiFunction('Procedure SolidCanvasClear( R, i : integer)');
  CL.AddDelphiFunction('Function GetPaintTargetExtents( i : integer) : TExtents');
+ CL.AddDelphiFunction('Procedure ResetPaintTargetPaint( i : integer)');
+ CL.AddDelphiFunction('Procedure SetPaintTargetPaintMode( i : integer; paintMode : TPaintVisuals)');
  CL.AddDelphiFunction('Procedure SetSolidSurfaceFriction( R, i : integer; mu, mu2 : double)');
  CL.AddDelphiFunction('Procedure SetSolidForce( R, i : integer; Fx, Fy, Fz : double)');
  CL.AddDelphiFunction('Function GetSolidSize( R, i : integer) : TPoint3D');
@@ -380,6 +384,8 @@ begin
  S.RegisterDelphiFunction(@GetSolidCanvas, 'GetSolidCanvas', cdRegister);
  S.RegisterDelphiFunction(@SolidCanvasClear, 'SolidCanvasClear', cdRegister);
  S.RegisterDelphiFunction(@GetPaintTargetExtents, 'GetPaintTargetExtents', cdRegister);
+ S.RegisterDelphiFunction(@ResetPaintTargetPaint, 'ResetPaintTargetPaint', cdRegister);
+ S.RegisterDelphiFunction(@SetPaintTargetPaintMode, 'SetPaintTargetPaintMode', cdRegister);
  S.RegisterDelphiFunction(@SetSolidSurfaceFriction, 'SetSolidSurfaceFriction', cdRegister);
  S.RegisterDelphiFunction(@SetSolidForce, 'SetSolidForce', cdRegister);
  S.RegisterDelphiFunction(@GetSolidSize, 'GetSolidSize', cdRegister);
