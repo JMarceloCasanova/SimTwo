@@ -16,7 +16,7 @@
       <!--<painting_target/>-->
       <painting_target/>
       <mass value='1'/>
-      <mesh file='hood_scale1.stl' shadow='0' scale='1.2' x_offset='1.11' y_offset='-9.12' z_offset='9.13'/>
+      <mesh file='hood_ier.stl' shadow='0' scale='0.1' x_offset='1.11' y_offset='-9.12' z_offset='9.13'/>
       <!--<mesh file='BlueDice.obj' shadow='0' scale='0.04' x_offset='1.11' y_offset='-9.12' z_offset='9.13'/>-->
       <size x='0.1' y='0.1' z='0.1'/>
       <pos x='0' y='0' z='0.1/2'/>

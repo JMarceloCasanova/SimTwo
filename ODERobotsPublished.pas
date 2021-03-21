@@ -5,7 +5,7 @@ unit ODERobotsPublished;
 interface
 
 uses Graphics, Types, ODERobots, PathFinder, dynmatrix, GLKeyboard, ODEGL,
-  GLVectorFileObjects, GLGeometryBB, GLColor;
+  GLVectorFileObjects, GLGeometryBB, GLColor, GLVectorGeometry;
 
 type
   TAxisPoint = record
@@ -1097,6 +1097,8 @@ begin
        k:=k+1;
        if k=i then begin
           (WorldODE.Things[i].AltGLObj as TGLFreeForm).MeshObjects[0].GetExtents(aabb);
+          aabb.Min := VectorTransform(aabb.Min, (WorldODE.Things[i].AltGLObj as TGLFreeForm).AbsoluteMatrix);
+          aabb.Max := VectorTransform(aabb.Max, (WorldODE.Things[i].AltGLObj as TGLFreeForm).AbsoluteMatrix);
           result.Max.x := aabb.Max.X;
           result.Max.y := aabb.Max.Y;
           result.Max.z := aabb.Max.Z;

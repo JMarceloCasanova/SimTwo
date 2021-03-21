@@ -3,7 +3,7 @@ const
  NumScrews = 1;
 type
   faces = (fTop, fBottom, fLeft, fRight, fBack, fFront);
-  controlModes = (cmManual, cmPaintModes);
+  controlModes = (cmManual, cmPaintModes, cmUDPServer);
   paintModes = (pmNone, pmBoxRaster);
 
   TTrajectory = record
@@ -41,6 +41,9 @@ var
   //sg_x, sg_y, sg_z,
   sg : TPoint3D;
   sg_theta: double;
+
+  connection: Boolean;
+  await_synack: Boolean;
 
 function diffTPoint3D(a, b:TPoint3D):TPoint3D;
 begin
@@ -173,6 +176,155 @@ begin
   tis := 0;
 end;
 
+procedure ManualControl();
+begin
+
+  if RCButtonPressed(6, 9) then lr_mode:=1;
+  if RCButtonPressed(6, 10) then lr_mode:=3;
+  if RCButtonPressed(6, 11) then lr_mode:=5;
+  if RCButtonPressed(6, 12) then lr_mode:=7;
+  if RCButtonPressed(7, 9) then ud_mode:=2;
+  if RCButtonPressed(7, 10) then ud_mode:=4;
+  if RCButtonPressed(7, 11) then ud_mode:=6;
+  if RCButtonPressed(7, 12) then ud_mode:=8;
+
+  case lr_mode of
+    1: begin
+        if KeyPressed(vk_left) then begin
+          sg.x := sg.x-0.05;
+        end else if KeyPressed(vk_right) then begin
+          sg.x := sg.x+0.05;
+        end
+      end;
+    3: begin
+        if KeyPressed(vk_left) then begin
+          sg.y := sg.y-0.05;
+        end else if KeyPressed(vk_right) then begin
+          sg.y := sg.y+0.05;
+        end
+      end;
+    5: begin
+        if KeyPressed(vk_left) then begin
+          sg.z := sg.z-0.05;
+        end else if KeyPressed(vk_right) then begin
+          sg.z := sg.z+0.05;
+        end
+      end;
+    7: begin
+        if KeyPressed(vk_left) then begin
+          sg_theta := sg_theta+0.05;
+        end else if KeyPressed(vk_right) then begin
+          sg_theta := sg_theta-0.05;
+        end
+      end;
+  end;
+  case ud_mode of
+    2: begin
+        if KeyPressed(vk_down) then begin
+          sg.x := sg.x-0.05;
+        end else if KeyPressed(vk_up) then begin
+          sg.x := sg.x+0.05;
+        end
+      end;
+    4: begin
+        if KeyPressed(vk_down) then begin
+          sg.y := sg.y-0.05;
+        end else if KeyPressed(vk_up) then begin
+          sg.y := sg.y+0.05;
+        end
+      end;
+    6: begin
+        if KeyPressed(vk_down) then begin
+          sg.z := sg.z-0.05;
+        end else if KeyPressed(vk_up) then begin
+          sg.z := sg.z+0.05;
+        end
+      end;
+    8: begin
+        if KeyPressed(vk_down) then begin
+          sg_theta := sg_theta-0.05;
+        end else if KeyPressed(vk_up) then begin
+          sg_theta := sg_theta+0.05;
+        end
+      end;
+    end;
+
+end;
+
+procedure EncodeInteger(var StrPacket: TStringList; name: string; data: integer);
+begin
+  StrPacket.add(name);
+  StrPacket.add(format('%d',[data]));
+  StrPacket.add('');
+end;
+
+procedure EncodeDouble(var StrPacket: TStringList; name: string; data: double);
+begin
+  StrPacket.add(name);
+  StrPacket.add(format('%.6g',[data]));
+  StrPacket.add('');
+end;
+
+function DecodeDoubleDef(var StrPacket: TStringList; name: string; defval: double): double;
+var i: integer;
+begin
+  result := defval;
+  i := StrPacket.indexof(name);
+  if (i < 0) or (i + 1 >= StrPacket.count) then exit;
+  result := strtofloat(StrPacket[i+1]);
+end;
+
+procedure sendUdp(msg: string);
+begin
+  WriteUDPData(GetRCText(1,16), strtoint(GetRCText(2,16)), msg);
+end;
+
+procedure ServerControl();
+var StrPacket: TStringList;
+    txt: string;
+    i: integer;
+    a: double;
+begin
+
+  if connection then begin
+    StrPacket := TStringList.create;
+    try
+      //EncodeInteger(StrPacket,'Enc1', GetAxisOdo(0, 0));
+
+      for i := 0 to 3 do begin
+        //EncodeDouble(StrPacket, 's' + inttostr(i), GetSensorVal(0, i));
+      end;
+
+      //WriteUDPData(GetRCText(1,16), strtoint(GetRCText(2,16)), StrPacket.text);
+
+      while true do begin
+        StrPacket.text := ReadUDPData();
+        txt := StrPacket.text;
+        WriteLn(txt);
+        if txt = '' then break;
+        // Read Motor Speed Reference
+        a := DecodeDoubleDef(StrPacket, 'a', 0);
+      end;
+    finally
+      StrPacket.free;
+    end;  
+  end else begin
+    while true do begin
+        txt := ReadUDPData();
+        if await_synack and (txt = 'SYNACK') then begin
+          connection := true;
+        end else if txt = 'SYN' then begin
+          sendUdp('ACK');
+          await_synack := True;
+        end;
+        if txt = '' then break;
+      end;
+
+
+  end;
+
+end;
+
 procedure RunTrajectory1(vel: double);
 var dist: double;
     dirnorm: TPoint3D;
@@ -197,11 +349,16 @@ begin
 end;
 
 procedure DrawTrajectory(traj: TTrajectory);
-var i: integer;
+var i, n: integer;
 begin
   ClearTrail(0);
   SetTrailColor(0, 0, 255, 0);
-  for i:= 0 to traj.count-1 do begin
+  n := traj.count;
+  if n>95 then begin
+    n := 95;
+    WriteLn('trajectory points, exceeds cell number');
+  end;
+  for i:= 0 to (n-1) do begin
     AddTrailNode(0, traj.points[i].X, traj.points[i].Y, traj.points[i].z);
     SetRCValue(2,21+i, '[go]');
     SetRCValue(3,21+i, FloatToStr(traj.points[i].X));
@@ -262,15 +419,6 @@ var i: integer;
     traj: TTrajectory;
 begin
 //jm
-  if RCButtonPressed(6, 9) then lr_mode:=1;
-  if RCButtonPressed(6, 10) then lr_mode:=3;
-  if RCButtonPressed(6, 11) then lr_mode:=5;
-  if RCButtonPressed(6, 12) then lr_mode:=7;
-  if RCButtonPressed(7, 9) then ud_mode:=2;
-  if RCButtonPressed(7, 10) then ud_mode:=4;
-  if RCButtonPressed(7, 11) then ud_mode:=6;
-  if RCButtonPressed(7, 12) then ud_mode:=8;
-
   if RCButtonPressed(6, 4) then ResetPaintTargetPaint(0);
   if RCButtonPressed(7, 4) then SetPaintTargetPaintMode(0, pmPaint);
   if RCButtonPressed(8, 4) then SetPaintTargetPaintMode(0, pmHeatmap);
@@ -284,11 +432,13 @@ begin
 
   if RCButtonPressed(1,9) then controlMode := cmManual;
   if RCButtonPressed(1,10) then controlMode := cmPaintModes;
+  if RCButtonPressed(1,11) then controlMode := cmUDPServer;
 
   if controlMode = cmPaintModes then begin
     SetRCValue(2,8,'PaintModes');
     SetRCBackColor(2, 10, $0000FF00);
     SetRCBackColor(2, 9, $7FFFFFFF);
+    SetRCBackColor(2,11, $7FFFFFFF);
     SetRCBackColor(3, 8, $7FFFFFFF);
     if RCButtonPressed(3,9) then begin
       paintMode := pmBoxRaster;
@@ -307,80 +457,35 @@ begin
           sg := traj1.points[i];
         end;
       end;
+      //WriteLn('e');
       RunTrajectory1(0.015);
     end;
   end else if controlMode = cmManual then begin
     SetRCValue(2,8,'Manual');
     SetRCBackColor(2, 9, $7F00FFFF);
     SetRCBackColor(2,10, $7FFFFFFF);
+    SetRCBackColor(2,11, $7FFFFFFF);
     SetRCBackColor(3, 8, $7FAAAAAA);
-    case lr_mode of
-      1: begin
-          if KeyPressed(vk_left) then begin
-            sg.x := sg.x-0.05;
-          end else if KeyPressed(vk_right) then begin
-            sg.x := sg.x+0.05;
-          end
-         end;
-      3: begin
-          if KeyPressed(vk_left) then begin
-            sg.y := sg.y-0.05;
-          end else if KeyPressed(vk_right) then begin
-            sg.y := sg.y+0.05;
-          end
-         end;
-      5: begin
-          if KeyPressed(vk_left) then begin
-            sg.z := sg.z-0.05;
-          end else if KeyPressed(vk_right) then begin
-            sg.z := sg.z+0.05;
-          end
-         end;
-      7: begin
-          if KeyPressed(vk_left) then begin
-            sg_theta := sg_theta+0.05;
-          end else if KeyPressed(vk_right) then begin
-            sg_theta := sg_theta-0.05;
-          end
-         end;
-    end;
-    case ud_mode of
-      2: begin
-          if KeyPressed(vk_down) then begin
-            sg.x := sg.x-0.05;
-          end else if KeyPressed(vk_up) then begin
-            sg.x := sg.x+0.05;
-          end
-         end;
-      4: begin
-          if KeyPressed(vk_down) then begin
-            sg.y := sg.y-0.05;
-          end else if KeyPressed(vk_up) then begin
-            sg.y := sg.y+0.05;
-          end
-         end;
-      6: begin
-          if KeyPressed(vk_down) then begin
-            sg.z := sg.z-0.05;
-          end else if KeyPressed(vk_up) then begin
-            sg.z := sg.z+0.05;
-          end
-         end;
-      8: begin
-          if KeyPressed(vk_down) then begin
-            sg_theta := sg_theta-0.05;
-          end else if KeyPressed(vk_up) then begin
-            sg_theta := sg_theta+0.05;
-          end
-         end;
-    end;
+    ManualControl();
+  end else if controlMode = cmUDPServer then begin
+    SetRCValue(2,8,'UDPServer');
+    if connection then begin 
+      SetRCValue(2,7,'Connected');
+    end else begin
+      SetRCValue(2,7,'Not Connected');
+    end; 
+    SetRCBackColor(2, 9, $7FFFFFFF);
+    SetRCBackColor(2,10, $7FFFFFFF);
+    SetRCBackColor(2,11, $7F00FFFF);
+    SetRCBackColor(3, 8, $7FAAAAAA);
+    ServerControl();
   end;
 
-  SetRobotPos(2, sg.x, sg.y, sg.z, sg_theta);
-
+  SetRobotPos(0, sg.x, sg.y, sg.z, sg_theta);
+  //SetRobotPos(2, sg.x, sg.y, sg.z, sg_theta);
   //end jm
 
-  UpdateScrew(1);
+  {UpdateScrew(1);
 
   B5Pos := GetSolidPosMat(iRobot, iB5);
   MatrixToRange(11, 2, B5Pos);
@@ -429,7 +534,7 @@ begin
     SetThetas(ReqThetas);
   end;
 
-
+}
   tis := tis + 0.04;
 
   SetRCValue(3, 7, state);
@@ -442,7 +547,7 @@ begin
   irobot := 0;
   iScrew := 1;
 
-  iB5 := GetSolidIndex(irobot, 'B5');
+  {iB5 := GetSolidIndex(irobot, 'B5');
   iB6 := GetSolidIndex(irobot, 'B6');
 
   iHead := GetSolidIndex(iScrew, 'screw_head');
@@ -460,7 +565,7 @@ begin
   d1 := 0.55;
   d2 := 0.4;
   d3 := 0.37;
-
+}
   state := 'idle';
   Tol := 0.2;
 
@@ -483,4 +588,8 @@ begin
   SetRCValue(12, 8, format('%.2f',[ext.Min.x]));
   SetRCValue(12, 9, format('%.2f',[ext.Min.y]));
   SetRCValue(12, 10, format('%.2f',[ext.Min.z]));
+
+  connection := False;
+  await_synack := False;
+  SetRCValue(2,7,'Not Connected');
 end;
