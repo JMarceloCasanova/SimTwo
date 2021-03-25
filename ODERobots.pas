@@ -91,6 +91,7 @@ type
     paintHeatmap: TVectorList;
     paintmap: TVectorList;
     paintMode: TPaintMode;
+    avgAreaPerVertex: double;
     kind: TSolidKind;
     MatterProperties: TMatterProperties;
     BeltSpeed: double;
@@ -366,7 +367,9 @@ type
     Vin: double;
     MaxDist, MinDist, StartAngle, EndAngle: double;
     paintRate: single;
+    paintMaxAngle: single;
     paintColor: TColorVector;
+    paintOn: boolean;
   private
     function InsideGLPolygonsTaged(x, y: double; GLFloor: TGLBaseSceneObject): boolean;
     procedure FreeMeasures;

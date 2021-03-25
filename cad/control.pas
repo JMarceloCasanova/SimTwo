@@ -422,6 +422,9 @@ begin
   if RCButtonPressed(6, 4) then ResetPaintTargetPaint(0);
   if RCButtonPressed(7, 4) then SetPaintTargetPaintMode(0, pmPaint);
   if RCButtonPressed(8, 4) then SetPaintTargetPaintMode(0, pmHeatmap);
+  if RCButtonPressed(10, 4) then SetSprayGunOn(0);
+  if RCButtonPressed(11, 4) then SetSprayGunOff(0);
+
 
   if RCButtonPressed(6, 13) then begin
     sg := ext.Max;

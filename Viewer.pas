@@ -1519,7 +1519,9 @@ var temp: TGLMaterialLibrary;
     heatmapBitmap: TBitmap;
     nada: TGLMesh;
     Mesh: TGLMeshObject;
-    j: integer;
+    Triangles: TAffineVectorList;
+    v1, v2, v3: TAffineVector;
+    i, j: integer;
 begin
   // create mesh file
   if MeshFile <> '' then begin
@@ -1551,6 +1553,25 @@ begin
       Mesh := (newSolid.AltGLObj as TGLFreeForm).MeshObjects[0];
       Mesh.TexCoords.Clear;
       Mesh.Colors.Clear;
+
+      //Calculate avgAreaPerVertex
+      Triangles := Mesh.ExtractTriangles;
+      if Triangles.Count > 0 then
+      try
+        i := 0;
+        while i<Triangles.Count do
+        begin
+          v1 := VectorTransform(Triangles[i],(newSolid.AltGLObj as TGLFreeForm).AbsoluteMatrix);
+          v2 := VectorTransform(Triangles[i+1], (newSolid.AltGLObj as TGLFreeForm).AbsoluteMatrix);
+          v3 := VectorTransform(Triangles[i+2], (newSolid.AltGLObj as TGLFreeForm).AbsoluteMatrix);
+          Inc(i, 3);
+          newSolid.avgAreaPerVertex := newSolid.avgAreaPerVertex + TriangleArea(v1,v2,v3);
+        end;
+      finally
+        newSolid.avgAreaPerVertex := (newSolid.avgAreaPerVertex/Triangles.Count)/Mesh.Vertices.Count;
+        Triangles.Free;
+      end;
+
       newSolid.paintHeatmap := TVectorList.Create;
       newSolid.paintmap := TVectorList.Create;
       newSolid.paintThickness := TDoubleList.Create;
@@ -2664,6 +2685,8 @@ var sensor, prop: IXMLNode;
 
     paintColor: TColorvector;
     paintRate: single;
+    paintMaxAngle: single;
+    paintDefaultOn: boolean;
 begin
   if root = nil then exit;
 
@@ -2707,6 +2730,8 @@ begin
       EndAngle := rad(90);
       paintColor := ConvertRGBColor([255,0,0]);
       paintRate := 0.01;
+      paintMaxAngle := 0.2;
+      paintDefaultOn := False;
 
       prop := sensor.FirstChild;
       while prop <> nil do begin
@@ -2771,6 +2796,12 @@ begin
         if prop.NodeName = 'paint_rate' then begin
           paintRate := GetNodeAttrRealParse(prop, 'value', 0.01, Parser);
         end;
+        if prop.NodeName = 'paint_max_angle' then begin
+          paintMaxAngle := GetNodeAttrRealParse(prop, 'value', 0.2, Parser);
+        end;
+        if prop.NodeName = 'paint_default_on' then begin
+          paintDefaultOn := GetNodeAttrBool(prop, 'value', False);
+        end;
         prop := prop.NextSibling;
       end;
       // Create and position the sensor
@@ -2807,6 +2838,8 @@ begin
 
       newSensor.paintColor := paintColor;
       newSensor.paintRate := paintRate;
+      newSensor.paintMaxAngle := paintMaxAngle;
+      newSensor.paintOn := paintDefaultOn;
 
       Sensors.Add(newSensor);
 
@@ -4742,7 +4775,7 @@ begin
 
         if Things[i].isPaintTarget then begin// and (random()<0.1)
           for sensor in Sensors do begin
-            if sensor.kind=skSprayGun then begin
+            if (sensor.kind=skSprayGun) and sensor.paintOn then begin
               //(Things[i].AltGLObj as TGLFreeForm).MaterialLibrary := nil;
               Mesh := (Things[i].AltGLObj as TGLFreeForm).MeshObjects[0];
               for j:=0 to Mesh.Vertices.Count - 1 do begin
@@ -4764,12 +4797,22 @@ begin
                                                                (VectorLength(VertDir)*VectorLength(GunDir)));
                 angle := arccos((GunVert.V[0]*GunDir.V[0] + GunVert.V[1]*GunDir.V[1] + GunVert.V[2]*GunDir.V[2])/
                                                           (VectorLength(GunVert)*VectorLength(GunDir)));
-                if (abs(angle_side) > pi/2) and (abs(angle) < 0.2) then begin
+                //WorldODE.physTime;
+                if (abs(angle_side) > pi/2) and (abs(angle) < sensor.paintMaxAngle) then begin
                   Dist := VectorLength(GunVert);
                   sd := 0.1;
+                  //intensity := 1/(sd*sqrt(2*pi))*exp(-0.5*(angle/sd)*(angle/sd));//gaussian (normal distribution) integral=1
                   intensity := exp(-0.5*(angle/sd)*(angle/sd));
+                  //interval_min = pi/2-MaxAngle/2 (f(interval_min)=+inf)
+                  if (angle > -1.46) and (angle > -1.46) then begin
+                     intensity := intensity/(pi*2*Dist*Dist*tan(sensor.paintMaxAngle/2) * sin(pi/2-angle) * (1/(tan(pi/2-angle-sensor.paintMaxAngle/2))-1/(tan(pi/2-angle+sensor.paintMaxAngle/2))));
+                     //intensity := intensity/(pi*2*Dist*Dist*tan(sensor.paintMaxAngle/2) * sin(pi/2-angle_side) * (1/(tan(pi/2-angle_side-sensor.paintMaxAngle/2))-1/(tan(pi/2-angle_side+sensor.paintMaxAngle/2))));
+                  end;
+
+                  //Things[i].avgAreaPerVertex
+
                   Things[i].paintmap[j] := VectorAdd(Things[i].paintmap[j],
-                                        VectorScale(VectorSubtract(sensor.paintColor, Things[i].paintmap[j]), sensor.paintRate*intensity));;
+                                        VectorScale(VectorSubtract(sensor.paintColor, Things[i].paintmap[j]), sensor.paintRate*intensity));
                   Things[i].paintThickness[j] := Things[i].paintThickness[j] + sensor.paintRate*0.00015*intensity;
                   Things[i].paintHeatmap[j] := Things[i].CalculateHeatmapColor(Things[i].paintThickness[j]);
 
@@ -4777,6 +4820,7 @@ begin
                 end else begin
                   //only spray cone (paint doesn't stick) Mesh.Colors[j] := ConvertRGBColor([255,255,255]);
                 end;
+                //end;
 
                 if(Things[i].paintMode = pmPaint) then begin
                   Mesh.Colors[j] := Things[i].paintmap[j];

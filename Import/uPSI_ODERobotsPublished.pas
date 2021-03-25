@@ -48,6 +48,7 @@ uses
   ,GLVectorFileObjects
   ,GLGeometryBB
   ,GLColor
+  ,GLVectorGeometry
   ,ODERobotsPublished
   ;
  
@@ -124,6 +125,8 @@ begin
  CL.AddDelphiFunction('Function GetPaintTargetExtents( i : integer) : TExtents');
  CL.AddDelphiFunction('Procedure ResetPaintTargetPaint( i : integer)');
  CL.AddDelphiFunction('Procedure SetPaintTargetPaintMode( i : integer; paintMode : TPaintVisuals)');
+ CL.AddDelphiFunction('Procedure SetSprayGunOn( i : integer)');
+ CL.AddDelphiFunction('Procedure SetSprayGunOff( i : integer)');
  CL.AddDelphiFunction('Procedure SetSolidSurfaceFriction( R, i : integer; mu, mu2 : double)');
  CL.AddDelphiFunction('Procedure SetSolidForce( R, i : integer; Fx, Fy, Fz : double)');
  CL.AddDelphiFunction('Function GetSolidSize( R, i : integer) : TPoint3D');
@@ -386,6 +389,8 @@ begin
  S.RegisterDelphiFunction(@GetPaintTargetExtents, 'GetPaintTargetExtents', cdRegister);
  S.RegisterDelphiFunction(@ResetPaintTargetPaint, 'ResetPaintTargetPaint', cdRegister);
  S.RegisterDelphiFunction(@SetPaintTargetPaintMode, 'SetPaintTargetPaintMode', cdRegister);
+ S.RegisterDelphiFunction(@SetSprayGunOn, 'SetSprayGunOn', cdRegister);
+ S.RegisterDelphiFunction(@SetSprayGunOff, 'SetSprayGunOff', cdRegister);
  S.RegisterDelphiFunction(@SetSolidSurfaceFriction, 'SetSolidSurfaceFriction', cdRegister);
  S.RegisterDelphiFunction(@SetSolidForce, 'SetSolidForce', cdRegister);
  S.RegisterDelphiFunction(@GetSolidSize, 'GetSolidSize', cdRegister);

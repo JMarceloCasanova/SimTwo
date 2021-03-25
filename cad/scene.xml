@@ -37,9 +37,9 @@
 
   <things file='cube.xml'/>
 
-  <noobstacles file='obstacles.xml'/>
+  <!--<noobstacles file='obstacles.xml'/>
 
-  <notrack file='track.xml'/>
+  <notrack file='track.xml'/>-->
 
 </scene>
 

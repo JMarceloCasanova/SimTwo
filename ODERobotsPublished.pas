@@ -146,6 +146,8 @@ procedure SolidCanvasClear(R, i: integer);
 function GetPaintTargetExtents(i: integer): TExtents;
 procedure ResetPaintTargetPaint(i: integer);
 procedure SetPaintTargetPaintMode(i:integer; paintMode: TPaintVisuals);
+procedure SetSprayGunOn(i: integer);
+procedure SetSprayGunOff(i: integer);
 
 procedure SetSolidSurfaceFriction(R, i: integer; mu, mu2: double);
 
@@ -1136,6 +1138,34 @@ begin
        k:=k+1;
        if k=i then begin
           WorldODE.Things[j].paintMode := TPaintMode(paintMode);
+       end;
+    end;
+  end;
+end;
+
+procedure SetSprayGunOn(i: integer);
+var j,k: integer;
+begin
+  k := -1;
+  for j:=0 to WorldODE.Sensors.Count-1 do begin
+    if WorldODE.Sensors[j].kind = skSprayGun then begin
+       k := k+1;
+       if k=i then begin
+         WorldODE.Sensors[j].paintOn := True;
+       end;
+    end;
+  end;
+end;
+
+procedure SetSprayGunOff(i: integer);
+var j,k: integer;
+begin
+  k := -1;
+  for j:=0 to WorldODE.Sensors.Count-1 do begin
+    if WorldODE.Sensors[j].kind = skSprayGun then begin
+       k := k+1;
+       if k=i then begin
+         WorldODE.Sensors[j].paintOn := False;
        end;
     end;
   end;
