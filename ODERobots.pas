@@ -9,7 +9,7 @@ uses
   Dialogs, GLScene, GLObjects, {GLMisc,} GLLCLViewer, ODEImport, OpenGL1x,
   GLVectorGeometry, GLGeomObjects, ExtCtrls, ComCtrls, GLTexture, GLGraphics,
   keyboard, math, GLMaterial, GLVectorFileObjects, GLDynamicTexture, GLColor,
-  GLVectorLists;
+  GLVectorLists, GLVectorTypes;
 
 const
   //ODE world constants
@@ -79,6 +79,20 @@ type
   TPaintMode = (pmPaint, pmHeatmap);//pmOriginal
 
   { TSolid }
+  TVertex = record
+    pos: TVector3f;
+    normal: TVector3f;
+    triangles: array of integer;
+    paint_quantity: double;
+  end;
+
+  TTriangle = record
+    vertexs: array [0..2] of ^TVertex;
+    center: TAffineVector;
+    normal: TAffineVector;
+    area: double;
+    neighbors: array of integer;
+  end;
 
   TSolid = class
     Body: PdxBody;
@@ -92,6 +106,8 @@ type
     paintmap: TVectorList;
     paintMode: TPaintMode;
     avgAreaPerVertex: double;
+    meshVertexs: array of TVertex;
+    meshTriangles: array of TTriangle;
     kind: TSolidKind;
     MatterProperties: TMatterProperties;
     BeltSpeed: double;
@@ -129,6 +145,7 @@ type
     procedure SetSurfacePars(mu, mu2, softness, bounce, bounce_tresh: double);
     procedure UpdateGLCanvas;
     function CalculateHeatmapColor(paintThickness: double): TColorVector;
+    function FindVertexIndex(Coordinates: TVector3f): integer;
   end;
 
   TSolidList = class(TList)
@@ -1025,6 +1042,19 @@ begin
     end;
     result := ConvertRGBColor([r,g,b]);
   end;
+end;
+
+function TSolid.FindVertexIndex(Coordinates: TVector3f):integer;
+var i: integer;
+begin
+  result := -1;
+  for i:=0 to Length(meshVertexs) do begin
+    if VectorEquals(Coordinates, meshVertexs[i].pos) then begin
+      result := i;
+      break;
+    end;
+  end;
+  if result = -1 then showmessage('vertex not found');
 end;
 
 procedure TSolid.SetSurfacePars(mu, mu2, softness, bounce, bounce_tresh: double);

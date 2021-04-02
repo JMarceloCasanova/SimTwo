@@ -1511,6 +1511,7 @@ var temp: TGLMaterialLibrary;
     temp1: TGLLibMaterials;
     temp2: TGLMaterial;
     temp_tex:TGLTexture;
+    temp_int: integer;
     name: TGLLibMaterialName;
     name2: string;
 
@@ -1521,7 +1522,7 @@ var temp: TGLMaterialLibrary;
     Mesh: TGLMeshObject;
     Triangles: TAffineVectorList;
     v1, v2, v3: TAffineVector;
-    i, j: integer;
+    i, j, k, l: integer;
 begin
   // create mesh file
   if MeshFile <> '' then begin
@@ -1554,29 +1555,16 @@ begin
       Mesh.TexCoords.Clear;
       Mesh.Colors.Clear;
 
-      //Calculate avgAreaPerVertex
-      Triangles := Mesh.ExtractTriangles;
-      if Triangles.Count > 0 then
-      try
-        i := 0;
-        while i<Triangles.Count do
-        begin
-          v1 := VectorTransform(Triangles[i],(newSolid.AltGLObj as TGLFreeForm).AbsoluteMatrix);
-          v2 := VectorTransform(Triangles[i+1], (newSolid.AltGLObj as TGLFreeForm).AbsoluteMatrix);
-          v3 := VectorTransform(Triangles[i+2], (newSolid.AltGLObj as TGLFreeForm).AbsoluteMatrix);
-          Inc(i, 3);
-          newSolid.avgAreaPerVertex := newSolid.avgAreaPerVertex + TriangleArea(v1,v2,v3);
-        end;
-      finally
-        newSolid.avgAreaPerVertex := (newSolid.avgAreaPerVertex/Triangles.Count)/Mesh.Vertices.Count;
-        Triangles.Free;
-      end;
-
       newSolid.paintHeatmap := TVectorList.Create;
       newSolid.paintmap := TVectorList.Create;
       newSolid.paintThickness := TDoubleList.Create;
       newSolid.paintMode := pmPaint;
-      //newSolid.paintMode := pmHeatmap;
+
+      //TODO: calculate normals for meshes without normals
+      if Mesh.Normals.Count <> Mesh.Vertices.Count then begin
+         showmessage('meshes without normals not supported yet, manually calculate then first');
+      end;
+      SetLength(newSolid.meshVertexs, Mesh.Vertices.Count);
       for j:=0 to Mesh.Vertices.Count - 1 do begin
         newSolid.paintmap.Add(ConvertRGBColor([255,255,255]));
         newSolid.paintHeatmap.Add(newSolid.CalculateHeatmapColor(0));
@@ -1586,9 +1574,75 @@ begin
         end else if (newSolid.paintMode = pmHeatmap) then begin
           Mesh.Colors.Add(newSolid.paintHeatmap[j]);
         end;
+        newSolid.meshVertexs[j].pos := Mesh.Vertices[j];
+        newSolid.meshVertexs[j].normal := Mesh.Normals[j];
+        SetLength(newSolid.meshVertexs[j].triangles, 0);
       end;
+
+      //Calculate avgAreaPerVertex
+      Triangles := Mesh.ExtractTriangles;
+      SetLength(newSolid.meshTriangles, Trunc(Triangles.Count/3));
+      if Triangles.Count > 0 then
+      try
+        i := 0;
+        while i<Triangles.Count do
+        begin
+          v1 := VectorTransform(Triangles[i],(newSolid.AltGLObj as TGLFreeForm).AbsoluteMatrix);
+          v2 := VectorTransform(Triangles[i+1], (newSolid.AltGLObj as TGLFreeForm).AbsoluteMatrix);
+          v3 := VectorTransform(Triangles[i+2], (newSolid.AltGLObj as TGLFreeForm).AbsoluteMatrix);
+
+          newSolid.avgAreaPerVertex := newSolid.avgAreaPerVertex + TriangleArea(v1,v2,v3);
+          newSolid.meshTriangles[Trunc(i/3)].vertexs[0] := @newSolid.meshVertexs[newSolid.FindVertexIndex(v1)];
+          SetLength(newSolid.meshTriangles[Trunc(i/3)].vertexs[0].triangles, length(newSolid.meshTriangles[Trunc(i/3)].vertexs[0].triangles)+1);
+          newSolid.meshTriangles[Trunc(i/3)].vertexs[0].triangles[length(newSolid.meshTriangles[Trunc(i/3)].vertexs[0].triangles)-1] := Trunc(i/3);
+
+          newSolid.meshTriangles[Trunc(i/3)].vertexs[1] := @newSolid.meshVertexs[newSolid.FindVertexIndex(v2)];
+          SetLength(newSolid.meshTriangles[Trunc(i/3)].vertexs[1].triangles, length(newSolid.meshTriangles[Trunc(i/3)].vertexs[1].triangles)+1);
+          newSolid.meshTriangles[Trunc(i/3)].vertexs[1].triangles[length(newSolid.meshTriangles[Trunc(i/3)].vertexs[1].triangles)-1] := Trunc(i/3);
+
+          newSolid.meshTriangles[Trunc(i/3)].vertexs[2] := @newSolid.meshVertexs[newSolid.FindVertexIndex(v3)];
+          SetLength(newSolid.meshTriangles[Trunc(i/3)].vertexs[2].triangles, length(newSolid.meshTriangles[Trunc(i/3)].vertexs[2].triangles)+1);
+          newSolid.meshTriangles[Trunc(i/3)].vertexs[2].triangles[length(newSolid.meshTriangles[Trunc(i/3)].vertexs[2].triangles)-1] := Trunc(i/3);
+
+          newSolid.meshTriangles[Trunc(i/3)].center := AffineVectorMake((v1.X+v2.X+v3.X)/3, (v1.Y+v2.Y+v3.Y)/3, (v1.Z+v2.Z+v3.Z)/3);
+          newSolid.meshTriangles[Trunc(i/3)].normal := AffineVectorMake(
+            (newSolid.meshTriangles[Trunc(i/3)].vertexs[0].normal.X + newSolid.meshTriangles[Trunc(i/3)].vertexs[1].normal.X + newSolid.meshTriangles[Trunc(i/3)].vertexs[2].normal.X)/3,
+            (newSolid.meshTriangles[Trunc(i/3)].vertexs[0].normal.Y + newSolid.meshTriangles[Trunc(i/3)].vertexs[1].normal.Y + newSolid.meshTriangles[Trunc(i/3)].vertexs[2].normal.Y)/3,
+            (newSolid.meshTriangles[Trunc(i/3)].vertexs[0].normal.Z + newSolid.meshTriangles[Trunc(i/3)].vertexs[1].normal.Z + newSolid.meshTriangles[Trunc(i/3)].vertexs[2].normal.Z)/3
+                                                    );
+          //newSolid.meshTriangles[Trunc(i/3)].normal := VectorScale(VectorAdd(VectorAdd(
+          //                                             newSolid.meshTriangles[Trunc(i/3)].vertexs[0].normal,newSolid.meshTriangles[Trunc(i/3)].vertexs[1].normal),
+          //                                             newSolid.meshTriangles[Trunc(i/3)].vertexs[2].normal), 1/3);
+          newSolid.meshTriangles[Trunc(i/3)].area := TriangleArea(v1,v2,v3);
+
+          Inc(i, 3);
+        end;
+      finally
+        newSolid.avgAreaPerVertex := (newSolid.avgAreaPerVertex/Triangles.Count)/Mesh.Vertices.Count;
+        Triangles.Free;
+      end;
+
+      temp_int := length(newSolid.meshTriangles);
+      for i:=0 to length(newSolid.meshTriangles) - 1 do begin //every triangle i
+        for k:=0 to 2 do begin //3 vertexs k of the triangle
+          for j:=0 to length((newSolid.meshTriangles[i].vertexs[k])^.triangles) - 1 do begin //every vertex.triangle j
+            for l:=0 to length(newSolid.meshTriangles[i].neighbors) do begin //every already existing neighbor
+
+              if (newSolid.meshTriangles[i].vertexs[k].triangles[j] = i) then break;
+              if (l=(length(newSolid.meshTriangles[i].neighbors))) then begin
+                SetLength(newSolid.meshTriangles[i].neighbors, length(newSolid.meshTriangles[i].neighbors)+1);
+                newSolid.meshTriangles[i].neighbors[length(newSolid.meshTriangles[i].neighbors)-1] := newSolid.meshTriangles[i].vertexs[k].triangles[j];
+                break;
+              end;
+              if (newSolid.meshTriangles[i].vertexs[k].triangles[j] = newSolid.meshTriangles[i].neighbors[l]) then break;
+            end;
+          end;
+        end;
+      end;
+
     end;
     PositionSceneObject(newSolid.AltGLObj, newSolid.Geom);
+    temp_int := Length(newSolid.meshVertexs);
 
     if MeshCastsShadows and (MeshShadowFile = '') then
       (OdeScene as TGLShadowVolume).Occluders.AddCaster(newSolid.AltGLObj);
@@ -4681,7 +4735,7 @@ var r, j, i, n: integer;
     intensity, sd: double;
 
     temp_int: integer;
-
+    temp_solid: TSolid;
 begin
     if GLHUDTextObjName.TagFloat > 0 then begin
       GLHUDTextObjName.TagFloat := GLHUDTextObjName.TagFloat - GLCadencer.FixedDeltaTime;
@@ -4776,13 +4830,59 @@ begin
         if Things[i].isPaintTarget then begin// and (random()<0.1)
           for sensor in Sensors do begin
             if (sensor.kind=skSprayGun) and sensor.paintOn then begin
+              Mesh := (Things[i].AltGLObj as TGLFreeForm).MeshObjects[0];
+              for j:=0 to Length(Things[i].meshTriangles)-1 do begin
+                GunDir := Vector3fMake(-sensor.GLObj.Up.X, -sensor.GLObj.Up.Y, -sensor.GLObj.Up.Z);//Assuming the ray is on the X axis
+                GunPos := Vector3fMake(sensor.GLObj.Position.X, sensor.GLObj.Position.Y, sensor.GLObj.Position.Z);
+                VertPos := Things[i].meshTriangles[j].center;
+                VertPos := VectorTransform(VertPos, (Things[i].AltGLObj as TGLFreeForm).AbsoluteMatrix);
+                VertDir := Things[i].meshTriangles[j].normal;
+                GunVert := VectorSubtract(VertPos, GunPos);
+                angle_side := arccos((VertDir.V[0]*GunDir.V[0] + VertDir.V[1]*GunDir.V[1] + VertDir.V[2]*GunDir.V[2])/
+                                                               (VectorLength(VertDir)*VectorLength(GunDir)));
+                angle := arccos((GunVert.V[0]*GunDir.V[0] + GunVert.V[1]*GunDir.V[1] + GunVert.V[2]*GunDir.V[2])/
+                                                          (VectorLength(GunVert)*VectorLength(GunDir)));
+                if (abs(angle_side) > pi/2) and (abs(angle) < sensor.paintMaxAngle) then begin
+                  sd := 0.1;
+                  //intensity := 1/(sd*sqrt(2*pi))*exp(-0.5*(angle/sd)*(angle/sd));//gaussian (normal distribution) integral=1
+                  intensity := exp(-0.5*(angle/sd)*(angle/sd));
+                  Things[i].meshTriangles[j].vertexs[0]^.paint_quantity := Things[i].meshTriangles[j].vertexs[0]^.paint_quantity + intensity/3;
+                  Things[i].meshTriangles[j].vertexs[1]^.paint_quantity := Things[i].meshTriangles[j].vertexs[1]^.paint_quantity + intensity/3;
+                  Things[i].meshTriangles[j].vertexs[2]^.paint_quantity := Things[i].meshTriangles[j].vertexs[2]^.paint_quantity + intensity/3;
+                end;
+              end;
+              for j:=0 to Mesh.Vertices.Count - 1 do begin
+                Things[i].paintmap[j] := VectorAdd(Things[i].paintmap[j],
+                                        VectorScale(VectorSubtract(sensor.paintColor, Things[i].paintmap[j]), sensor.paintRate*Things[i].meshVertexs[j].paint_quantity));
+                Things[i].paintThickness[j] := Things[i].paintThickness[j] + sensor.paintRate*0.00015*Things[i].meshVertexs[j].paint_quantity;
+                Things[i].paintHeatmap[j] := Things[i].CalculateHeatmapColor(Things[i].paintThickness[j]);
+                if(Things[i].paintMode = pmPaint) then begin
+                  Mesh.Colors[j] := Things[i].paintmap[j];
+                end else if (Things[i].paintMode = pmHeatmap) then begin
+                  Mesh.Colors[j] := Things[i].paintHeatmap[j];
+                end;
+
+              end;
+
+              //DEBUG ONLY
+              for j:=0 to Length(Things[i].meshTriangles)-1 do begin
+                  Things[i].meshTriangles[j].vertexs[0]^.paint_quantity:=69;
+              end;
+              for j:=0 to Mesh.Vertices.Count-1 do begin
+                if(Things[i].meshVertexs[j].paint_quantity=69) then begin
+                  Mesh.Colors[j] := Things[i].CalculateHeatmapColor(0);
+                end;
+              end;
+              //END DEBUG ONLY
+              temp_solid := Things[i];
+              (Things[i].AltGLObj as TGLFreeForm).StructureChanged;
+            end;
+            //working mode
+            {
+            if (sensor.kind=skSprayGun) and sensor.paintOn then begin
               //(Things[i].AltGLObj as TGLFreeForm).MaterialLibrary := nil;
               Mesh := (Things[i].AltGLObj as TGLFreeForm).MeshObjects[0];
               for j:=0 to Mesh.Vertices.Count - 1 do begin
-                //TODO: calculate normals for meshes without normals
-                if Mesh.Normals.Count <> Mesh.Vertices.Count then begin
-                   showmessage('meshes without normals not supported yet, only the first mesh will be used');
-                end;
                 //GunDir := Vector3fMake(sensor.GLObj.Direction.X, sensor.GLObj.Direction.Y, sensor.GLObj.Direction.Z);
                 GunDir := Vector3fMake(-sensor.GLObj.Up.X, -sensor.GLObj.Up.Y, -sensor.GLObj.Up.Z);//Assuming the ray is on the X axis
                 GunPos := Vector3fMake(sensor.GLObj.Position.X, sensor.GLObj.Position.Y, sensor.GLObj.Position.Z);
@@ -4801,13 +4901,13 @@ begin
                 if (abs(angle_side) > pi/2) and (abs(angle) < sensor.paintMaxAngle) then begin
                   Dist := VectorLength(GunVert);
                   sd := 0.1;
-                  //intensity := 1/(sd*sqrt(2*pi))*exp(-0.5*(angle/sd)*(angle/sd));//gaussian (normal distribution) integral=1
-                  intensity := exp(-0.5*(angle/sd)*(angle/sd));
+                  intensity := 1/(sd*sqrt(2*pi))*exp(-0.5*(angle/sd)*(angle/sd));//gaussian (normal distribution) integral=1
+                  (*intensity := exp(-0.5*(angle/sd)*(angle/sd));
                   //interval_min = pi/2-MaxAngle/2 (f(interval_min)=+inf)
                   if (angle > -1.46) and (angle > -1.46) then begin
                      intensity := intensity/(pi*2*Dist*Dist*tan(sensor.paintMaxAngle/2) * sin(pi/2-angle) * (1/(tan(pi/2-angle-sensor.paintMaxAngle/2))-1/(tan(pi/2-angle+sensor.paintMaxAngle/2))));
                      //intensity := intensity/(pi*2*Dist*Dist*tan(sensor.paintMaxAngle/2) * sin(pi/2-angle_side) * (1/(tan(pi/2-angle_side-sensor.paintMaxAngle/2))-1/(tan(pi/2-angle_side+sensor.paintMaxAngle/2))));
-                  end;
+                  end;*)
 
                   //Things[i].avgAreaPerVertex
 
@@ -4831,6 +4931,8 @@ begin
               end;
               (Things[i].AltGLObj as TGLFreeForm).StructureChanged;
             end;
+            }
+            //end working mode
           end;
         end;
 
