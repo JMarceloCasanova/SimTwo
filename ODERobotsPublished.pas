@@ -75,6 +75,16 @@ type
     Max: TPoint3D;
   end;
 
+  TArrayOfPoints = array of TPoint3D;
+
+  TVertexs = record
+    V: TArrayOfPoints;
+    //V: array[0..20] of TPoint3D;//Vertices
+    //N: array[0..2000] of TPoint3D;//Normals
+    //C: array[0..2000] of TPoint3D;//Colors
+    count: integer;
+  end;
+
   TPaintVisuals = (pmPaint, pmHeatmap);
 
 procedure SetFireScale(x, y, z: double);
@@ -148,6 +158,15 @@ procedure ResetPaintTargetPaint(i: integer);
 procedure SetPaintTargetPaintMode(i:integer; paintMode: TPaintVisuals);
 procedure SetSprayGunOn(i: integer);
 procedure SetSprayGunOff(i: integer);
+function CalculateAvgSprayThickness(i: integer): double;
+function CalculateSDSprayThickness(i: integer): double;
+function CalculatePosAvgSprayThickness(i: integer): double;
+function CalculatePosSDSprayThickness(i: integer): double;
+function CalculatePosMinSprayThickness(i: integer): double;
+function CalculateMinSprayThickness(i: integer): double;
+function CalculateMaxSprayThickness(i: integer): double;
+function CalculateSprayCoverage(i: integer): double;
+function GetPaintTargetVertices(i: integer): TVertexs;
 
 procedure SetSolidSurfaceFriction(R, i: integer; mu, mu2: double);
 
@@ -463,7 +482,7 @@ const
 implementation
 
 uses Math, Viewer, odeimport, utils, Keyboard, GLObjects, SysUtils,
-  Classes;
+  Classes, Dialogs;
 
 function Deg(angle: double): double;
 begin
@@ -1122,6 +1141,7 @@ begin
        if k=i then begin
           for l:=0 to (WorldODE.Things[i].AltGLObj as TGLFreeForm).MeshObjects[0].Vertices.Count - 1 do begin
               WorldODE.Things[j].paintmap[l] := ConvertRGBColor([255,255,255]);
+              WorldODE.Things[j].paintThickness[l] := 0;
               WorldODE.Things[j].paintHeatmap[l] := WorldODE.Things[j].CalculateHeatmapColor(0);
           end;
        end;
@@ -1166,6 +1186,214 @@ begin
        k := k+1;
        if k=i then begin
          WorldODE.Sensors[j].paintOn := False;
+       end;
+    end;
+  end;
+end;
+
+function CalculateAvgSprayThickness(i: integer): double;
+var j, k, l: integer;
+    n: integer;
+begin
+  result:=0;
+  n:=0;
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to WorldODE.Things[j].paintThickness.Count-1 do begin
+             n:=n+1;
+             result := result + WorldODE.Things[j].paintThickness[l];
+          end;
+       end;
+    end;
+  end;
+  if n>0 then result := result/n
+  else result := 0;
+end;
+
+function CalculateSDSprayThickness(i: integer): double;
+var j, k, l: integer;
+    n: integer;
+    avg: double;
+begin
+  result:=0;
+  avg := CalculateAvgSprayThickness(i);
+  n:=0;
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to WorldODE.Things[j].paintThickness.Count-1 do begin
+             n:=n+1;
+             result := result +((WorldODE.Things[j].paintThickness[l] - avg)*
+                                (WorldODE.Things[j].paintThickness[l] - avg));
+          end;
+       end;
+    end;
+  end;
+  if n>0 then result := sqrt(result/n)
+  else result := 0;
+end;
+
+
+function CalculatePosAvgSprayThickness(i: integer): double;
+var j, k, l: integer;
+    n: integer;
+begin
+  result:=0;
+  n:=0;
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to WorldODE.Things[j].paintThickness.Count-1 do begin
+            if WorldODE.Things[j].paintThickness[l] > 0 then begin
+               n:=n+1;
+               result := result + WorldODE.Things[j].paintThickness[l];
+            end;
+          end;
+       end;
+    end;
+  end;
+  if n>0 then result := result/n
+  else result := 0;
+end;
+
+function CalculatePosSDSprayThickness(i: integer): double;
+var j, k, l: integer;
+    n: integer;
+    avg: double;
+begin
+  result:=0;
+  avg := CalculatePosAvgSprayThickness(i);
+  n:=0;
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to WorldODE.Things[j].paintThickness.Count-1 do begin
+            if WorldODE.Things[j].paintThickness[l]>0 then begin
+              n:=n+1;
+              result := result +((WorldODE.Things[j].paintThickness[l] - avg)*
+                                 (WorldODE.Things[j].paintThickness[l] - avg));
+            end;
+          end;
+       end;
+    end;
+  end;
+  if n>0 then result := sqrt(result/n)
+  else result := 0;
+end;
+
+function CalculatePosMinSprayThickness(i: integer): double;
+var j, k, l: integer;
+begin
+  result:=10000;
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to WorldODE.Things[j].paintThickness.Count-1 do begin
+            if (WorldODE.Things[j].paintThickness[l] < result) and (WorldODE.Things[j].paintThickness[l] > 0) then begin
+               result := WorldODE.Things[j].paintThickness[l];
+            end;
+          end;
+       end;
+    end;
+  end;
+end;
+
+function CalculateMinSprayThickness(i: integer): double;
+var j, k, l: integer;
+begin
+  result:=10000;
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to WorldODE.Things[j].paintThickness.Count-1 do begin
+            if WorldODE.Things[j].paintThickness[l] < result then begin
+               result := WorldODE.Things[j].paintThickness[l];
+            end;
+          end;
+       end;
+    end;
+  end;
+end;
+
+function CalculateMaxSprayThickness(i: integer): double;
+var j, k, l: integer;
+begin
+  result:=0;
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to WorldODE.Things[j].paintThickness.Count-1 do begin
+            if WorldODE.Things[j].paintThickness[l] > result then begin
+               result := WorldODE.Things[j].paintThickness[l];
+            end;
+          end;
+       end;
+    end;
+  end;
+end;
+
+function CalculateSprayCoverage(i: integer): double;
+var j, k, l: integer;
+begin
+  result:=0;
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          for l:=0 to WorldODE.Things[j].paintThickness.Count-1 do begin
+            if WorldODE.Things[j].paintThickness[l] > 0 then begin
+               result := result+1;
+            end;
+          end;
+          result := result/WorldODE.Things[j].paintThickness.Count;
+       end;
+    end;
+  end;
+end;
+
+
+function GetPaintTargetVertices(i: integer): TVertexs;
+var j,k, l: integer;
+    Mesh: TGLMeshObject;
+begin
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          Mesh := (WorldODE.Things[i].AltGLObj as TGLFreeForm).MeshObjects[0];
+          result.count := Mesh.Vertices.count;
+          if result.count > 2000 then begin
+             //showmessage('meshes more than 2000 vertices not supported yet, only the first 2000 will be used');
+             result.count := 20;
+          end;
+          for l:=0 to result.count-1 do begin
+            {result.V[l].x := Mesh.Vertices[l].X;
+            result.V[l].y := Mesh.Vertices[l].Y;
+            result.V[l].z := Mesh.Vertices[l].Z;
+            result.N[l].x := Mesh.Normals[l].X;
+            result.N[l].y := Mesh.Normals[l].Y;
+            result.N[l].z := Mesh.Normals[l].Z;
+            result.C[l].x := Mesh.Colors[l].X;
+            result.C[l].y := Mesh.Colors[l].Y;
+            result.C[l].z := Mesh.Colors[l].Z;}
+          end;
        end;
     end;
   end;

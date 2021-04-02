@@ -79,6 +79,8 @@ begin
   CL.AddTypeS('TRGBAColor', 'record Red : integer; Green : integer; Blue : inte'
    +'ger; alpha : integer; end');
   CL.AddTypeS('TExtents', 'record Min : TPoint3D; Max : TPoint3D; end');
+  CL.AddTypeS('TArrayOfPoints', 'array of TPoint3D');
+  CL.AddTypeS('TVertexs', 'record V : TArrayOfPoints; count : integer; end');
   CL.AddTypeS('TPaintVisuals', '( pmPaint, pmHeatmap )');
  CL.AddDelphiFunction('Procedure SetFireScale( x, y, z : double)');
  CL.AddDelphiFunction('Procedure SetFirePosition( x, y, z : double)');
@@ -127,6 +129,15 @@ begin
  CL.AddDelphiFunction('Procedure SetPaintTargetPaintMode( i : integer; paintMode : TPaintVisuals)');
  CL.AddDelphiFunction('Procedure SetSprayGunOn( i : integer)');
  CL.AddDelphiFunction('Procedure SetSprayGunOff( i : integer)');
+ CL.AddDelphiFunction('Function CalculateAvgSprayThickness( i : integer) : double');
+ CL.AddDelphiFunction('Function CalculateSDSprayThickness( i : integer) : double');
+ CL.AddDelphiFunction('Function CalculatePosAvgSprayThickness( i : integer) : double');
+ CL.AddDelphiFunction('Function CalculatePosSDSprayThickness( i : integer) : double');
+ CL.AddDelphiFunction('Function CalculatePosMinSprayThickness( i : integer) : double');
+ CL.AddDelphiFunction('Function CalculateMinSprayThickness( i : integer) : double');
+ CL.AddDelphiFunction('Function CalculateMaxSprayThickness( i : integer) : double');
+ CL.AddDelphiFunction('Function CalculateSprayCoverage( i : integer) : double');
+ CL.AddDelphiFunction('Function GetPaintTargetVertices( i : integer) : TVertexs');
  CL.AddDelphiFunction('Procedure SetSolidSurfaceFriction( R, i : integer; mu, mu2 : double)');
  CL.AddDelphiFunction('Procedure SetSolidForce( R, i : integer; Fx, Fy, Fz : double)');
  CL.AddDelphiFunction('Function GetSolidSize( R, i : integer) : TPoint3D');
@@ -391,6 +402,15 @@ begin
  S.RegisterDelphiFunction(@SetPaintTargetPaintMode, 'SetPaintTargetPaintMode', cdRegister);
  S.RegisterDelphiFunction(@SetSprayGunOn, 'SetSprayGunOn', cdRegister);
  S.RegisterDelphiFunction(@SetSprayGunOff, 'SetSprayGunOff', cdRegister);
+ S.RegisterDelphiFunction(@CalculateAvgSprayThickness, 'CalculateAvgSprayThickness', cdRegister);
+ S.RegisterDelphiFunction(@CalculateSDSprayThickness, 'CalculateSDSprayThickness', cdRegister);
+ S.RegisterDelphiFunction(@CalculatePosAvgSprayThickness, 'CalculatePosAvgSprayThickness', cdRegister);
+ S.RegisterDelphiFunction(@CalculatePosSDSprayThickness, 'CalculatePosSDSprayThickness', cdRegister);
+ S.RegisterDelphiFunction(@CalculatePosMinSprayThickness, 'CalculatePosMinSprayThickness', cdRegister);
+ S.RegisterDelphiFunction(@CalculateMinSprayThickness, 'CalculateMinSprayThickness', cdRegister);
+ S.RegisterDelphiFunction(@CalculateMaxSprayThickness, 'CalculateMaxSprayThickness', cdRegister);
+ S.RegisterDelphiFunction(@CalculateSprayCoverage, 'CalculateSprayCoverage', cdRegister);
+ S.RegisterDelphiFunction(@GetPaintTargetVertices, 'GetPaintTargetVertices', cdRegister);
  S.RegisterDelphiFunction(@SetSolidSurfaceFriction, 'SetSolidSurfaceFriction', cdRegister);
  S.RegisterDelphiFunction(@SetSolidForce, 'SetSolidForce', cdRegister);
  S.RegisterDelphiFunction(@GetSolidSize, 'GetSolidSize', cdRegister);

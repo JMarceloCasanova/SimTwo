@@ -4677,11 +4677,13 @@ var r, j, i, n: integer;
     GunPos, GunDir: TVector3f;
     VertPos, VertDir: TVector3f;
     GunVert: TVector3f;
-    Dist, angle_side, angle: double;
+    Vert1, Vert2, VertTg: TVector3f;
+    Dist, angle_side, angle, angle_vertex: double;
     intensity, sd: double;
 
     temp_int: integer;
-
+    temp_double: double;
+    temp_vector: TVector3f;
 begin
     if GLHUDTextObjName.TagFloat > 0 then begin
       GLHUDTextObjName.TagFloat := GLHUDTextObjName.TagFloat - GLCadencer.FixedDeltaTime;
@@ -4801,13 +4803,31 @@ begin
                 if (abs(angle_side) > pi/2) and (abs(angle) < sensor.paintMaxAngle) then begin
                   Dist := VectorLength(GunVert);
                   sd := 0.1;
-                  //intensity := 1/(sd*sqrt(2*pi))*exp(-0.5*(angle/sd)*(angle/sd));//gaussian (normal distribution) integral=1
-                  intensity := exp(-0.5*(angle/sd)*(angle/sd));
+                  intensity := 1/(sd*sqrt(2*pi))*exp(-0.5*(angle/sd)*(angle/sd));//gaussian (normal distribution) integral=1
+                  //intensity := 1;
+
+                  {intensity := exp(-0.5*(angle/sd)*(angle/sd));
                   //interval_min = pi/2-MaxAngle/2 (f(interval_min)=+inf)
                   if (angle > -1.46) and (angle > -1.46) then begin
                      intensity := intensity/(pi*2*Dist*Dist*tan(sensor.paintMaxAngle/2) * sin(pi/2-angle) * (1/(tan(pi/2-angle-sensor.paintMaxAngle/2))-1/(tan(pi/2-angle+sensor.paintMaxAngle/2))));
                      //intensity := intensity/(pi*2*Dist*Dist*tan(sensor.paintMaxAngle/2) * sin(pi/2-angle_side) * (1/(tan(pi/2-angle_side-sensor.paintMaxAngle/2))-1/(tan(pi/2-angle_side+sensor.paintMaxAngle/2))));
                   end;
+                  }
+
+                  VertTg := VectorScale(VectorCrossProduct(VertDir, VectorCrossProduct(VertDir,GunVert)),
+                            1/VectorLength(VectorCrossProduct(VertDir, VectorCrossProduct(VertDir,GunVert))));
+                  Vert1 := VectorAdd(VertPos, VectorScale(VertTg, 100*sqrt(Things[i].avgAreaPerVertex/pi)));
+                  Vert2 := VectorAdd(VertPos, VectorScale(VertTg, -100*sqrt(Things[i].avgAreaPerVertex/pi)));
+                  angle_vertex := arccos((Vert1.V[0]*Vert2.V[0] + Vert1.V[1]*Vert2.V[1] + Vert1.V[2]*Vert2.V[2])/
+                                                               (VectorLength(Vert1)*VectorLength(Vert2)));
+                  temp_vector := VectorSubtract(Vert1,Vert2);
+                  temp_double := sqrt(Things[i].avgAreaPerVertex/pi);
+                  temp_double := angle_vertex/sensor.paintMaxAngle;
+                  temp_double := VectorLength(temp_vector);
+                  temp_double :=(2*pi*(1 - cos(angle_vertex/2)));
+                  temp_double :=(2*pi*(1 - cos(sensor.paintMaxAngle/2)));
+                  //intensity := 100*intensity*(2*pi*(1 - cos(angle_vertex/2)))/(2*pi*(1 - cos(sensor.paintMaxAngle/2)));//solid angle proportion
+
 
                   //Things[i].avgAreaPerVertex
 

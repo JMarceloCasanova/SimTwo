@@ -251,6 +251,11 @@ begin
 
 end;
 
+procedure sendUdp(msg: string);
+begin
+  WriteUDPData(GetRCText(1,16), strtoint(GetRCText(2,16)), msg);
+end;
+
 procedure EncodeInteger(var StrPacket: TStringList; name: string; data: integer);
 begin
   StrPacket.add(name);
@@ -274,9 +279,21 @@ begin
   result := strtofloat(StrPacket[i+1]);
 end;
 
-procedure sendUdp(msg: string);
+procedure DecodeCommands(var command: string);
+var StrPacketRec, StrPacketSend: TStringList; 
+    vertexs: TVertexs;
+    i: integer;
 begin
-  WriteUDPData(GetRCText(1,16), strtoint(GetRCText(2,16)), msg);
+  StrPacketRec := TStringList.create;
+  StrPacketSend := TStringList.create;
+  StrPacketRec.add(command);
+  i := StrPacketRec.indexof('ReadVertexsCount');
+  if (i >= 0) and (i < StrPacketRec.count) then begin
+    vertexs := GetPaintTargetVertices(0);
+    EncodeInteger(StrPacketSend, 'a', vertexs.count);
+    sendUdp(StrPacketSend.text);
+    WriteLn('sent');
+  end; 
 end;
 
 procedure ServerControl();
@@ -289,38 +306,40 @@ begin
   if connection then begin
     StrPacket := TStringList.create;
     try
-      //EncodeInteger(StrPacket,'Enc1', GetAxisOdo(0, 0));
-
-      for i := 0 to 3 do begin
-        //EncodeDouble(StrPacket, 's' + inttostr(i), GetSensorVal(0, i));
-      end;
-
-      //WriteUDPData(GetRCText(1,16), strtoint(GetRCText(2,16)), StrPacket.text);
-
       while true do begin
         StrPacket.text := ReadUDPData();
         txt := StrPacket.text;
-        WriteLn(txt);
         if txt = '' then break;
+        WriteLn(txt);
+        DecodeCommands(txt);
         // Read Motor Speed Reference
         a := DecodeDoubleDef(StrPacket, 'a', 0);
       end;
+      //EncodeInteger(StrPacket,'Enc1', GetAxisOdo(0, 0));
+      for i := 0 to 3 do begin
+        //EncodeDouble(StrPacket, 's' + inttostr(i), GetSensorVal(0, i));
+      end;
+      //WriteUDPData(GetRCText(1,16), strtoint(GetRCText(2,16)), StrPacket.text);
+      
     finally
       StrPacket.free;
     end;  
   end else begin
     while true do begin
         txt := ReadUDPData();
+        if txt = '' then break;
+        WriteLn(txt);
         if await_synack and (txt = 'SYNACK') then begin
           connection := true;
+          SetRCValue(4, 15, 'done');
+          WriteLn('connected');
         end else if txt = 'SYN' then begin
           sendUdp('ACK');
           await_synack := True;
+          SetRCValue(4, 15, 'await_synack');
         end;
-        if txt = '' then break;
+        
       end;
-
-
   end;
 
 end;
@@ -446,7 +465,7 @@ begin
     if RCButtonPressed(3,9) then begin
       paintMode := pmBoxRaster;
       BoxSelectFace := fTop;
-      BoxOffset := 0.4;
+      BoxOffset := 0.5;
       BoxUStep := 0.1;
       BoxVExtend := 0.3;
       traj := CalculateBoxRaster(BoxSelectFace, BoxOffset, BoxUStep, BoxVExtend);
@@ -461,7 +480,8 @@ begin
         end;
       end;
       //WriteLn('e');
-      RunTrajectory1(0.015);
+      //RunTrajectory1(0.015);
+      RunTrajectory1(0.008);
     end;
   end else if controlMode = cmManual then begin
     SetRCValue(2,8,'Manual');
@@ -485,6 +505,25 @@ begin
   end;
 
   SetRobotPos(0, sg.x, sg.y, sg.z, sg_theta);
+
+  if RCButtonPressed(14, 8) then begin
+    SetRCValue(15, 8, 'AvgSprayThickness');
+    SetRCValue(16, 8, format('%.6f',[CalculateAvgSprayThickness(0)]));
+    SetRCValue(15, 9, 'SDSprayThickness');
+    SetRCValue(16, 9, format('%.6f',[CalculateSDSprayThickness(0)]));
+    SetRCValue(15, 10, 'PosAvgSprayThickness');
+    SetRCValue(16, 10, format('%.6f',[CalculatePosAvgSprayThickness(0)]));
+    SetRCValue(15, 11, 'PosSDSprayThickness');
+    SetRCValue(16, 11, format('%.6f',[CalculatePosSDSprayThickness(0)]));
+    SetRCValue(15, 12, 'PosMinSprayThickness');
+    SetRCValue(16, 12, format('%.6f',[CalculatePosMinSprayThickness(0)]));
+    SetRCValue(15, 13, 'MinSprayThickness');
+    SetRCValue(16, 13, format('%.6f',[CalculateMinSprayThickness(0)]));
+    SetRCValue(15, 14, 'MaxSprayThickness');
+    SetRCValue(16, 14, format('%.6f',[CalculateMaxSprayThickness(0)]));
+    SetRCValue(15, 15, 'SprayCoverage');
+    SetRCValue(16, 15, format('%.6f',[CalculateSprayCoverage(0)]));
+  end;
   //SetRobotPos(2, sg.x, sg.y, sg.z, sg_theta);
   //end jm
 
