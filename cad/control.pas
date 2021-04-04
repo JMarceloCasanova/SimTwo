@@ -281,19 +281,76 @@ end;
 
 procedure DecodeCommands(var command: string);
 var StrPacketRec, StrPacketSend: TStringList; 
-    vertexs: TVertexs;
-    i: integer;
+    Triangles: TTriangles;
+    i, j, l: integer;
+    st, en:integer;
 begin
   StrPacketRec := TStringList.create;
   StrPacketSend := TStringList.create;
-  StrPacketRec.add(command);
-  i := StrPacketRec.indexof('ReadVertexsCount');
+
+  StrPacketRec.Delimiter := ' ';
+  StrPacketRec.DelimitedText := command;
+  i := StrPacketRec.indexof('Disconnect');
   if (i >= 0) and (i < StrPacketRec.count) then begin
-    vertexs := GetPaintTargetVertices(0);
-    EncodeInteger(StrPacketSend, 'a', vertexs.count);
+    connection := False;
+    WriteLn('Disconnected');
+  end;
+  i := StrPacketRec.indexof('ReadTrianglesCount');
+  if (i >= 0) and (i < StrPacketRec.count) then begin
+    Triangles := GetPaintTargetTriangles(0);
+    EncodeInteger(StrPacketSend, 'a', length(Triangles));
     sendUdp(StrPacketSend.text);
     WriteLn('sent');
-  end; 
+  end else begin
+    i := StrPacketRec.indexof('Read80Triangles');
+    st := strtoint(StrPacketRec[i+1]);
+    if (i >= 0) and (i < StrPacketRec.count) then begin
+      Triangles := GetPaintTargetTriangles(0);
+      if length(Triangles) > 0 then begin
+        if length(Triangles)-80 < st then en := length(Triangles)
+        else en := st+80;
+        Writeln('Sending');
+        Writeln(inttostr(en-st));
+        Writeln('triangles');
+        //for j:=0 to length(Triangles)-1 do begin
+        for j:=st to en-1 do begin
+          //WriteLn(inttostr(j));
+          EncodeInteger(StrPacketSend, 'b', j);
+          EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice0.X);
+          EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice0.Y);
+          EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice0.Z);
+          EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice1.X);
+          EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice1.Y);
+          EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice1.Z);
+          EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice2.X);
+          EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice2.Y);
+          EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice2.Z);
+          EncodeDouble(StrPacketSend, 'b', Triangles[j].normal.X);
+          EncodeDouble(StrPacketSend, 'b', Triangles[j].normal.Y);
+          EncodeDouble(StrPacketSend, 'b', Triangles[j].normal.Z);
+          EncodeDouble(StrPacketSend, 'b', Triangles[j].center.X);
+          EncodeDouble(StrPacketSend, 'b', Triangles[j].center.Y);
+          EncodeDouble(StrPacketSend, 'b', Triangles[j].center.Z);
+          EncodeDouble(StrPacketSend, 'b', Triangles[j].area);
+          
+          EncodeInteger(StrPacketSend, 'b', length(Triangles[j].neighbors));
+          for l:=0 to length(Triangles[j].neighbors) - 1 do begin
+            //WriteLn(inttostr(Triangles[j].neighbors[l]));
+            EncodeInteger(StrPacketSend, 'b', Triangles[j].neighbors[l]);
+          end;
+          EncodeDouble(StrPacketSend, 'b', 0);
+          if ((j mod 25) = 0) then WriteLn(StrPacketSend.text);
+        end;
+
+      end else begin              
+        WriteLn('no triangles');
+        EncodeDouble(StrPacketSend, 'b', 0);  
+      end;
+      sendUdp(StrPacketSend.text);
+      WriteLn(StrPacketSend.text);
+      WriteLn('sent');
+    end;  
+  end;
 end;
 
 procedure ServerControl();
@@ -338,7 +395,6 @@ begin
           await_synack := True;
           SetRCValue(4, 15, 'await_synack');
         end;
-        
       end;
   end;
 
@@ -456,6 +512,8 @@ begin
   if RCButtonPressed(1,10) then controlMode := cmPaintModes;
   if RCButtonPressed(1,11) then controlMode := cmUDPServer;
 
+  if RCButtonPressed(4, 16) then connection := False;
+
   if controlMode = cmPaintModes then begin
     SetRCValue(2,8,'PaintModes');
     SetRCBackColor(2, 10, $0000FF00);
@@ -481,7 +539,7 @@ begin
       end;
       //WriteLn('e');
       //RunTrajectory1(0.015);
-      RunTrajectory1(0.008);
+      RunTrajectory1(0.1);
     end;
   end else if controlMode = cmManual then begin
     SetRCValue(2,8,'Manual');

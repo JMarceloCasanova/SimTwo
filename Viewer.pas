@@ -1555,9 +1555,6 @@ begin
       Mesh.TexCoords.Clear;
       Mesh.Colors.Clear;
 
-      newSolid.paintHeatmap := TVectorList.Create;
-      newSolid.paintmap := TVectorList.Create;
-      newSolid.paintThickness := TDoubleList.Create;
       newSolid.paintMode := pmPaint;
 
       //TODO: calculate normals for meshes without normals
@@ -1566,20 +1563,22 @@ begin
       end;
       SetLength(newSolid.meshVertexs, Mesh.Vertices.Count);
       for j:=0 to Mesh.Vertices.Count - 1 do begin
-        newSolid.paintmap.Add(ConvertRGBColor([255,255,255]));
-        newSolid.paintHeatmap.Add(newSolid.CalculateHeatmapColor(0));
-        newSolid.paintThickness.Add(0);
+        newSolid.meshVertexs[j].paintMapColor := ConvertRGBColor([255,255,255]);
+        newSolid.meshVertexs[j].paintHeatmapColor := newSolid.CalculateHeatmapColor(0);
         if(newSolid.paintMode = pmPaint) then begin
-          Mesh.Colors.Add(newSolid.paintmap[j]);
+          Mesh.Colors.Add(newSolid.meshVertexs[j].paintMapColor);
         end else if (newSolid.paintMode = pmHeatmap) then begin
-          Mesh.Colors.Add(newSolid.paintHeatmap[j]);
+          Mesh.Colors.Add(newSolid.meshVertexs[j].paintHeatmapColor);
         end;
         newSolid.meshVertexs[j].pos := Mesh.Vertices[j];
         newSolid.meshVertexs[j].normal := Mesh.Normals[j];
         SetLength(newSolid.meshVertexs[j].triangles, 0);
       end;
+      for j:=0 to length(newSolid.meshTriangles)-1 do begin
+        newSolid.meshTriangles[j].paintThickness := 0;
+      end;
 
-      //Calculate avgAreaPerVertex
+      //Calculate avgAreaPerVertex, traingles
       Triangles := Mesh.ExtractTriangles;
       SetLength(newSolid.meshTriangles, Trunc(Triangles.Count/3));
       if Triangles.Count > 0 then
@@ -1592,6 +1591,7 @@ begin
           v3 := VectorTransform(Triangles[i+2], (newSolid.AltGLObj as TGLFreeForm).AbsoluteMatrix);
 
           newSolid.avgAreaPerVertex := newSolid.avgAreaPerVertex + TriangleArea(v1,v2,v3);
+
           newSolid.meshTriangles[Trunc(i/3)].vertexs[0] := @newSolid.meshVertexs[newSolid.FindVertexIndex(v1)];
           SetLength(newSolid.meshTriangles[Trunc(i/3)].vertexs[0].triangles, length(newSolid.meshTriangles[Trunc(i/3)].vertexs[0].triangles)+1);
           newSolid.meshTriangles[Trunc(i/3)].vertexs[0].triangles[length(newSolid.meshTriangles[Trunc(i/3)].vertexs[0].triangles)-1] := Trunc(i/3);
@@ -1605,11 +1605,7 @@ begin
           newSolid.meshTriangles[Trunc(i/3)].vertexs[2].triangles[length(newSolid.meshTriangles[Trunc(i/3)].vertexs[2].triangles)-1] := Trunc(i/3);
 
           newSolid.meshTriangles[Trunc(i/3)].center := AffineVectorMake((v1.X+v2.X+v3.X)/3, (v1.Y+v2.Y+v3.Y)/3, (v1.Z+v2.Z+v3.Z)/3);
-          newSolid.meshTriangles[Trunc(i/3)].normal := AffineVectorMake(
-            (newSolid.meshTriangles[Trunc(i/3)].vertexs[0].normal.X + newSolid.meshTriangles[Trunc(i/3)].vertexs[1].normal.X + newSolid.meshTriangles[Trunc(i/3)].vertexs[2].normal.X)/3,
-            (newSolid.meshTriangles[Trunc(i/3)].vertexs[0].normal.Y + newSolid.meshTriangles[Trunc(i/3)].vertexs[1].normal.Y + newSolid.meshTriangles[Trunc(i/3)].vertexs[2].normal.Y)/3,
-            (newSolid.meshTriangles[Trunc(i/3)].vertexs[0].normal.Z + newSolid.meshTriangles[Trunc(i/3)].vertexs[1].normal.Z + newSolid.meshTriangles[Trunc(i/3)].vertexs[2].normal.Z)/3
-                                                    );
+          //newSolid.meshTriangles[Trunc(i/3)].normal := newSolid.meshTriangles[Trunc(i/3)].vertexs[0].normal; //normal is the same for every vertex in the triangle (not smoothed)
           //newSolid.meshTriangles[Trunc(i/3)].normal := VectorScale(VectorAdd(VectorAdd(
           //                                             newSolid.meshTriangles[Trunc(i/3)].vertexs[0].normal,newSolid.meshTriangles[Trunc(i/3)].vertexs[1].normal),
           //                                             newSolid.meshTriangles[Trunc(i/3)].vertexs[2].normal), 1/3);
@@ -1622,7 +1618,6 @@ begin
         Triangles.Free;
       end;
 
-      temp_int := length(newSolid.meshTriangles);
       for i:=0 to length(newSolid.meshTriangles) - 1 do begin //every triangle i
         for k:=0 to 2 do begin //3 vertexs k of the triangle
           for j:=0 to length((newSolid.meshTriangles[i].vertexs[k])^.triangles) - 1 do begin //every vertex.triangle j
@@ -1638,6 +1633,14 @@ begin
             end;
           end;
         end;
+      end;
+
+      for i:=0 to length(newSolid.meshTriangles) - 1 do begin //every triangle i
+        newSolid.meshTriangles[i].vertexs[0] := @newSolid.meshVertexs[i*3];
+        newSolid.meshTriangles[i].vertexs[1] := @newSolid.meshVertexs[i*3+1];
+        newSolid.meshTriangles[i].vertexs[2] := @newSolid.meshVertexs[i*3+2];
+        newSolid.meshTriangles[i].normal := newSolid.meshVertexs[i*3].normal;
+
       end;
 
     end;
@@ -4725,15 +4728,15 @@ begin
 end;
 
 procedure TFViewer.UpdateGLScene;
-var r, j, i, n: integer;
+var r, j, i, k, n: integer;
     sensor: TSensor;
     Mesh: TGLMeshObject;
     GunPos, GunDir: TVector3f;
     VertPos, VertDir: TVector3f;
     GunVert: TVector3f;
     Vert1, Vert2, VertTg: TVector3f;
-    Dist, angle_side, angle, angle_vertex: double;
-    intensity, sd: double;
+    Dist, angle_side, angle, solidAngle, angle_vertex: double;
+    paintQuantity, sd: double;
 
     temp_int: integer;
     temp_double: double;
@@ -4847,40 +4850,36 @@ begin
                                                           (VectorLength(GunVert)*VectorLength(GunDir)));
                 if (abs(angle_side) > pi/2) and (abs(angle) < sensor.paintMaxAngle) then begin
                   sd := 0.1;
-                  //intensity := 1/(sd*sqrt(2*pi))*exp(-0.5*(angle/sd)*(angle/sd));//gaussian (normal distribution) integral=1
-                  intensity := exp(-0.5*(angle/sd)*(angle/sd));
-                  Things[i].meshTriangles[j].vertexs[0]^.paint_quantity := Things[i].meshTriangles[j].vertexs[0]^.paint_quantity + intensity/3;
-                  Things[i].meshTriangles[j].vertexs[1]^.paint_quantity := Things[i].meshTriangles[j].vertexs[1]^.paint_quantity + intensity/3;
-                  Things[i].meshTriangles[j].vertexs[2]^.paint_quantity := Things[i].meshTriangles[j].vertexs[2]^.paint_quantity + intensity/3;
+                  paintQuantity := (sensor.paintRate*WorldODE.physTime);//*1/(sd*sqrt(2*pi))*exp(-0.5*(angle/sd)*(angle/sd));//gaussian (normal distribution) integral=1
+                  //paintQuantity := exp(-0.5*(angle/sd)*(angle/sd));
+                  Dist := VectorLength(GunVert);
+                  solidAngle := Things[i].meshTriangles[j].area/dist;
+                  paintQuantity := paintQuantity * solidAngle/(2*pi*(1 - cos(sensor.paintMaxAngle/2)));
+                  Things[i].meshTriangles[j].paintThickness := Things[i].meshTriangles[j].paintThickness + paintQuantity/Things[i].meshTriangles[j].area;
+                  for k:=0 to 2 do begin
+                                                                           //sensor.paintColor + (255 - sensor.paintColor) * e^ -paintThickness/tau;
+                    Things[i].meshTriangles[j].vertexs[k]^.paintMapColor := VectorAdd(sensor.paintColor, VectorScale(VectorSubtract(ConvertRGBColor([255,255,255]), sensor.paintColor), exp(-Things[i].meshTriangles[j].paintThickness/400)));
+                    //Things[i].meshTriangles[j].vertexs[k]^.paintMapColor := VectorAdd(Things[i].meshTriangles[j].vertexs[k]^.paintMapColor,
+                    //                                                        VectorScale(VectorSubtract(sensor.paintColor, Things[i].meshTriangles[j].vertexs[k]^.paintMapColor),
+                    //                                                                    0.1*Things[i].meshTriangles[j].paintThickness));//jm: mudar a constante para ficar bonito (realista)
+                    Things[i].meshTriangles[j].vertexs[k]^.paintHeatmapColor := Things[i].CalculateHeatmapColor(Things[i].meshTriangles[j].paintThickness);
+                  end;
                 end;
               end;
               for j:=0 to Mesh.Vertices.Count - 1 do begin
-                Things[i].paintmap[j] := VectorAdd(Things[i].paintmap[j],
-                                        VectorScale(VectorSubtract(sensor.paintColor, Things[i].paintmap[j]), sensor.paintRate*Things[i].meshVertexs[j].paint_quantity));
-                Things[i].paintThickness[j] := Things[i].paintThickness[j] + sensor.paintRate*0.00015*Things[i].meshVertexs[j].paint_quantity;
-                Things[i].paintHeatmap[j] := Things[i].CalculateHeatmapColor(Things[i].paintThickness[j]);
+                //Things[i].paintmap[j] := VectorAdd(Things[i].paintmap[j],VectorScale(VectorSubtract(sensor.paintColor, Things[i].paintmap[j]), sensor.paintRate*Things[i].meshVertexs[j].paint_quantity));
+                //Things[i].paintThickness[j] := Things[i].paintThickness[j] + sensor.paintRate*0.00015*Things[i].meshVertexs[j].paint_quantity;
+                //Things[i].paintHeatmap[j] := Things[i].CalculateHeatmapColor(Things[i].paintThickness[j]);
                 if(Things[i].paintMode = pmPaint) then begin
-                  Mesh.Colors[j] := Things[i].paintmap[j];
+                  Mesh.Colors[j] := Things[i].meshVertexs[j].paintMapColor;
                 end else if (Things[i].paintMode = pmHeatmap) then begin
-                  Mesh.Colors[j] := Things[i].paintHeatmap[j];
-                end;
-
-              end;
-
-              //DEBUG ONLY
-              for j:=0 to Length(Things[i].meshTriangles)-1 do begin
-                  Things[i].meshTriangles[j].vertexs[0]^.paint_quantity:=69;
-              end;
-              for j:=0 to Mesh.Vertices.Count-1 do begin
-                if(Things[i].meshVertexs[j].paint_quantity=69) then begin
-                  Mesh.Colors[j] := Things[i].CalculateHeatmapColor(0);
+                  Mesh.Colors[j] := Things[i].meshVertexs[j].paintHeatmapColor;
                 end;
               end;
-              //END DEBUG ONLY
               temp_solid := Things[i];
               (Things[i].AltGLObj as TGLFreeForm).StructureChanged;
             end;
-            //working mode
+            //"working" mode
             (*
             if (sensor.kind=skSprayGun) and sensor.paintOn then begin
               //(Things[i].AltGLObj as TGLFreeForm).MaterialLibrary := nil;
@@ -4904,15 +4903,15 @@ begin
                 if (abs(angle_side) > pi/2) and (abs(angle) < sensor.paintMaxAngle) then begin
                   Dist := VectorLength(GunVert);
                   sd := 0.1;
-                  intensity := 1/(sd*sqrt(2*pi))*exp(-0.5*(angle/sd)*(angle/sd));//gaussian (normal distribution) integral=1
-                  //intensity := 1;
+                  paintQuantity := 1/(sd*sqrt(2*pi))*exp(-0.5*(angle/sd)*(angle/sd));//gaussian (normal distribution) integral=1
+                  //paintQuantity := 1;
 
-                  {intensity := exp(-0.5*(angle/sd)*(angle/sd));
-                  (*intensity := exp(-0.5*(angle/sd)*(angle/sd));
+                  {paintQuantity := exp(-0.5*(angle/sd)*(angle/sd));
+                  (*paintQuantity := exp(-0.5*(angle/sd)*(angle/sd));
                   //interval_min = pi/2-MaxAngle/2 (f(interval_min)=+inf)
                   if (angle > -1.46) and (angle > -1.46) then begin
-                     intensity := intensity/(pi*2*Dist*Dist*tan(sensor.paintMaxAngle/2) * sin(pi/2-angle) * (1/(tan(pi/2-angle-sensor.paintMaxAngle/2))-1/(tan(pi/2-angle+sensor.paintMaxAngle/2))));
-                     //intensity := intensity/(pi*2*Dist*Dist*tan(sensor.paintMaxAngle/2) * sin(pi/2-angle_side) * (1/(tan(pi/2-angle_side-sensor.paintMaxAngle/2))-1/(tan(pi/2-angle_side+sensor.paintMaxAngle/2))));
+                     paintQuantity := paintQuantity/(pi*2*Dist*Dist*tan(sensor.paintMaxAngle/2) * sin(pi/2-angle) * (1/(tan(pi/2-angle-sensor.paintMaxAngle/2))-1/(tan(pi/2-angle+sensor.paintMaxAngle/2))));
+                     //paintQuantity := paintQuantity/(pi*2*Dist*Dist*tan(sensor.paintMaxAngle/2) * sin(pi/2-angle_side) * (1/(tan(pi/2-angle_side-sensor.paintMaxAngle/2))-1/(tan(pi/2-angle_side+sensor.paintMaxAngle/2))));
                   end;
                   }
 
@@ -4928,15 +4927,15 @@ begin
                   temp_double := VectorLength(temp_vector);
                   temp_double :=(2*pi*(1 - cos(angle_vertex/2)));
                   temp_double :=(2*pi*(1 - cos(sensor.paintMaxAngle/2)));
-                  //intensity := 100*intensity*(2*pi*(1 - cos(angle_vertex/2)))/(2*pi*(1 - cos(sensor.paintMaxAngle/2)));//solid angle proportion
+                  //paintQuantity := 100*paintQuantity*(2*pi*(1 - cos(angle_vertex/2)))/(2*pi*(1 - cos(sensor.paintMaxAngle/2)));//solid angle proportion
 
                   end;
 
                   //Things[i].avgAreaPerVertex
 
                   Things[i].paintmap[j] := VectorAdd(Things[i].paintmap[j],
-                                        VectorScale(VectorSubtract(sensor.paintColor, Things[i].paintmap[j]), sensor.paintRate*intensity));
-                  Things[i].paintThickness[j] := Things[i].paintThickness[j] + sensor.paintRate*0.00015*intensity;
+                                        VectorScale(VectorSubtract(sensor.paintColor, Things[i].paintmap[j]), sensor.paintRate*paintQuantity));
+                  Things[i].paintThickness[j] := Things[i].paintThickness[j] + sensor.paintRate*0.00015*paintQuantity;
                   Things[i].paintHeatmap[j] := Things[i].CalculateHeatmapColor(Things[i].paintThickness[j]);
 
                   //binary option: Mesh.Colors[j] := sensor.paintColor;

@@ -49,6 +49,7 @@ uses
   ,GLGeometryBB
   ,GLColor
   ,GLVectorGeometry
+  ,GLVectorTypes
   ,ODERobotsPublished
   ;
  
@@ -79,8 +80,10 @@ begin
   CL.AddTypeS('TRGBAColor', 'record Red : integer; Green : integer; Blue : inte'
    +'ger; alpha : integer; end');
   CL.AddTypeS('TExtents', 'record Min : TPoint3D; Max : TPoint3D; end');
-  CL.AddTypeS('TArrayOfPoints', 'array of TPoint3D');
-  CL.AddTypeS('TVertexs', 'record V : TArrayOfPoints; count : integer; end');
+  CL.AddTypeS('TFace', 'record vertice0 : TPoint3D; vertice1 : TPoint3D; vertic'
+   +'e2 : TPoint3D; center : TPoint3D; normal : TPoint3D; area : double; neighb'
+   +'ors : array of integer; end');
+  CL.AddTypeS('TTriangles', 'array of TFace');
   CL.AddTypeS('TPaintVisuals', '( pmPaint, pmHeatmap )');
  CL.AddDelphiFunction('Procedure SetFireScale( x, y, z : double)');
  CL.AddDelphiFunction('Procedure SetFirePosition( x, y, z : double)');
@@ -137,7 +140,7 @@ begin
  CL.AddDelphiFunction('Function CalculateMinSprayThickness( i : integer) : double');
  CL.AddDelphiFunction('Function CalculateMaxSprayThickness( i : integer) : double');
  CL.AddDelphiFunction('Function CalculateSprayCoverage( i : integer) : double');
- CL.AddDelphiFunction('Function GetPaintTargetVertices( i : integer) : TVertexs');
+ CL.AddDelphiFunction('Function GetPaintTargetTriangles( i : integer) : TTriangles');
  CL.AddDelphiFunction('Procedure SetSolidSurfaceFriction( R, i : integer; mu, mu2 : double)');
  CL.AddDelphiFunction('Procedure SetSolidForce( R, i : integer; Fx, Fy, Fz : double)');
  CL.AddDelphiFunction('Function GetSolidSize( R, i : integer) : TPoint3D');
@@ -410,7 +413,7 @@ begin
  S.RegisterDelphiFunction(@CalculateMinSprayThickness, 'CalculateMinSprayThickness', cdRegister);
  S.RegisterDelphiFunction(@CalculateMaxSprayThickness, 'CalculateMaxSprayThickness', cdRegister);
  S.RegisterDelphiFunction(@CalculateSprayCoverage, 'CalculateSprayCoverage', cdRegister);
- S.RegisterDelphiFunction(@GetPaintTargetVertices, 'GetPaintTargetVertices', cdRegister);
+ S.RegisterDelphiFunction(@GetPaintTargetTriangles, 'GetPaintTargetTriangles', cdRegister);
  S.RegisterDelphiFunction(@SetSolidSurfaceFriction, 'SetSolidSurfaceFriction', cdRegister);
  S.RegisterDelphiFunction(@SetSolidForce, 'SetSolidForce', cdRegister);
  S.RegisterDelphiFunction(@GetSolidSize, 'GetSolidSize', cdRegister);

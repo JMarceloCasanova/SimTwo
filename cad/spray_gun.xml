@@ -10,7 +10,7 @@
       <size x='0.02' y='0.04' z='0.08'/>
 
       <pos x='0' y='0' z='0.04'/>
-      <rot_deg x='0' y='45' z='0'/>
+      <rot_deg x='0' y='90' z='0'/>
       <color_rgb r='150' g='150' b='150'/>
     </cuboid>
 
@@ -22,10 +22,10 @@
       <absolute_coords/>
       <beam length='0.5' initial_width='0' final_width='0.1'/>
       <pos x='0' y='0' z='0.04'/>
-      <rot_deg x='0' y='45' z='0'/>
+      <rot_deg x='0' y='90' z='0'/>
       <color_rgb r='200' g='0' b='0'/>
       <paint_color_rgb r='0' g='100' b='255'/>
-      <paint_rate value='0.02'/>
+      <paint_rate value='0.04'/>
       <paint_default_on value='true'/>
     </spraygun>
 

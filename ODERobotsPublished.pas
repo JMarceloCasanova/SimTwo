@@ -5,7 +5,7 @@ unit ODERobotsPublished;
 interface
 
 uses Graphics, Types, ODERobots, PathFinder, dynmatrix, GLKeyboard, ODEGL,
-  GLVectorFileObjects, GLGeometryBB, GLColor, GLVectorGeometry;
+  GLVectorFileObjects, GLGeometryBB, GLColor, GLVectorGeometry, GLVectorTypes;
 
 type
   TAxisPoint = record
@@ -75,8 +75,24 @@ type
     Max: TPoint3D;
   end;
 
-  TArrayOfPoints = array of TPoint3D;
+  TFaceVertexs = array [0..2] of TPoint3D;
 
+  TFace = record
+    //TODO: solve:
+    //vertices: TFaceVertexs;
+    vertice0: TPoint3D;
+    vertice1: TPoint3D;
+    vertice2: TPoint3D;
+    center: TPoint3D;
+    normal: TPoint3D;
+    area: double;
+    neighbors: array of integer;
+  end;
+
+  TTriangles = array of TFace;
+
+{delete this example:
+  TArrayOfPoints = array of TPoint3D;
   TVertexs = record
     V: TArrayOfPoints;
     //V: array[0..20] of TPoint3D;//Vertices
@@ -84,6 +100,9 @@ type
     //C: array[0..2000] of TPoint3D;//Colors
     count: integer;
   end;
+}
+
+
 
   TPaintVisuals = (pmPaint, pmHeatmap);
 
@@ -166,7 +185,7 @@ function CalculatePosMinSprayThickness(i: integer): double;
 function CalculateMinSprayThickness(i: integer): double;
 function CalculateMaxSprayThickness(i: integer): double;
 function CalculateSprayCoverage(i: integer): double;
-function GetPaintTargetVertices(i: integer): TVertexs;
+function GetPaintTargetTriangles(i: integer): TTriangles;
 
 procedure SetSolidSurfaceFriction(R, i: integer; mu, mu2: double);
 
@@ -1140,9 +1159,11 @@ begin
        k:=k+1;
        if k=i then begin
           for l:=0 to (WorldODE.Things[i].AltGLObj as TGLFreeForm).MeshObjects[0].Vertices.Count - 1 do begin
-              WorldODE.Things[j].paintmap[l] := ConvertRGBColor([255,255,255]);
-              WorldODE.Things[j].paintThickness[l] := 0;
-              WorldODE.Things[j].paintHeatmap[l] := WorldODE.Things[j].CalculateHeatmapColor(0);
+              WorldODE.Things[i].meshVertexs[l].paintMapColor := ConvertRGBColor([255,255,255]);
+              WorldODE.Things[i].meshVertexs[l].paintHeatmapColor := WorldODE.Things[j].CalculateHeatmapColor(0);
+          end;
+          for l:=0 to length(WorldODE.Things[i].meshTriangles)-1 do begin
+            WorldODE.Things[i].meshTriangles[l].paintThickness := 0;
           end;
        end;
     end;
@@ -1202,9 +1223,9 @@ begin
     if WorldODE.Things[j].isPaintTarget then begin
        k:=k+1;
        if k=i then begin
-          for l:=0 to WorldODE.Things[j].paintThickness.Count-1 do begin
+          for l:=0 to length(WorldODE.Things[j].meshTriangles)-1 do begin
              n:=n+1;
-             result := result + WorldODE.Things[j].paintThickness[l];
+             result := result + WorldODE.Things[j].meshTriangles[l].paintThickness;
           end;
        end;
     end;
@@ -1226,10 +1247,10 @@ begin
     if WorldODE.Things[j].isPaintTarget then begin
        k:=k+1;
        if k=i then begin
-          for l:=0 to WorldODE.Things[j].paintThickness.Count-1 do begin
+          for l:=0 to length(WorldODE.Things[j].meshTriangles)-1 do begin
              n:=n+1;
-             result := result +((WorldODE.Things[j].paintThickness[l] - avg)*
-                                (WorldODE.Things[j].paintThickness[l] - avg));
+             result := result +((WorldODE.Things[j].meshTriangles[l].paintThickness - avg)*
+                                (WorldODE.Things[j].meshTriangles[l].paintThickness - avg));
           end;
        end;
     end;
@@ -1250,10 +1271,10 @@ begin
     if WorldODE.Things[j].isPaintTarget then begin
        k:=k+1;
        if k=i then begin
-          for l:=0 to WorldODE.Things[j].paintThickness.Count-1 do begin
-            if WorldODE.Things[j].paintThickness[l] > 0 then begin
+          for l:=0 to length(WorldODE.Things[j].meshTriangles)-1 do begin
+            if WorldODE.Things[j].meshTriangles[l].paintThickness > 0 then begin
                n:=n+1;
-               result := result + WorldODE.Things[j].paintThickness[l];
+               result := result + WorldODE.Things[j].meshTriangles[l].paintThickness;
             end;
           end;
        end;
@@ -1276,11 +1297,11 @@ begin
     if WorldODE.Things[j].isPaintTarget then begin
        k:=k+1;
        if k=i then begin
-          for l:=0 to WorldODE.Things[j].paintThickness.Count-1 do begin
-            if WorldODE.Things[j].paintThickness[l]>0 then begin
+          for l:=0 to length(WorldODE.Things[j].meshTriangles)-1 do begin
+            if WorldODE.Things[j].meshTriangles[l].paintThickness>0 then begin
               n:=n+1;
-              result := result +((WorldODE.Things[j].paintThickness[l] - avg)*
-                                 (WorldODE.Things[j].paintThickness[l] - avg));
+              result := result +((WorldODE.Things[j].meshTriangles[l].paintThickness - avg)*
+                                 (WorldODE.Things[j].meshTriangles[l].paintThickness - avg));
             end;
           end;
        end;
@@ -1299,9 +1320,9 @@ begin
     if WorldODE.Things[j].isPaintTarget then begin
        k:=k+1;
        if k=i then begin
-          for l:=0 to WorldODE.Things[j].paintThickness.Count-1 do begin
-            if (WorldODE.Things[j].paintThickness[l] < result) and (WorldODE.Things[j].paintThickness[l] > 0) then begin
-               result := WorldODE.Things[j].paintThickness[l];
+          for l:=0 to length(WorldODE.Things[j].meshTriangles)-1 do begin
+            if (WorldODE.Things[j].meshTriangles[l].paintThickness < result) and (WorldODE.Things[j].meshTriangles[l].paintThickness > 0) then begin
+               result := WorldODE.Things[j].meshTriangles[l].paintThickness;
             end;
           end;
        end;
@@ -1318,9 +1339,9 @@ begin
     if WorldODE.Things[j].isPaintTarget then begin
        k:=k+1;
        if k=i then begin
-          for l:=0 to WorldODE.Things[j].paintThickness.Count-1 do begin
-            if WorldODE.Things[j].paintThickness[l] < result then begin
-               result := WorldODE.Things[j].paintThickness[l];
+          for l:=0 to length(WorldODE.Things[j].meshTriangles)-1 do begin
+            if WorldODE.Things[j].meshTriangles[l].paintThickness < result then begin
+               result := WorldODE.Things[j].meshTriangles[l].paintThickness;
             end;
           end;
        end;
@@ -1337,9 +1358,9 @@ begin
     if WorldODE.Things[j].isPaintTarget then begin
        k:=k+1;
        if k=i then begin
-          for l:=0 to WorldODE.Things[j].paintThickness.Count-1 do begin
-            if WorldODE.Things[j].paintThickness[l] > result then begin
-               result := WorldODE.Things[j].paintThickness[l];
+          for l:=0 to length(WorldODE.Things[j].meshTriangles)-1 do begin
+            if WorldODE.Things[j].meshTriangles[l].paintThickness > result then begin
+               result := WorldODE.Things[j].meshTriangles[l].paintThickness;
             end;
           end;
        end;
@@ -1356,43 +1377,52 @@ begin
     if WorldODE.Things[j].isPaintTarget then begin
        k:=k+1;
        if k=i then begin
-          for l:=0 to WorldODE.Things[j].paintThickness.Count-1 do begin
-            if WorldODE.Things[j].paintThickness[l] > 0 then begin
+          for l:=0 to length(WorldODE.Things[j].meshTriangles)-1 do begin
+            if WorldODE.Things[j].meshTriangles[l].paintThickness > 0 then begin
                result := result+1;
             end;
           end;
-          result := result/WorldODE.Things[j].paintThickness.Count;
+          result := result/length(WorldODE.Things[j].meshTriangles);
        end;
     end;
   end;
 end;
 
 
-function GetPaintTargetVertices(i: integer): TVertexs;
-var j,k, l: integer;
-    Mesh: TGLMeshObject;
+function GetPaintTargetTriangles(i: integer): TTriangles;
+var j,k, l, m: integer;
 begin
   k:=-1;
   for j:=0 to WorldODE.Things.Count-1 do begin
     if WorldODE.Things[j].isPaintTarget then begin
        k:=k+1;
        if k=i then begin
-          Mesh := (WorldODE.Things[i].AltGLObj as TGLFreeForm).MeshObjects[0];
-          result.count := Mesh.Vertices.count;
-          if result.count > 2000 then begin
-             //showmessage('meshes more than 2000 vertices not supported yet, only the first 2000 will be used');
-             result.count := 20;
+          setLength(result, length(WorldODE.Things[i].meshTriangles));
+          if length(result) > 200000 then begin
+             //showmessage('meshes more than 200000 vertices not supported yet, only the first 2000 will be used');
+             setLength(result, 200000);
           end;
-          for l:=0 to result.count-1 do begin
-            {result.V[l].x := Mesh.Vertices[l].X;
-            result.V[l].y := Mesh.Vertices[l].Y;
-            result.V[l].z := Mesh.Vertices[l].Z;
-            result.N[l].x := Mesh.Normals[l].X;
-            result.N[l].y := Mesh.Normals[l].Y;
-            result.N[l].z := Mesh.Normals[l].Z;
-            result.C[l].x := Mesh.Colors[l].X;
-            result.C[l].y := Mesh.Colors[l].Y;
-            result.C[l].z := Mesh.Colors[l].Z;}
+          for l:=0 to length(result)-1 do begin
+            result[l].vertice0.X := WorldODE.Things[i].meshTriangles[l].vertexs[0]^.pos.X;
+            result[l].vertice0.Y := WorldODE.Things[i].meshTriangles[l].vertexs[0]^.pos.Y;
+            result[l].vertice0.Z := WorldODE.Things[i].meshTriangles[l].vertexs[0]^.pos.Z;
+            result[l].vertice1.X := WorldODE.Things[i].meshTriangles[l].vertexs[1]^.pos.X;
+            result[l].vertice1.Y := WorldODE.Things[i].meshTriangles[l].vertexs[1]^.pos.Y;
+            result[l].vertice1.Z := WorldODE.Things[i].meshTriangles[l].vertexs[1]^.pos.Z;
+            result[l].vertice2.X := WorldODE.Things[i].meshTriangles[l].vertexs[2]^.pos.X;
+            result[l].vertice2.Y := WorldODE.Things[i].meshTriangles[l].vertexs[2]^.pos.Y;
+            result[l].vertice2.Z := WorldODE.Things[i].meshTriangles[l].vertexs[2]^.pos.Z;
+            result[l].normal.X := WorldODE.Things[i].meshTriangles[l].normal.X;
+            result[l].normal.Y := WorldODE.Things[i].meshTriangles[l].normal.Y;
+            result[l].normal.Z := WorldODE.Things[i].meshTriangles[l].normal.Z;
+            result[l].center.X := WorldODE.Things[i].meshTriangles[l].center.X;
+            result[l].center.Y := WorldODE.Things[i].meshTriangles[l].center.Y;
+            result[l].center.Z := WorldODE.Things[i].meshTriangles[l].center.Z;
+            result[l].area:= WorldODE.Things[i].meshTriangles[l].area;
+            setLength(result[l].neighbors, length(WorldODE.Things[i].meshTriangles[l].neighbors));
+            for m:=0 to length(WorldODE.Things[i].meshTriangles[l].neighbors) - 1 do begin
+              result[l].neighbors[m] := WorldODE.Things[i].meshTriangles[l].neighbors[m];
+            end;
           end;
        end;
     end;

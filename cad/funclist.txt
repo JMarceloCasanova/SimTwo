@@ -165,7 +165,7 @@
  function CalculateMinSprayThickness(i: LongInt): Double;
  function CalculateMaxSprayThickness(i: LongInt): Double;
  function CalculateSprayCoverage(i: LongInt): Double;
- function GetPaintTargetVertices(i: LongInt): TVertexs;
+ function GetPaintTargetTriangles(i: LongInt): TTriangles;
  procedure SetSolidSurfaceFriction(R: LongInt; i: LongInt; mu: Double; mu2: Double);
  procedure SetSolidForce(R: LongInt; i: LongInt; Fx: Double; Fy: Double; Fz: Double);
  function GetSolidSize(R: LongInt; i: LongInt): TPoint3D;

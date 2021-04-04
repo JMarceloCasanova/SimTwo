@@ -83,7 +83,8 @@ type
     pos: TVector3f;
     normal: TVector3f;
     triangles: array of integer;
-    paint_quantity: double;
+    paintMapColor: TVector;
+    paintHeatmapColor: TVector;
   end;
 
   TTriangle = record
@@ -92,6 +93,7 @@ type
     normal: TAffineVector;
     area: double;
     neighbors: array of integer;
+    paintThickness: double;
   end;
 
   TSolid = class
@@ -101,9 +103,9 @@ type
     PaintBitmap: TBitmap;
     PaintBitmapCorner: TdVector3;
     isPaintTarget: bool;
-    paintThickness: TDoubleList;
-    paintHeatmap: TVectorList;
-    paintmap: TVectorList;
+    //paintThickness: TDoubleList;
+    //paintHeatmap: TVectorList;
+    //paintmap: TVectorList;
     paintMode: TPaintMode;
     avgAreaPerVertex: double;
     meshVertexs: array of TVertex;
@@ -1026,7 +1028,8 @@ var r,g,b:integer;
     max, min, avg: double;
 begin
   min := 0;
-  max := 0.00015*50;
+  //max := 0.00015*50;
+  max := 5000;
   avg := (max-min)/2;
   if paintThickness > max then begin
     result := ConvertRGBColor([255,0,0]);
