@@ -14,7 +14,7 @@ def send(msg):
     #print("send:", msg)
     sockSend.sendto(msg.encode('UTF-8'), (UDP_IP, UDP_REMOTE_PORT))
 def read():
-    data, addr = sockRec.recvfrom(64000)
+    data, _ = sockRec.recvfrom(64000)
     data = data.decode('UTF-8')
     #print("rec:", data)
     if data[0] == 'a':
@@ -47,7 +47,8 @@ def connect():
     wait_until = datetime.now() + timedelta(seconds=1)
     send("SYN")
     while not connection:
-        data, addr = sockRec.recvfrom(1024) # buffer size is 1024 bytes
+        data, _ = sockRec.recvfrom(1024) # buffer size is 1024 bytes
+        print(data.decode('UTF-8'))
         if data.decode('UTF-8') == "ACK":
             connection = True
             time.sleep(1)
@@ -67,6 +68,7 @@ class triangle(object):
         self.center = np.array([0,0,0], dtype=np.float64)
         self.area = 0
         self.neighbors = []
+        self.color = np.array([255,255,255], dtype=np.int16)
 
     def __str__(self):#custom print
         txt = "\nvertices:\n"
@@ -126,26 +128,34 @@ def vec_length(a):
 
 def angle(a, b):
     #print((a[0]*b[0] + a[1]*b[1] + a[2] + b[2]) / (vec_length(a)*vec_length(b)) )
-    return np.arccos((a[0]*b[0] + a[1]*b[1] + a[2] + b[2]) / (vec_length(a)*vec_length(b)) )
+    return np.arccos((a[0]*b[0] + a[1]*b[1] + a[2]*b[2]) / (vec_length(a)*vec_length(b)) )
 
 def subdivision(max_angle, triangles):
     free_triangles = [i for i in range(len(triangles))]
     parts = []
     while len(free_triangles) > 0:
         part = []
+        print()
         print(len(free_triangles))
-        to_be_visited = [free_triangles.pop(random.randint(0,len(free_triangles)-1))]
+        print(len(parts))
+        print()
+        part_seed = free_triangles[random.randint(0,len(free_triangles)-1)]
+        to_be_visited = [part_seed]
         while len(to_be_visited) > 0:
             seed = to_be_visited.pop()
+            free_triangles.remove(seed)
             part.append(seed)
             for nei in triangles[seed].neighbors:
-                if (angle(triangles[seed].normal, triangles[nei].normal) < max_angle) \
-                    and (nei in free_triangles):
+                if (angle(triangles[part_seed].normal, triangles[nei].normal) < max_angle) \
+                    and (nei in free_triangles) and (nei not in to_be_visited):
                     to_be_visited.append(nei)
+            #print("\t", len(to_be_visited))
+        parts.append(part)
 
+    return parts
 
 if __name__ == "__main__":
-    if (not os.path.isfile('triangles.npy')) or False:
+    if (not os.path.isfile('triangles.npy')) or True:
         connect()
         load_triangles()
         disconnect()
@@ -153,8 +163,19 @@ if __name__ == "__main__":
     triangles = np.load("triangles.npy", allow_pickle=True)
     print(len(triangles))
     
-    subdivision(np.pi/2, triangles)
+    parts = subdivision(np.pi/2, triangles)
 
-   
+    for part in parts:
+        part_color = np.array([random.randint(0,254),random.randint(0,254),random.randint(0,254)], dtype=np.float64)
+        for i in part:
+            triangles[i].color = part_color
+
+    connect()
+    send("SendResultColorsCount "+str(3*len(triangles)))
+    send("SendResultColors")
+    for i in range(len(triangles)):
+        for j in range(3):
+            send("c"+str(triangles[i].color[j]))
+    disconnect()
 
 
