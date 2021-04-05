@@ -279,11 +279,12 @@ begin
   result := strtofloat(StrPacket[i+1]);
 end;
 
-procedure DecodeCommands(var command: string);
-var StrPacketRec, StrPacketSend: TStringList; 
+procedure DecodeCommands(var command: string);//Client POV
+var StrPacketRec, StrPacketSend, StrPacket: TStringList; 
     Triangles: TTriangles;
     i, j, l: integer;
     st, en:integer;
+    colors: array of TPoint3D;
 begin
   StrPacketRec := TStringList.create;
   StrPacketSend := TStringList.create;
@@ -350,6 +351,40 @@ begin
       WriteLn(StrPacketSend.text);
       WriteLn('sent');
     end;  
+  end;
+  i := StrPacketRec.indexof('SendResultColorsCount');
+  if (i >= 0) and (i < StrPacketRec.count) then begin
+    en := strtoint(StrPacketRec[i+1]);
+    setLength(colors, en);
+  end else begin
+    i := StrPacketRec.indexof('SendResultColors');
+    if (i >= 0) and (i < StrPacketRec.count) then begin
+      WriteLn('ResultColors');
+      for j:=0 to ((en/3)-1) do begin
+        try
+          StrPacket.create;
+          while true do begin
+            StrPacket.text := ReadUDPData();
+            if StrPacket.text <> '' then break;
+          end;
+          colors[j].X := DecodeDoubleDef(StrPacket, 'c', 255);
+          while true do begin
+            StrPacket.text := ReadUDPData();
+            if StrPacket.text <> '' then break;
+          end;
+          colors[j].Y := DecodeDoubleDef(StrPacket, 'c', 255);
+          while true do begin
+            StrPacket.text := ReadUDPData();
+            if StrPacket.text <> '' then break;
+          end;
+          colors[j].Z := DecodeDoubleDef(StrPacket, 'c', 255);
+          
+        finally
+          StrPacket.free;
+        end;  
+      end;
+      SetResultTrianglesColor(0, colors);
+    end;
   end;
 end;
 
@@ -497,6 +532,7 @@ begin
   if RCButtonPressed(6, 4) then ResetPaintTargetPaint(0);
   if RCButtonPressed(7, 4) then SetPaintTargetPaintMode(0, pmPaint);
   if RCButtonPressed(8, 4) then SetPaintTargetPaintMode(0, pmHeatmap);
+  if RCButtonPressed(9, 4) then SetPaintTargetPaintMode(0, pmResult);
   if RCButtonPressed(10, 4) then SetSprayGunOn(0);
   if RCButtonPressed(11, 4) then SetSprayGunOff(0);
 

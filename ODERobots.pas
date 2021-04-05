@@ -76,7 +76,7 @@ type
   TMatterProperty = (smMetallic, smFerroMagnetic, smRFIDTag);
   TMatterProperties = set of TMatterProperty;
 
-  TPaintMode = (pmPaint, pmHeatmap);//pmOriginal
+  TPaintMode = (pmPaint, pmHeatmap, pmResult);//pmOriginal
 
   { TSolid }
   TVertex = record
@@ -85,6 +85,7 @@ type
     triangles: array of integer;
     paintMapColor: TVector;
     paintHeatmapColor: TVector;
+    paintResultColor: TVector;
   end;
 
   TTriangle = record

@@ -1565,10 +1565,13 @@ begin
       for j:=0 to Mesh.Vertices.Count - 1 do begin
         newSolid.meshVertexs[j].paintMapColor := ConvertRGBColor([255,255,255]);
         newSolid.meshVertexs[j].paintHeatmapColor := newSolid.CalculateHeatmapColor(0);
+        newSolid.meshVertexs[j].paintResultColor := ConvertRGBColor([100,100,100]);
         if(newSolid.paintMode = pmPaint) then begin
           Mesh.Colors.Add(newSolid.meshVertexs[j].paintMapColor);
         end else if (newSolid.paintMode = pmHeatmap) then begin
           Mesh.Colors.Add(newSolid.meshVertexs[j].paintHeatmapColor);
+        end else if (newSolid.paintMode = pmResult) then begin
+          Mesh.Colors.Add(newSolid.meshVertexs[j].paintResultColor);
         end;
         newSolid.meshVertexs[j].pos := Mesh.Vertices[j];
         newSolid.meshVertexs[j].normal := Mesh.Normals[j];
@@ -4874,6 +4877,8 @@ begin
                   Mesh.Colors[j] := Things[i].meshVertexs[j].paintMapColor;
                 end else if (Things[i].paintMode = pmHeatmap) then begin
                   Mesh.Colors[j] := Things[i].meshVertexs[j].paintHeatmapColor;
+                end else if (Things[i].paintMode = pmResult) then begin
+                  Mesh.Colors[j] := Things[i].meshVertexs[j].paintResultColor;
                 end;
               end;
               temp_solid := Things[i];

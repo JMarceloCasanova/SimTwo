@@ -84,7 +84,7 @@ begin
    +'e2 : TPoint3D; center : TPoint3D; normal : TPoint3D; area : double; neighb'
    +'ors : array of integer; end');
   CL.AddTypeS('TTriangles', 'array of TFace');
-  CL.AddTypeS('TPaintVisuals', '( pmPaint, pmHeatmap )');
+  CL.AddTypeS('TPaintVisuals', '( pmPaint, pmHeatmap, pmResult )');
  CL.AddDelphiFunction('Procedure SetFireScale( x, y, z : double)');
  CL.AddDelphiFunction('Procedure SetFirePosition( x, y, z : double)');
  CL.AddDelphiFunction('Procedure StartFire');
@@ -141,6 +141,7 @@ begin
  CL.AddDelphiFunction('Function CalculateMaxSprayThickness( i : integer) : double');
  CL.AddDelphiFunction('Function CalculateSprayCoverage( i : integer) : double');
  CL.AddDelphiFunction('Function GetPaintTargetTriangles( i : integer) : TTriangles');
+ CL.AddDelphiFunction('Procedure SetResultTrianglesColor( i : integer; colors : array of TPoint3D)');
  CL.AddDelphiFunction('Procedure SetSolidSurfaceFriction( R, i : integer; mu, mu2 : double)');
  CL.AddDelphiFunction('Procedure SetSolidForce( R, i : integer; Fx, Fy, Fz : double)');
  CL.AddDelphiFunction('Function GetSolidSize( R, i : integer) : TPoint3D');
@@ -414,6 +415,7 @@ begin
  S.RegisterDelphiFunction(@CalculateMaxSprayThickness, 'CalculateMaxSprayThickness', cdRegister);
  S.RegisterDelphiFunction(@CalculateSprayCoverage, 'CalculateSprayCoverage', cdRegister);
  S.RegisterDelphiFunction(@GetPaintTargetTriangles, 'GetPaintTargetTriangles', cdRegister);
+ S.RegisterDelphiFunction(@SetResultTrianglesColor, 'SetResultTrianglesColor', cdRegister);
  S.RegisterDelphiFunction(@SetSolidSurfaceFriction, 'SetSolidSurfaceFriction', cdRegister);
  S.RegisterDelphiFunction(@SetSolidForce, 'SetSolidForce', cdRegister);
  S.RegisterDelphiFunction(@GetSolidSize, 'GetSolidSize', cdRegister);

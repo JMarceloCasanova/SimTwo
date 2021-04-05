@@ -104,7 +104,7 @@ type
 
 
 
-  TPaintVisuals = (pmPaint, pmHeatmap);
+  TPaintVisuals = (pmPaint, pmHeatmap, pmResult);
 
 procedure SetFireScale(x, y, z: double);
 procedure SetFirePosition(x, y, z: double);
@@ -186,6 +186,7 @@ function CalculateMinSprayThickness(i: integer): double;
 function CalculateMaxSprayThickness(i: integer): double;
 function CalculateSprayCoverage(i: integer): double;
 function GetPaintTargetTriangles(i: integer): TTriangles;
+procedure SetResultTrianglesColor(i: integer; colors: array of TPoint3D);
 
 procedure SetSolidSurfaceFriction(R, i: integer; mu, mu2: double);
 
@@ -1390,7 +1391,7 @@ end;
 
 
 function GetPaintTargetTriangles(i: integer): TTriangles;
-var j,k, l, m: integer;
+var j, k, l, m: integer;
 begin
   k:=-1;
   for j:=0 to WorldODE.Things.Count-1 do begin
@@ -1422,6 +1423,29 @@ begin
             setLength(result[l].neighbors, length(WorldODE.Things[i].meshTriangles[l].neighbors));
             for m:=0 to length(WorldODE.Things[i].meshTriangles[l].neighbors) - 1 do begin
               result[l].neighbors[m] := WorldODE.Things[i].meshTriangles[l].neighbors[m];
+            end;
+          end;
+       end;
+    end;
+  end;
+end;
+
+
+procedure SetResultTrianglesColor(i: integer; colors: array of TPoint3D);
+var j, k, l, m: integer;
+begin
+  k:=-1;
+  for j:=0 to WorldODE.Things.Count-1 do begin
+    if WorldODE.Things[j].isPaintTarget then begin
+       k:=k+1;
+       if k=i then begin
+          if (length(colors) div 3) <> length(WorldODE.Things[i].meshTriangles) then begin
+             showmessage('length(colors) <> length(WorldODE.Things[i].meshTriangles)');
+          end else begin
+            for l:=0 to length(WorldODE.Things[i].meshTriangles) do begin
+              for m:=0 to 2 do begin
+                WorldODE.Things[i].meshTriangles[l].vertexs[m]^.paintResultColor := ConvertRGBColor([Trunc(colors[l div 3].X), Trunc(colors[l div 3].Y), Trunc(colors[l div 3].Z)]);
+              end;
             end;
           end;
        end;
