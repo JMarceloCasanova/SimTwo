@@ -5,6 +5,7 @@ import time
 import numpy as np
 from tqdm import tqdm
 import os.path
+import random
 
 UDP_IP = "127.0.0.1"
 UDP_REMOTE_PORT = 9808
@@ -117,6 +118,32 @@ def disconnect():
     send("Disconnect")
     print("Disconnected")
 
+#angle := arccos((GunVert.V[0]*GunDir.V[0] + GunVert.V[1]*GunDir.V[1] + GunVert.V[2]*GunDir.V[2])/
+#                                                          (VectorLength(GunVert)*VectorLength(GunDir)));
+
+def vec_length(a):
+    return np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2])
+
+def angle(a, b):
+    #print((a[0]*b[0] + a[1]*b[1] + a[2] + b[2]) / (vec_length(a)*vec_length(b)) )
+    return np.arccos((a[0]*b[0] + a[1]*b[1] + a[2] + b[2]) / (vec_length(a)*vec_length(b)) )
+
+def subdivision(max_angle, triangles):
+    free_triangles = [i for i in range(len(triangles))]
+    parts = []
+    while len(free_triangles) > 0:
+        part = []
+        print(len(free_triangles))
+        to_be_visited = [free_triangles.pop(random.randint(0,len(free_triangles)-1))]
+        while len(to_be_visited) > 0:
+            seed = to_be_visited.pop()
+            part.append(seed)
+            for nei in triangles[seed].neighbors:
+                if (angle(triangles[seed].normal, triangles[nei].normal) < max_angle) \
+                    and (nei in free_triangles):
+                    to_be_visited.append(nei)
+
+
 if __name__ == "__main__":
     if (not os.path.isfile('triangles.npy')) or False:
         connect()
@@ -125,10 +152,9 @@ if __name__ == "__main__":
 
     triangles = np.load("triangles.npy", allow_pickle=True)
     print(len(triangles))
-    time.sleep(5)
-    for i in range(len(triangles)):
-        print(triangles[i])
-
     
+    subdivision(np.pi/2, triangles)
+
+   
 
 
