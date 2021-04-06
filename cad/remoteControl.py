@@ -48,7 +48,7 @@ def connect():
     send("SYN")
     while not connection:
         data, _ = sockRec.recvfrom(1024) # buffer size is 1024 bytes
-        print(data.decode('UTF-8'))
+        #print(data.decode('UTF-8'))
         if data.decode('UTF-8') == "ACK":
             connection = True
             time.sleep(1)
@@ -120,9 +120,6 @@ def disconnect():
     send("Disconnect")
     print("Disconnected")
 
-#angle := arccos((GunVert.V[0]*GunDir.V[0] + GunVert.V[1]*GunDir.V[1] + GunVert.V[2]*GunDir.V[2])/
-#                                                          (VectorLength(GunVert)*VectorLength(GunDir)));
-
 def vec_length(a):
     return np.sqrt(a[0]*a[0]+a[1]*a[1]+a[2]*a[2])
 
@@ -155,7 +152,7 @@ def subdivision(max_angle, triangles):
     return parts
 
 if __name__ == "__main__":
-    if (not os.path.isfile('triangles.npy')) or True:
+    if (not os.path.isfile('triangles.npy')) or False:
         connect()
         load_triangles()
         disconnect()
@@ -171,11 +168,16 @@ if __name__ == "__main__":
             triangles[i].color = part_color
 
     connect()
-    send("SendResultColorsCount "+str(3*len(triangles)))
-    send("SendResultColors")
-    for i in range(len(triangles)):
+    print("WriteCountResultColors "+str(len(triangles)))
+    send("WriteCountResultColors "+str(len(triangles))+" ")
+    time.sleep(3)
+    send("WriteResultColors ")
+    for i in tqdm(range(len(triangles))):
+        if (i % 80)==0:
+            time.sleep(2)
         for j in range(3):
-            send("c"+str(triangles[i].color[j]))
+            send("WriteResultColor "+str(triangles[i].color[j])+" ")
+    time.sleep(3)
     disconnect()
 
 

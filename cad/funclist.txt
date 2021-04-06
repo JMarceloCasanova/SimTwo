@@ -166,6 +166,7 @@
  function CalculateMaxSprayThickness(i: LongInt): Double;
  function CalculateSprayCoverage(i: LongInt): Double;
  function GetPaintTargetTriangles(i: LongInt): TTriangles;
+ procedure SetResultTrianglesColor(i: LongInt; colors: !OPENARRAYOFRECORD_TPOINT3D);
  procedure SetSolidSurfaceFriction(R: LongInt; i: LongInt; mu: Double; mu2: Double);
  procedure SetSolidForce(R: LongInt; i: LongInt; Fx: Double; Fy: Double; Fz: Double);
  function GetSolidSize(R: LongInt; i: LongInt): TPoint3D;

@@ -1441,6 +1441,8 @@ begin
        if k=i then begin
           if (length(colors) div 3) <> length(WorldODE.Things[i].meshTriangles) then begin
              showmessage('length(colors) <> length(WorldODE.Things[i].meshTriangles)');
+             showmessage(inttostr((length(colors))));
+             showmessage(inttostr(length(WorldODE.Things[i].meshTriangles)));
           end else begin
             for l:=0 to length(WorldODE.Things[i].meshTriangles) do begin
               for m:=0 to 2 do begin

@@ -4853,7 +4853,7 @@ begin
                                                           (VectorLength(GunVert)*VectorLength(GunDir)));
                 if (abs(angle_side) > pi/2) and (abs(angle) < sensor.paintMaxAngle) then begin
                   sd := 0.1;
-                  paintQuantity := (sensor.paintRate*WorldODE.physTime);//*1/(sd*sqrt(2*pi))*exp(-0.5*(angle/sd)*(angle/sd));//gaussian (normal distribution) integral=1
+                  paintQuantity := (sensor.paintRate*WorldODE.physTime)*1/(sd*sqrt(2*pi))*exp(-0.5*(angle/sd)*(angle/sd));//gaussian (normal distribution) integral=1
                   //paintQuantity := exp(-0.5*(angle/sd)*(angle/sd));
                   Dist := VectorLength(GunVert);
                   solidAngle := Things[i].meshTriangles[j].area/dist;

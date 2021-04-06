@@ -45,6 +45,11 @@ var
   connection: Boolean;
   await_synack: Boolean;
 
+  receiveResultColors: Boolean;
+  receiveResultColorsSize, receiveResultColorsPos: Integer;
+
+  colors: array of TPoint3D;
+
 function diffTPoint3D(a, b:TPoint3D):TPoint3D;
 begin
   result.x := a.x - b.x;
@@ -280,111 +285,121 @@ begin
 end;
 
 procedure DecodeCommands(var command: string);//Client POV
-var StrPacketRec, StrPacketSend, StrPacket: TStringList; 
+var StrPacketRec, StrPacketSend: TStringList;
     Triangles: TTriangles;
     i, j, l: integer;
-    st, en:integer;
-    colors: array of TPoint3D;
+    st, en, tries:integer;
 begin
   StrPacketRec := TStringList.create;
   StrPacketSend := TStringList.create;
 
   StrPacketRec.Delimiter := ' ';
   StrPacketRec.DelimitedText := command;
-  i := StrPacketRec.indexof('Disconnect');
-  if (i >= 0) and (i < StrPacketRec.count) then begin
-    connection := False;
-    WriteLn('Disconnected');
-  end;
-  i := StrPacketRec.indexof('ReadTrianglesCount');
-  if (i >= 0) and (i < StrPacketRec.count) then begin
-    Triangles := GetPaintTargetTriangles(0);
-    EncodeInteger(StrPacketSend, 'a', length(Triangles));
-    sendUdp(StrPacketSend.text);
-    WriteLn('sent');
-  end else begin
-    i := StrPacketRec.indexof('Read80Triangles');
-    st := strtoint(StrPacketRec[i+1]);
+
+  tries := 100000;
+  while (StrPacketRec.Count > 0) and (tries>0) do begin
+    
+    i := StrPacketRec.indexof('Disconnect');
+    if (i >= 0) and (i < StrPacketRec.count) then begin
+      connection := False;
+      WriteLn('Disconnected');
+      StrPacketRec.Delete(i);
+    end;
+    i := StrPacketRec.indexof('ReadTrianglesCount');
     if (i >= 0) and (i < StrPacketRec.count) then begin
       Triangles := GetPaintTargetTriangles(0);
-      if length(Triangles) > 0 then begin
-        if length(Triangles)-80 < st then en := length(Triangles)
-        else en := st+80;
-        Writeln('Sending');
-        Writeln(inttostr(en-st));
-        Writeln('triangles');
-        //for j:=0 to length(Triangles)-1 do begin
-        for j:=st to en-1 do begin
-          //WriteLn(inttostr(j));
-          EncodeInteger(StrPacketSend, 'b', j);
-          EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice0.X);
-          EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice0.Y);
-          EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice0.Z);
-          EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice1.X);
-          EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice1.Y);
-          EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice1.Z);
-          EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice2.X);
-          EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice2.Y);
-          EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice2.Z);
-          EncodeDouble(StrPacketSend, 'b', Triangles[j].normal.X);
-          EncodeDouble(StrPacketSend, 'b', Triangles[j].normal.Y);
-          EncodeDouble(StrPacketSend, 'b', Triangles[j].normal.Z);
-          EncodeDouble(StrPacketSend, 'b', Triangles[j].center.X);
-          EncodeDouble(StrPacketSend, 'b', Triangles[j].center.Y);
-          EncodeDouble(StrPacketSend, 'b', Triangles[j].center.Z);
-          EncodeDouble(StrPacketSend, 'b', Triangles[j].area);
-          
-          EncodeInteger(StrPacketSend, 'b', length(Triangles[j].neighbors));
-          for l:=0 to length(Triangles[j].neighbors) - 1 do begin
-            //WriteLn(inttostr(Triangles[j].neighbors[l]));
-            EncodeInteger(StrPacketSend, 'b', Triangles[j].neighbors[l]);
-          end;
-          EncodeDouble(StrPacketSend, 'b', 0);
-          if ((j mod 25) = 0) then WriteLn(StrPacketSend.text);
-        end;
-
-      end else begin              
-        WriteLn('no triangles');
-        EncodeDouble(StrPacketSend, 'b', 0);  
-      end;
+      EncodeInteger(StrPacketSend, 'a', length(Triangles));
       sendUdp(StrPacketSend.text);
-      WriteLn(StrPacketSend.text);
       WriteLn('sent');
-    end;  
-  end;
-  i := StrPacketRec.indexof('SendResultColorsCount');
-  if (i >= 0) and (i < StrPacketRec.count) then begin
-    en := strtoint(StrPacketRec[i+1]);
-    setLength(colors, en);
-  end else begin
-    i := StrPacketRec.indexof('SendResultColors');
+      StrPacketRec.Delete(i);
+    end else begin
+      i := StrPacketRec.indexof('Read80Triangles');
+      if (i >= 0) and (i < StrPacketRec.count) then begin
+        st := strtoint(StrPacketRec[i+1]);
+        Triangles := GetPaintTargetTriangles(0);
+        if length(Triangles) > 0 then begin
+          if length(Triangles)-80 < st then en := length(Triangles)
+          else en := st+80;
+          Writeln('Sending');
+          Writeln(inttostr(en-st));
+          Writeln('triangles');
+          //for j:=0 to length(Triangles)-1 do begin
+          for j:=st to en-1 do begin
+            //WriteLn(inttostr(j));
+            EncodeInteger(StrPacketSend, 'b', j);
+            EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice0.X);
+            EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice0.Y);
+            EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice0.Z);
+            EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice1.X);
+            EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice1.Y);
+            EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice1.Z);
+            EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice2.X);
+            EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice2.Y);
+            EncodeDouble(StrPacketSend, 'b', Triangles[j].vertice2.Z);
+            EncodeDouble(StrPacketSend, 'b', Triangles[j].normal.X);
+            EncodeDouble(StrPacketSend, 'b', Triangles[j].normal.Y);
+            EncodeDouble(StrPacketSend, 'b', Triangles[j].normal.Z);
+            EncodeDouble(StrPacketSend, 'b', Triangles[j].center.X);
+            EncodeDouble(StrPacketSend, 'b', Triangles[j].center.Y);
+            EncodeDouble(StrPacketSend, 'b', Triangles[j].center.Z);
+            EncodeDouble(StrPacketSend, 'b', Triangles[j].area);
+            
+            EncodeInteger(StrPacketSend, 'b', length(Triangles[j].neighbors));
+            for l:=0 to length(Triangles[j].neighbors) - 1 do begin
+              //WriteLn(inttostr(Triangles[j].neighbors[l]));
+              EncodeInteger(StrPacketSend, 'b', Triangles[j].neighbors[l]);
+            end;
+            EncodeDouble(StrPacketSend, 'b', 0);
+            if ((j mod 25) = 0) then WriteLn(StrPacketSend.text);
+          end;
+
+        end else begin              
+          WriteLn('no triangles');
+          EncodeDouble(StrPacketSend, 'b', 0);  
+        end;
+        sendUdp(StrPacketSend.text);
+        WriteLn(StrPacketSend.text);
+        WriteLn('sent');
+        StrPacketRec.Delete(i);
+        //StrPacketRec.Delete(i+1);
+      end;  
+    end;
+    i := StrPacketRec.indexof('WriteCountResultColors');
+    if (i >= 0) and (i < StrPacketRec.count) then begin
+      en := strtoint(StrPacketRec[i+1]);
+      WriteLn('WriteCountResultColors');
+      setLength(colors, en);
+      receiveResultColorsSize := en;
+      StrPacketRec.Delete(i);
+      //StrPacketRec.Delete(i+1);
+    end;
+    i := StrPacketRec.indexof('WriteResultColors');
     if (i >= 0) and (i < StrPacketRec.count) then begin
       WriteLn('ResultColors');
-      for j:=0 to ((en/3)-1) do begin
-        try
-          StrPacket.create;
-          while true do begin
-            StrPacket.text := ReadUDPData();
-            if StrPacket.text <> '' then break;
-          end;
-          colors[j].X := DecodeDoubleDef(StrPacket, 'c', 255);
-          while true do begin
-            StrPacket.text := ReadUDPData();
-            if StrPacket.text <> '' then break;
-          end;
-          colors[j].Y := DecodeDoubleDef(StrPacket, 'c', 255);
-          while true do begin
-            StrPacket.text := ReadUDPData();
-            if StrPacket.text <> '' then break;
-          end;
-          colors[j].Z := DecodeDoubleDef(StrPacket, 'c', 255);
-          
-        finally
-          StrPacket.free;
-        end;  
-      end;
-      SetResultTrianglesColor(0, colors);
+      receiveResultColors := True;
+      StrPacketRec.Delete(i);
     end;
+    i := StrPacketRec.indexof('WriteResultColor');
+    if receiveResultColors and (i >= 0) and (i < StrPacketRec.count) then begin
+      WriteLn(inttostr(receiveResultColorsPos));
+      if (receiveResultColorsPos+1) = receiveResultColorsSize then begin
+        receiveResultColorsPos := 0;
+        receiveResultColorsSize := 0;
+        receiveResultColors := False;
+        WriteLn('SetResultTrianglesColor length(colors):');
+        WriteLn(inttostr(length(colors)));
+        SetResultTrianglesColor(0, colors);
+      end else begin
+        //WriteLn(StrPacketRec[i+1]);
+        if (receiveResultColorsPos mod 3) = 0 then colors[receiveResultColorsPos div 3].X := strtofloat(StrPacketRec[i+1]);
+        if ((receiveResultColorsPos+1) mod 3) = 0 then colors[receiveResultColorsPos div 3].Y := strtofloat(StrPacketRec[i+1]);
+        if ((receiveResultColorsPos+2) mod 3) = 0 then colors[receiveResultColorsPos div 3].Z := strtofloat(StrPacketRec[i+1]);
+        receiveResultColorsPos := receiveResultColorsPos + 1;
+      end;
+      StrPacketRec.Delete(i);
+      //StrPacketRec.Delete(i+1);
+    end;
+    tries := tries-1;
   end;
 end;
 
@@ -728,4 +743,7 @@ begin
   connection := False;
   await_synack := False;
   SetRCValue(2,7,'Not Connected');
+  receiveResultColors := False;
+  receiveResultColorsSize := 0;
+  receiveResultColorsPos := 0;
 end;
