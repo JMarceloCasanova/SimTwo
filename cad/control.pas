@@ -531,7 +531,7 @@ end;
 
 
 procedure Control;
-var i: integer;
+var i, j: integer;
     B5Pos, B6Pos: Matrix;
     B6Rot, B6RotCalc: Matrix;
     xw, yw, zw: double;
@@ -542,6 +542,8 @@ var i: integer;
     BoxOffset: double;
     BoxUStep, BoxVExtend: double;
     traj: TTrajectory;
+
+    test: Matrix;
 begin
 //jm
   if RCButtonPressed(6, 4) then ResetPaintTargetPaint(0);
@@ -551,6 +553,18 @@ begin
   if RCButtonPressed(10, 4) then SetSprayGunOn(0);
   if RCButtonPressed(11, 4) then SetSprayGunOff(0);
 
+  if RCButtonPressed(8, 15) then begin
+
+    test := MLoad(GetRCText(8,16));
+    //MatrixToRange(8, 16, test);
+    setLength(colors, MNumRows(test));
+    for i:=0 to MNumRows(test)-1 do begin
+      colors[i].X := MGetV(test, i, 0);
+      colors[i].Y := MGetV(test, i, 1);
+      colors[i].Z := MGetV(test, i, 2);
+    end;
+    SetResultTrianglesColor(0, colors);
+  end;
 
   if RCButtonPressed(6, 13) then begin
     sg := ext.Max;

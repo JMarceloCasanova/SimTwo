@@ -167,17 +167,23 @@ if __name__ == "__main__":
         for i in part:
             triangles[i].color = part_color
 
-    connect()
-    print("WriteCountResultColors "+str(len(triangles)))
-    send("WriteCountResultColors "+str(len(triangles))+" ")
-    time.sleep(3)
-    send("WriteResultColors ")
-    for i in tqdm(range(len(triangles))):
-        if (i % 80)==0:
-            time.sleep(2)
-        for j in range(3):
-            send("WriteResultColor "+str(triangles[i].color[j])+" ")
-    time.sleep(3)
-    disconnect()
+    #connect()
+    #print("WriteCountResultColors "+str(len(triangles)))
+    #send("WriteCountResultColors "+str(len(triangles))+" ")
+    #time.sleep(3)
+    #send("WriteResultColors ")
+    #for i in tqdm(range(len(triangles))):
+    #    if (i % 80)==0:
+    #        time.sleep(2)
+    #    for j in range(3):
+    #        send("WriteResultColor "+str(triangles[i].color[j])+" ")
+    #time.sleep(3)
+    #disconnect()
+
+    with open('cad/ResultColors3.txt', 'w') as f:
+        for i in range(len(triangles)):
+            for j in range(3):
+                f.write(str(triangles[i].color[j])+" ")
+            f.write("\n")
 
 

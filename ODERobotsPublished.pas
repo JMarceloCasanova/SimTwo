@@ -1439,14 +1439,14 @@ begin
     if WorldODE.Things[j].isPaintTarget then begin
        k:=k+1;
        if k=i then begin
-          if (length(colors) div 3) <> length(WorldODE.Things[i].meshTriangles) then begin
+          if (length(colors)) <> length(WorldODE.Things[i].meshTriangles) then begin
              showmessage('length(colors) <> length(WorldODE.Things[i].meshTriangles)');
              showmessage(inttostr((length(colors))));
              showmessage(inttostr(length(WorldODE.Things[i].meshTriangles)));
           end else begin
-            for l:=0 to length(WorldODE.Things[i].meshTriangles) do begin
+            for l:=0 to length(WorldODE.Things[i].meshTriangles)-1 do begin
               for m:=0 to 2 do begin
-                WorldODE.Things[i].meshTriangles[l].vertexs[m]^.paintResultColor := ConvertRGBColor([Trunc(colors[l div 3].X), Trunc(colors[l div 3].Y), Trunc(colors[l div 3].Z)]);
+                WorldODE.Things[i].meshTriangles[l].vertexs[m]^.paintResultColor := ConvertRGBColor([Trunc(colors[l].X), Trunc(colors[l].Y), Trunc(colors[l].Z)]);
               end;
             end;
           end;
