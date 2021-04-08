@@ -180,10 +180,74 @@ if __name__ == "__main__":
     #time.sleep(3)
     #disconnect()
 
-    with open('cad/ResultColors3.txt', 'w') as f:
+    #with open('cad/ResultColors4.txt', 'w') as f:
+    #    for i in range(len(triangles)):
+    #        for j in range(3):
+    #            f.write(str(triangles[i].color[j])+" ")
+    #        f.write("\n")
+    
+
+    max_part = parts.index(max(parts, key=len))
+    max_part = parts.index(max(parts, key=len))
+
+    part_color = np.array([random.randint(0,254),random.randint(0,254),random.randint(0,254)], dtype=np.float64)
+    max_color = np.array([random.randint(0,254),random.randint(0,254),random.randint(0,254)], dtype=np.float64)
+    for part in parts:
+        if parts.index(part) == max_part:
+            for i in part:
+                triangles[i].color = max_color
+        else:
+            for i in part:
+                triangles[i].color = part_color
+
+    with open('cad/ResultColors4.txt', 'w') as f:
         for i in range(len(triangles)):
             for j in range(3):
                 f.write(str(triangles[i].color[j])+" ")
             f.write("\n")
 
+    #for t in parts:
+    i = parts[max_part][0]
+    align_rot_axis = np.cross(triangles[i].normal, np.array([0,0,1]))
+    align_rot_axis = align_rot_axis/np.sqrt(np.sum(align_rot_axis**2))
+
+    phi = angle(triangles[i].normal, np.array([0,0,1]))
+    W = np.array([[0, -align_rot_axis[2], align_rot_axis[1]],\
+                    [align_rot_axis[2], 0, -align_rot_axis[0]],\
+                    [-align_rot_axis[1], align_rot_axis[0], 0]])
+    align_rot_mat_z = np.eye(3) + np.sin(phi)*W + (1-np.cos(phi))*W*W
+    
+    align_rot_mat = np.eye(3)
+    min_volume = 99999999
+    aligned_phi = 0
+    for phi in np.arange(0, 2*np.pi, np.pi/180):
+        align_rot_mat_temp = np.array([[np.cos(phi), -np.sin(phi), 0],\
+                                        [np.sin(phi), np.cos(phi), 0],\
+                                        [0, 0, 1]])
+        aabb_min_x = 999999
+        aabb_max_x = -999999
+        aabb_min_y = 999999
+        aabb_max_y = -999999
+        aabb_min_z = 999999
+        aabb_max_z = -999999
+        for j in parts[max_part]:
+            new_center = align_rot_mat_temp*align_rot_mat_z*triangles[parts[max_part]].center
+            if new_center[0] < aabb_min_x :
+                aabb_min_x = new_center[0]
+            if new_center[0] > aabb_max_x :
+                aabb_max_x = new_center[0]
+            if new_center[1] < aabb_min_y :
+                aabb_min_y = new_center[1]
+            if new_center[1] > aabb_max_y :
+                aabb_max_y = new_center[1]
+            if new_center[2] < aabb_min_z :
+                aabb_min_z = new_center[2]
+            if new_center[2] > aabb_max_z :
+                aabb_max_z = new_center[2]
+
+        volume = (aabb_max_x-aabb_min_x) * (aabb_max_y-aabb_min_y) * (aabb_max_z-aabb_min_z)
+        if volume < min_volume:
+            min_volume = volume
+            aligned_phi = phi
+            align_rot_mat = align_rot_mat_temp*align_rot_mat_z #Don't mess this up!
 
