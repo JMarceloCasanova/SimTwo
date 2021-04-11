@@ -4,7 +4,7 @@ const
 type
   faces = (fTop, fBottom, fLeft, fRight, fBack, fFront);
   controlModes = (cmManual, cmPaintModes, cmUDPServer);
-  paintModes = (pmNone, pmBoxRaster);
+  paintModes = (pmNone, pmBoxRaster, pmLoadedTraj);
 
   TTrajectory = record
     points : array [0..500] of TPoint3D;
@@ -36,7 +36,7 @@ var
   paintMode: paintModes;
 
   ext: TExtents;
-  traj1 : TTrajectory;
+  traj1, traj2 : TTrajectory;
   //spray gun
   //sg_x, sg_y, sg_z,
   sg : TPoint3D;
@@ -450,26 +450,26 @@ begin
 
 end;
 
-procedure RunTrajectory1(vel: double);
+procedure RunTrajectory(vel: double; traj: TTrajectory);
 var dist: double;
     dirnorm: TPoint3D;
 begin
-  if traj1.nextPoint = 0 then begin
-    traj1.nextPoint := 1;
-    traj1.nextpointPerone := 0;
-    sg := traj1.points[0];
-  end else if traj1.nextPoint > traj1.count then begin
+  if traj.nextPoint = 0 then begin
+    traj.nextPoint := 1;
+    traj.nextpointPerone := 0;
+    sg := traj.points[0];
+  end else if traj.nextPoint > traj.count then begin
     paintMode := pmNone;
   end;
 
-  if traj1.nextpointPerone>0.95 then begin
-    traj1.nextPoint := traj1.nextPoint+1;
-    traj1.nextpointPerone := 0;
+  if traj.nextpointPerone>0.95 then begin
+    traj.nextPoint := traj.nextPoint+1;
+    traj.nextpointPerone := 0;
   end;
 
-  dirnorm := normTPoint3D(diffTPoint3D(traj1.points[traj1.nextPoint], traj1.points[traj1.nextPoint-1]));
+  dirnorm := normTPoint3D(diffTPoint3D(traj.points[traj.nextPoint], traj.points[traj.nextPoint-1]));
   sg := AddTPoint3D(sg, scaleTPoint3D(dirnorm,vel));
-  traj1.nextpointPerone := distTPoint3D(sg, traj1.points[traj1.nextPoint-1])/distTPoint3D(traj1.points[traj1.nextPoint], traj1.points[traj1.nextPoint-1]);
+  traj.nextpointPerone := distTPoint3D(sg, traj.points[traj.nextPoint-1])/distTPoint3D(traj.points[traj.nextPoint], traj.points[traj.nextPoint-1]);
 
 end;
 
@@ -512,7 +512,7 @@ begin
     faceExt.max.Y := faceExt.max.Y + BoxVExtend;
   end;
   traj.count := 2*round((faceExt.max.X - faceExt.min.X) / BoxUStep) + 2;
-  for i:= 0 to traj.count-1 do begin
+  for i:= 0 to traj.count-1 do begin//Should be (traj.count div 4) ???
     traj.points[i*4].X := faceExt.min.X + i*2*BoxUStep;
     traj.points[i*4].Y := faceExt.min.Y;
     traj.points[i*4].Z := faceExt.max.Z;
@@ -541,9 +541,8 @@ var i, j: integer;
     BoxSelectFace: faces;
     BoxOffset: double;
     BoxUStep, BoxVExtend: double;
-    traj: TTrajectory;
 
-    test: Matrix;
+    loadMat: Matrix;
 begin
 //jm
   if RCButtonPressed(6, 4) then ResetPaintTargetPaint(0);
@@ -555,15 +554,42 @@ begin
 
   if RCButtonPressed(8, 15) then begin
     if GetRCText(8,16) <> '' then begin
-      test := MLoad(GetRCText(8,16));
-      //MatrixToRange(8, 16, test);
-      setLength(colors, MNumRows(test));
-      for i:=0 to MNumRows(test)-1 do begin
-        colors[i].X := MGetV(test, i, 0);
-        colors[i].Y := MGetV(test, i, 1);
-        colors[i].Z := MGetV(test, i, 2);
+      loadMat := MLoad(GetRCText(8,16));
+      //MatrixToRange(8, 16, loadMat);
+      setLength(colors, MNumRows(loadMat));
+      for i:=0 to MNumRows(loadMat)-1 do begin
+        colors[i].X := MGetV(loadMat, i, 0);
+        colors[i].Y := MGetV(loadMat, i, 1);
+        colors[i].Z := MGetV(loadMat, i, 2);
       end;
       SetResultTrianglesColor(0, colors);
+    end;
+  end;
+
+  if RCButtonPressed(9, 15) then begin
+    if GetRCText(9,16) <> '' then begin
+      loadMat := MLoad(GetRCText(9,16));
+      //MatrixToRange(9, 16, loadMat);
+      ext.Min.x := MGetV(loadMat, 0, 0);
+      ext.Min.y := MGetV(loadMat, 0, 1);
+      ext.Min.z := MGetV(loadMat, 0, 2);
+      ext.Max.x := MGetV(loadMat, 1, 0);
+      ext.Max.y := MGetV(loadMat, 1, 1);
+      ext.Max.z := MGetV(loadMat, 1, 2);
+    end;
+  end;
+
+  if RCButtonPressed(10, 15) then begin
+    if GetRCText(10,16) <> '' then begin
+      loadMat := MLoad(GetRCText(10,16));
+      MatrixToRange(11, 18, loadMat);
+      traj2.count := MNumRows(loadMat);
+      for i:=0 to MNumRows(loadMat)-1 do begin
+        traj2.points[i].X := MGetV(loadMat, i, 0);
+        traj2.points[i].Y := MGetV(loadMat, i, 1);
+        traj2.points[i].Z := MGetV(loadMat, i, 2);
+      end;
+      DrawTrajectory(traj2);
     end;
   end;
 
@@ -592,20 +618,36 @@ begin
       BoxOffset := 0.5;
       BoxUStep := 0.1;
       BoxVExtend := 0.3;
-      traj := CalculateBoxRaster(BoxSelectFace, BoxOffset, BoxUStep, BoxVExtend);
-      traj1 := traj;
-      DrawTrajectory(traj);
+      traj1 := CalculateBoxRaster(BoxSelectFace, BoxOffset, BoxUStep, BoxVExtend);
+      DrawTrajectory(traj1);
+    end else if RCButtonPressed(3,10) then begin
+      paintMode := pmLoadedTraj;
+      DrawTrajectory(traj2);
+    end else if RCButtonPressed(3,11) then begin
+      paintMode := pmNone;
+      ClearTrail(0);
+      SetRCValue(4, 8, 'None');
     end;
     if paintMode = pmBoxRaster then begin
       SetRCValue(4, 8, 'Box Raster');
-      for i:=0 to traj1.count-1 do begin
+      //WriteLn('e');
+      //RunTrajectory(0.015, traj1);
+      RunTrajectory(0.1, traj1);
+    end else if paintMode=pmLoadedTraj then begin
+      SetRCValue(4, 8, 'Loaded Traj');
+      for i:=0 to traj2.count-1 do begin
         if RCButtonPressed(2,21+i) then begin
-          sg := traj1.points[i];
+          sg := traj2.points[i];
         end;
       end;
       //WriteLn('e');
-      //RunTrajectory1(0.015);
-      RunTrajectory1(0.1);
+      //RunTrajectory(0.015, traj2);
+      RunTrajectory(0.1, traj2);
+    end;
+    for i:=0 to traj1.count-1 do begin
+      if RCButtonPressed(2,21+i) then begin
+        sg := traj1.points[i];
+      end;
     end;
   end else if controlMode = cmManual then begin
     SetRCValue(2,8,'Manual');

@@ -4738,6 +4738,7 @@ var r, j, i, k, n: integer;
     VertPos, VertDir: TVector3f;
     GunVert: TVector3f;
     Vert1, Vert2, VertTg: TVector3f;
+    a, b, c: TVector3f;
     Dist, angle_side, angle, solidAngle, angle_vertex: double;
     paintQuantity, sd: double;
 
@@ -4856,7 +4857,17 @@ begin
                   paintQuantity := (sensor.paintRate*WorldODE.physTime)*1/(sd*sqrt(2*pi))*exp(-0.5*(angle/sd)*(angle/sd));//gaussian (normal distribution) integral=1
                   //paintQuantity := exp(-0.5*(angle/sd)*(angle/sd));
                   Dist := VectorLength(GunVert);
-                  solidAngle := Things[i].meshTriangles[j].area/dist;
+
+                  a := VectorSubtract(Things[i].meshTriangles[j].vertexs[0]^.pos, GunPos);
+                  b := VectorSubtract(Things[i].meshTriangles[j].vertexs[1]^.pos, GunPos);
+                  c := VectorSubtract(Things[i].meshTriangles[j].vertexs[2]^.pos, GunPos);
+                  solidAngle := abs(2*atan2(VectorDotProduct(a, VectorCrossProduct(b,c)),
+                                      (VectorLength(a)*VectorLength(b)*VectorLength(c) +
+                                      VectorDotProduct(a, b)*VectorLength(c) +
+                                      VectorDotProduct(a, c)*VectorLength(b) +
+                                      VectorDotProduct(b, c)*VectorLength(a))));
+
+                  //solidAngle := Things[i].meshTriangles[j].area/dist;
                   paintQuantity := paintQuantity * solidAngle/(2*pi*(1 - cos(sensor.paintMaxAngle/2)));
                   Things[i].meshTriangles[j].paintThickness := Things[i].meshTriangles[j].paintThickness + paintQuantity/Things[i].meshTriangles[j].area;
                   for k:=0 to 2 do begin

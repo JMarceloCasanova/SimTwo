@@ -84,6 +84,35 @@ class triangle(object):
         txt += str(self.neighbors)
         return txt
 
+class aabb():
+    def __init__(self):
+        self.min_x = 999999
+        self.max_x = -999999
+        self.min_y = 999999
+        self.max_y = -999999
+        self.min_z = 999999
+        self.max_z = -999999
+
+    def reset(self):
+        self.min_x = 999999
+        self.max_x = -999999
+        self.min_y = 999999
+        self.max_y = -999999
+        self.min_z = 999999
+        self.max_z = -999999
+
+    def volume(self):
+        return (self.max_x-self.min_x) * (self.max_y-self.min_y) * (self.max_z-self.min_z)
+
+    def write_file(self, filename="extents1.txt"):
+        with open('cad/' + filename, 'w') as f:
+            f.write(str(self.min_x)+" ")
+            f.write(str(self.min_y)+" ")
+            f.write(str(self.min_z)+"\n")
+            f.write(str(self.max_x)+" ")
+            f.write(str(self.max_y)+" ")
+            f.write(str(self.max_z)+"\n")
+        
 def load_triangles():
     send("ReadTrianglesCount")
     count = int(read())
@@ -127,7 +156,7 @@ def angle(a, b):
     #print((a[0]*b[0] + a[1]*b[1] + a[2] + b[2]) / (vec_length(a)*vec_length(b)) )
     return np.arccos((a[0]*b[0] + a[1]*b[1] + a[2]*b[2]) / (vec_length(a)*vec_length(b)) )
 
-def subdivision(max_angle, triangles):
+def subdivision(max_angle, triangles):# patch_creation
     free_triangles = [i for i in range(len(triangles))]
     parts = []
     while len(free_triangles) > 0:
@@ -150,6 +179,32 @@ def subdivision(max_angle, triangles):
         parts.append(part)
 
     return parts
+
+def CalculateBoxRaster(BoxOffset, BoxUStep, BoxVExtend, ext, BoxSelectFace= 'ftop'):
+    faceExt = aabb()
+    if BoxSelectFace=='ftop':
+        faceExt = ext
+        faceExt.min_z = ext.max_z + BoxOffset
+        faceExt.max_z = ext.max_z + BoxOffset
+        faceExt.min_x = faceExt.min_x - BoxUStep
+        faceExt.max_x = faceExt.max_x + BoxUStep
+        faceExt.min_y = faceExt.min_y - BoxVExtend
+        faceExt.max_y = faceExt.max_y + BoxVExtend
+    traj = np.zeros( ( 2*round((faceExt.max_x - faceExt.min_x) / BoxUStep) + 4, 3) , dtype=np.float32)
+    for i in range(np.shape(traj)[0] // 4):
+        traj[i*4][0] = faceExt.min_x + i*2*BoxUStep
+        traj[i*4][1] = faceExt.min_y
+        traj[i*4][2] = faceExt.max_z
+        traj[i*4+1][0] = faceExt.min_x + i*2*BoxUStep
+        traj[i*4+1][1] = faceExt.max_y
+        traj[i*4+1][2] = faceExt.max_z
+        traj[i*4+2][0] = faceExt.min_x + (i*2+1)*BoxUStep
+        traj[i*4+2][1] = faceExt.max_y
+        traj[i*4+2][2] = faceExt.max_z
+        traj[i*4+3][0] = faceExt.min_x + (i*2+1)*BoxUStep
+        traj[i*4+3][1] = faceExt.min_y
+        traj[i*4+3][2] = faceExt.max_z
+    return(traj)
 
 if __name__ == "__main__":
     if (not os.path.isfile('triangles.npy')) or False:
@@ -187,8 +242,8 @@ if __name__ == "__main__":
     #        f.write("\n")
     
 
-    max_part = parts.index(max(parts, key=len))
-    max_part = parts.index(max(parts, key=len))
+    max_part = parts.index(sorted(parts, key=len)[-2])
+    #max_part = parts.index(max(parts, key=len))
 
     part_color = np.array([random.randint(0,254),random.randint(0,254),random.randint(0,254)], dtype=np.float64)
     max_color = np.array([random.randint(0,254),random.randint(0,254),random.randint(0,254)], dtype=np.float64)
@@ -220,34 +275,56 @@ if __name__ == "__main__":
     align_rot_mat = np.eye(3)
     min_volume = 99999999
     aligned_phi = 0
+    min_extents = aabb()
     for phi in np.arange(0, 2*np.pi, np.pi/180):
         align_rot_mat_temp = np.array([[np.cos(phi), -np.sin(phi), 0],\
                                         [np.sin(phi), np.cos(phi), 0],\
                                         [0, 0, 1]])
-        aabb_min_x = 999999
-        aabb_max_x = -999999
-        aabb_min_y = 999999
-        aabb_max_y = -999999
-        aabb_min_z = 999999
-        aabb_max_z = -999999
+        extents = aabb()
         for j in parts[max_part]:
-            new_center = align_rot_mat_temp*align_rot_mat_z*triangles[parts[max_part]].center
-            if new_center[0] < aabb_min_x :
-                aabb_min_x = new_center[0]
-            if new_center[0] > aabb_max_x :
-                aabb_max_x = new_center[0]
-            if new_center[1] < aabb_min_y :
-                aabb_min_y = new_center[1]
-            if new_center[1] > aabb_max_y :
-                aabb_max_y = new_center[1]
-            if new_center[2] < aabb_min_z :
-                aabb_min_z = new_center[2]
-            if new_center[2] > aabb_max_z :
-                aabb_max_z = new_center[2]
+            new_center = np.dot(align_rot_mat_temp*align_rot_mat_z,triangles[j].center)
+            if new_center[0] < extents.min_x:
+                extents.min_x = new_center[0]
+            if new_center[0] > extents.max_x:
+                extents.max_x = new_center[0]
+            if new_center[1] < extents.min_y:
+                extents.min_y = new_center[1]
+            if new_center[1] > extents.max_y:
+                extents.max_y = new_center[1]
+            if new_center[2] < extents.min_z:
+                extents.min_z = new_center[2]
+            if new_center[2] > extents.max_z:
+                extents.max_z = new_center[2]
 
-        volume = (aabb_max_x-aabb_min_x) * (aabb_max_y-aabb_min_y) * (aabb_max_z-aabb_min_z)
+        volume = extents.volume()
         if volume < min_volume:
             min_volume = volume
             aligned_phi = phi
-            align_rot_mat = align_rot_mat_temp*align_rot_mat_z #Don't mess this up!
+            min_extents = extents
+            align_rot_mat = np.dot(align_rot_mat_temp, align_rot_mat_z) #Don't mess this up!
+    min_extents.write_file()
 
+    #align_rot_mat obtained
+    BoxSelectFace = 'fTop'
+    BoxOffset = 0.5
+    BoxUStep = 0.1
+    BoxVExtend = 0.3
+    traj = CalculateBoxRaster(BoxOffset, BoxUStep, BoxVExtend, min_extents)
+    reset_rot_mat = np.linalg.inv(align_rot_mat)
+    print(traj)
+    print()
+    #print(align_rot_mat_temp)
+    #print(align_rot_mat_z)
+    #print(reset_rot_mat)
+    #print(align_rot_mat)
+    #print(np.dot(reset_rot_mat, align_rot_mat))
+    print()
+    print()
+    traj = np.array([np.dot(reset_rot_mat, traj[i]) for i in range(np.shape(traj)[0])])# Am I this good?
+    print(traj)
+
+    with open('cad/trajectory1.txt', 'w') as f:
+        for i in range(np.shape(traj)[0]):
+            for j in range(3):
+                f.write(str(traj[i][j])+" ")
+            f.write("\n")
