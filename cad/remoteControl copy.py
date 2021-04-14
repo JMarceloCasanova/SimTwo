@@ -206,70 +206,6 @@ def CalculateBoxRaster(BoxOffset, BoxUStep, BoxVExtend, ext, BoxSelectFace= 'fto
         traj[i*4+3][2] = faceExt.max_z
     return(traj)
 
-def CalculatePatchyTrajectory(parts, triangles, save_extents=True):
-    complete_traj = np.zeros((0, 3))
-    for part in parts:
-        align_rot_axis = np.cross(triangles[part[0]].normal, np.array([0,0,1]))
-        align_rot_axis = align_rot_axis/np.sqrt(np.sum(align_rot_axis**2))
-
-        phi = angle(triangles[i].normal, np.array([0,0,1]))
-        W = np.array([[0, -align_rot_axis[2], align_rot_axis[1]],\
-                        [align_rot_axis[2], 0, -align_rot_axis[0]],\
-                        [-align_rot_axis[1], align_rot_axis[0], 0]])
-        align_rot_mat_z = np.eye(3) + np.sin(phi)*W + (1-np.cos(phi))*W*W
-        
-        align_rot_mat = np.eye(3)
-        min_volume = 99999999
-        aligned_phi = 0
-        min_extents = aabb()
-        for phi in np.arange(0, 2*np.pi, np.pi/180):
-            align_rot_mat_temp = np.array([[np.cos(phi), -np.sin(phi), 0],\
-                                            [np.sin(phi), np.cos(phi), 0],\
-                                            [0, 0, 1]])
-            extents = aabb()
-            for j in part:
-                #new_center = np.matmul(align_rot_mat_temp,np.matmul(align_rot_mat_z,triangles[j].center))
-                new_center = align_rot_mat_temp @ align_rot_mat_z @ triangles[j].center
-                if new_center[0] < extents.min_x:
-                    extents.min_x = new_center[0]
-                if new_center[0] > extents.max_x:
-                    extents.max_x = new_center[0]
-                if new_center[1] < extents.min_y:
-                    extents.min_y = new_center[1]
-                if new_center[1] > extents.max_y:
-                    extents.max_y = new_center[1]
-                if new_center[2] < extents.min_z:
-                    extents.min_z = new_center[2]
-                if new_center[2] > extents.max_z:
-                    extents.max_z = new_center[2]
-
-            volume = extents.volume()
-            if volume < min_volume:
-                min_volume = volume
-                aligned_phi = phi
-                min_extents = extents
-                #align_rot_mat = np.matmul(align_rot_mat_temp, align_rot_mat_z) #Don't mess this up!
-                align_rot_mat = align_rot_mat_temp @ align_rot_mat_z #Don't mess this up!
-        if save_extents:
-            min_extents.write_file("extents_"+str(parts.index(part)))
-
-        #Got align_rot_mat and min_extents
-        BoxSelectFace = 'fTop'
-        BoxOffset = 0.5
-        BoxUStep = 0.1
-        BoxVExtend = 0.3
-        traj = CalculateBoxRaster(BoxOffset, BoxUStep, BoxVExtend, min_extents)
-        #reset_rot_mat = np.linalg.inv(align_rot_mat)
-        reset_rot_mat = np.transpose(align_rot_mat)
-        #print(traj)
-        #traj = np.array([np.matmul(reset_rot_mat, traj[i]) for i in range(np.shape(traj)[0])])# Am I this good?
-        traj = np.array([(reset_rot_mat @ traj[i]) for i in range(np.shape(traj)[0])])# Am I this good?
-        #print(traj)
-        complete_traj = np.append(complete_traj, traj, axis=0)
-        
-    return complete_traj
-    
-
 if __name__ == "__main__":
     if (not os.path.isfile('triangles.npy')) or False:
         connect()
@@ -286,18 +222,18 @@ if __name__ == "__main__":
         for i in part:
             triangles[i].color = part_color
 
-    #max_part = parts.index(sorted(parts, key=len)[-2])
-    ##max_part = parts.index(max(parts, key=len))
-#
-    #part_color = np.array([random.randint(0,254),random.randint(0,254),random.randint(0,254)], dtype=np.float64)
-    #max_color = np.array([random.randint(0,254),random.randint(0,254),random.randint(0,254)], dtype=np.float64)
-    #for part in parts:
-    #    if parts.index(part) == max_part:
-    #        for i in part:
-    #            triangles[i].color = max_color
-    #    else:
-    #        for i in part:
-    #            triangles[i].color = part_color
+    max_part = parts.index(sorted(parts, key=len)[-2])
+    #max_part = parts.index(max(parts, key=len))
+
+    part_color = np.array([random.randint(0,254),random.randint(0,254),random.randint(0,254)], dtype=np.float64)
+    max_color = np.array([random.randint(0,254),random.randint(0,254),random.randint(0,254)], dtype=np.float64)
+    for part in parts:
+        if parts.index(part) == max_part:
+            for i in part:
+                triangles[i].color = max_color
+        else:
+            for i in part:
+                triangles[i].color = part_color
 
     with open('cad/ResultColors4.txt', 'w') as f:
         for i in range(len(triangles)):
@@ -305,9 +241,67 @@ if __name__ == "__main__":
                 f.write(str(triangles[i].color[j])+" ")
             f.write("\n")
 
+    #for t in parts:
+    i = parts[max_part][0]
+    align_rot_axis = np.cross(triangles[i].normal, np.array([0,0,1]))
+    align_rot_axis = align_rot_axis/np.sqrt(np.sum(align_rot_axis**2))
 
+    phi = angle(triangles[i].normal, np.array([0,0,1]))
+    W = np.array([[0, -align_rot_axis[2], align_rot_axis[1]],\
+                    [align_rot_axis[2], 0, -align_rot_axis[0]],\
+                    [-align_rot_axis[1], align_rot_axis[0], 0]])
+    align_rot_mat_z = np.eye(3) + np.sin(phi)*W + (1-np.cos(phi))*W*W
+    
+    align_rot_mat = np.eye(3)
+    min_volume = 99999999
+    aligned_phi = 0
+    min_extents = aabb()
+    for phi in np.arange(0, 2*np.pi, np.pi/180):
+        align_rot_mat_temp = np.array([[np.cos(phi), -np.sin(phi), 0],\
+                                        [np.sin(phi), np.cos(phi), 0],\
+                                        [0, 0, 1]])
+        extents = aabb()
+        for j in parts[max_part]:
+            new_center = np.dot(align_rot_mat_temp*align_rot_mat_z,triangles[j].center)
+            if new_center[0] < extents.min_x:
+                extents.min_x = new_center[0]
+            if new_center[0] > extents.max_x:
+                extents.max_x = new_center[0]
+            if new_center[1] < extents.min_y:
+                extents.min_y = new_center[1]
+            if new_center[1] > extents.max_y:
+                extents.max_y = new_center[1]
+            if new_center[2] < extents.min_z:
+                extents.min_z = new_center[2]
+            if new_center[2] > extents.max_z:
+                extents.max_z = new_center[2]
 
-    traj = CalculatePatchyTrajectory(parts, triangles)
+        volume = extents.volume()
+        if volume < min_volume:
+            min_volume = volume
+            aligned_phi = phi
+            min_extents = extents
+            align_rot_mat = np.dot(align_rot_mat_temp, align_rot_mat_z) #Don't mess this up!
+    min_extents.write_file()
+
+    #align_rot_mat obtained
+    BoxSelectFace = 'fTop'
+    BoxOffset = 0.5
+    BoxUStep = 0.1
+    BoxVExtend = 0.3
+    traj = CalculateBoxRaster(BoxOffset, BoxUStep, BoxVExtend, min_extents)
+    reset_rot_mat = np.linalg.inv(align_rot_mat)
+    print(traj)
+    print()
+    #print(align_rot_mat_temp)
+    #print(align_rot_mat_z)
+    #print(reset_rot_mat)
+    #print(align_rot_mat)
+    #print(np.dot(reset_rot_mat, align_rot_mat))
+    print()
+    print()
+    traj = np.array([np.dot(reset_rot_mat, traj[i]) for i in range(np.shape(traj)[0])])# Am I this good?
+    print(traj)
 
     with open('cad/trajectory1.txt', 'w') as f:
         for i in range(np.shape(traj)[0]):

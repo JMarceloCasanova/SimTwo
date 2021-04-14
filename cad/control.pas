@@ -3,7 +3,7 @@ const
  NumScrews = 1;
 type
   faces = (fTop, fBottom, fLeft, fRight, fBack, fFront);
-  controlModes = (cmManual, cmPaintModes, cmUDPServer);
+  controlModes = (cmManual, cmPaintModes, cmUDPServer, cmNone);
   paintModes = (pmNone, pmBoxRaster, pmLoadedTraj);
 
   TTrajectory = record
@@ -479,8 +479,8 @@ begin
   ClearTrail(0);
   SetTrailColor(0, 0, 255, 0);
   n := traj.count;
-  if n>95 then begin
-    n := 95;
+  if n>10 then begin
+    n := 10;
     WriteLn('trajectory points, exceeds cell number');
   end;
   for i:= 0 to (n-1) do begin
@@ -582,7 +582,7 @@ begin
   if RCButtonPressed(10, 15) then begin
     if GetRCText(10,16) <> '' then begin
       loadMat := MLoad(GetRCText(10,16));
-      MatrixToRange(11, 18, loadMat);
+      //MatrixToRange(11, 18, loadMat);
       traj2.count := MNumRows(loadMat);
       for i:=0 to MNumRows(loadMat)-1 do begin
         traj2.points[i].X := MGetV(loadMat, i, 0);
@@ -603,6 +603,7 @@ begin
   if RCButtonPressed(1,9) then controlMode := cmManual;
   if RCButtonPressed(1,10) then controlMode := cmPaintModes;
   if RCButtonPressed(1,11) then controlMode := cmUDPServer;
+  if RCButtonPressed(1,12) then controlMode := cmNone;
 
   if RCButtonPressed(4, 16) then connection := False;
 
@@ -668,9 +669,16 @@ begin
     SetRCBackColor(2,11, $7F00FFFF);
     SetRCBackColor(3, 8, $7FAAAAAA);
     ServerControl();
+  end else if controlMode = cmNone then begin
+    SetRCValue(2,8,'None');
   end;
 
-  SetRobotPos(0, sg.x, sg.y, sg.z, sg_theta);
+  if controlMode <> cmNone then begin
+    //SetRobotPos(0, sg.x, sg.y, sg.z, sg_theta);
+    SetSolidPos(0, 0, sg.x, sg.y, sg.z);
+    SetSolidRotationMat(0,0, Meye(3));
+  end;
+
 
   if RCButtonPressed(14, 8) then begin
     SetRCValue(15, 8, 'AvgSprayThickness');
