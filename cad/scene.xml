@@ -1,6 +1,5 @@
 <?xml version="1.0" ?>
 <scene>
-
   <!--<robot>
     <ID name='Arm6D'/>
     <pos x='-2' y='0' z='0'/>
@@ -40,6 +39,14 @@
   <!--<noobstacles file='obstacles.xml'/>
 
   <notrack file='track.xml'/>-->
+
+  <robot>
+    <ID name='MH50'/>
+    <pos x='-2' y='0' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+
+    <body file='MH50.xml'/>
+  </robot>
 
 </scene>
 
