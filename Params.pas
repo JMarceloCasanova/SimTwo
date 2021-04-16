@@ -295,6 +295,7 @@ type
     procedure CBGroundTextureClick(Sender: TObject);
     procedure CBSkyDomeClick(Sender: TObject);
     procedure BEditScriptClick(Sender: TObject);
+    procedure ComboGroundTexturesChange(Sender: TObject);
     procedure EditRemoteIPChange(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
     procedure TCPModBusAccept(aSocket: TLSocket);
@@ -528,6 +529,11 @@ end;
 procedure TFParams.BEditScriptClick(Sender: TObject);
 begin
   FEditor.show;
+end;
+
+procedure TFParams.ComboGroundTexturesChange(Sender: TObject);
+begin
+
 end;
 
 procedure TFParams.EditRemoteIPChange(Sender: TObject);

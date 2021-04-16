@@ -72,13 +72,13 @@
     <cell r="10" c="16" text="trajectory1.txt" />
     <cell r="11" c="4" text="[SprayOff]" />
     <cell r="11" c="7" text="max" />
-    <cell r="11" c="8" text="0.42" />
-    <cell r="11" c="9" text="0.22" />
-    <cell r="11" c="10" text="0.09" />
+    <cell r="11" c="8" text="1.26" />
+    <cell r="11" c="9" text="0.66" />
+    <cell r="11" c="10" text="0.16" />
     <cell r="12" c="7" text="min" />
-    <cell r="12" c="8" text="-0.42" />
-    <cell r="12" c="9" text="-0.27" />
-    <cell r="12" c="10" text="0.02" />
+    <cell r="12" c="8" text="-1.26" />
+    <cell r="12" c="9" text="-0.81" />
+    <cell r="12" c="10" text="-0.05" />
     <cell r="14" c="7" text="Stats" />
     <cell r="14" c="8" text="[update]" />
     <cell r="15" c="4" text="B6 Rot" />

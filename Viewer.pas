@@ -1563,7 +1563,7 @@ begin
       end;
       SetLength(newSolid.meshVertexs, Mesh.Vertices.Count);
       for j:=0 to Mesh.Vertices.Count - 1 do begin
-        newSolid.meshVertexs[j].paintMapColor := ConvertRGBColor([255,255,255]);
+        newSolid.meshVertexs[j].paintMapColor := ConvertRGBColor([100,100,100]);
         newSolid.meshVertexs[j].paintHeatmapColor := newSolid.CalculateHeatmapColor(0);
         newSolid.meshVertexs[j].paintResultColor := ConvertRGBColor([100,100,100]);
         if(newSolid.paintMode = pmPaint) then begin

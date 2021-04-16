@@ -40,6 +40,7 @@ var
   //spray gun
   //sg_x, sg_y, sg_z,
   sg : TPoint3D;
+  sg_rot: Matrix;
   sg_theta: double;
 
   connection: Boolean;
@@ -676,7 +677,12 @@ begin
   if controlMode <> cmNone then begin
     //SetRobotPos(0, sg.x, sg.y, sg.z, sg_theta);
     SetSolidPos(0, 0, sg.x, sg.y, sg.z);
-    SetSolidRotationMat(0,0, Meye(3));
+    sg_rot := Meye(3);
+    Msetv(sg_rot, 0, 0, 0);
+    Msetv(sg_rot, 2, 0, -1);
+    Msetv(sg_rot, 2, 2, 0);
+    Msetv(sg_rot, 0, 2, 1);
+    SetSolidRotationMat(0,0, sg_rot);
   end;
 
 

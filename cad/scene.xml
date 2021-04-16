@@ -40,13 +40,26 @@
 
   <notrack file='track.xml'/>-->
 
+  <!--<things>
+    <ID name='room'/>
+    <pos x='0' y='0' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+
+    <body file='room.xml'/>
+  </things>-->
+  
   <robot>
     <ID name='MH50'/>
     <pos x='-2' y='0' z='0'/>
-    <rot_deg x='0' y='0' z='0'/>
+    <rot_deg x='0' y='0' z='0.001'/>
 
     <body file='MH50.xml'/>
   </robot>
-
+  <robot>
+    <ID name='room'/>
+    <pos x='0' y='0' z='0'/>
+    <rot_deg x='0' y='0' z='0'/>
+    <body file='room.xml'/>
+  </robot>
 </scene>
 

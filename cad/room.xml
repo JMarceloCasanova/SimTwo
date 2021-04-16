@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<robot>
+  <solids>
+    <cuboid>
+      <ID value='room'/>
+      <mass value='0.001'/>
+      <size x='7' y='6.06' z='0.001'/>
+      <pos x='0' y='0' z='5.502/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <mesh file='labRob/sala2.obj' shadow='0' scale='0.001'/>
+    </cuboid>
+  </solids>
+
+  <articulations>
+    <joint>
+        <ID value='world_room'/>
+        <pos x='0' y='0' z='0'/>
+        <connect B1='room' B2='world'/>
+        <type value='Fixed'/>
+    </joint>
+  </articulations>
+
+</robot>
