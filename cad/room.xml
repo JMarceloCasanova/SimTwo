@@ -8,6 +8,7 @@
       <pos x='0' y='0' z='5.502/2'/>
       <rot_deg x='0' y='0' z='0'/>
       <mesh file='labRob/sala2.obj' shadow='0' scale='0.001'/>
+      <!--<mesh file='robRoom/sala_robot_plain_complete.obj' shadow='0' scale='0.001'/>-->
     </cuboid>
   </solids>
 

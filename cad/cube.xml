@@ -16,12 +16,12 @@
       <!--<painting_target/>-->
       <painting_target/>
       <mass value='1'/>
-      <mesh file='simple_hood_size.stl' shadow='0' scale='1' x_offset='1.11' y_offset='-9.12' z_offset='9.13'/>
-      <!--<mesh file='BlueDice.obj' shadow='0' scale='0.04' x_offset='1.11' y_offset='-9.12' z_offset='9.13'/>-->
+      <!--<mesh file='simple_hood_size.stl' shadow='0' scale='1' x_offset='1.11' y_offset='-9.12' z_offset='9.13'/>-->
+      <mesh file='Cube.stl' shadow='0' scale='1'/>
       <size x='0.1' y='0.1' z='0.1'/>
       <pos x='0' y='0' z='0.1/2'/>
       <rot_deg x='0' y='0' z='0'/>
-      <color_rgb r='32' g='32' b='32'/>
+      <color_rgb r='100' g='100' b='100'/>
     </cylinder>
 
 

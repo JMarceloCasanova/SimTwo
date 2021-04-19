@@ -1563,7 +1563,7 @@ begin
       end;
       SetLength(newSolid.meshVertexs, Mesh.Vertices.Count);
       for j:=0 to Mesh.Vertices.Count - 1 do begin
-        newSolid.meshVertexs[j].paintMapColor := ConvertRGBColor([100,100,100]);
+        newSolid.meshVertexs[j].paintMapColor := newSolid.initialColor;//ConvertRGBColor([100,100,100]);
         newSolid.meshVertexs[j].paintHeatmapColor := newSolid.CalculateHeatmapColor(0);
         newSolid.meshVertexs[j].paintResultColor := ConvertRGBColor([100,100,100]);
         if(newSolid.paintMode = pmPaint) then begin
@@ -1868,6 +1868,10 @@ begin
         newSolid.BuoyanceCenter[1] := BuoyanceY;
         newSolid.BuoyanceCenter[2] := Buoyancez;
         newSolid.isPaintTarget := isPaintTarget;
+
+        if newSolid.isPaintTarget then begin
+          newSolid.initialColor := ConvertRGBColor([trunc(colorR*255), trunc(colorG*255), trunc(colorB*255)]);
+        end;
 
         if (XMLSolid.NodeName = 'cuboid') or (XMLSolid.NodeName = 'belt') or (XMLSolid.NodeName = 'propeller')then begin
           CreateSolidBox(newSolid, mass, posX, posY, posZ, sizeX, sizeY, sizeZ);
@@ -4870,10 +4874,15 @@ begin
 
                   //solidAngle := Things[i].meshTriangles[j].area/dist;
                   paintQuantity := paintQuantity * solidAngle/(2*pi*(1 - cos(sensor.paintMaxAngle/2)));
+                  temp_double := Things[i].meshTriangles[j].paintThickness;// +
+                  temp_double := paintQuantity;// /
+                  temp_double := Things[i].meshTriangles[j].area;
                   Things[i].meshTriangles[j].paintThickness := Things[i].meshTriangles[j].paintThickness + paintQuantity/Things[i].meshTriangles[j].area;
+
+                  temp_double := Things[i].meshTriangles[j].paintThickness;
                   for k:=0 to 2 do begin
                                                                            //sensor.paintColor + (255 - sensor.paintColor) * e^ -paintThickness/tau;
-                    Things[i].meshTriangles[j].vertexs[k]^.paintMapColor := VectorAdd(sensor.paintColor, VectorScale(VectorSubtract(ConvertRGBColor([255,255,255]), sensor.paintColor), exp(-Things[i].meshTriangles[j].paintThickness/400)));
+                    Things[i].meshTriangles[j].vertexs[k]^.paintMapColor := VectorAdd(sensor.paintColor, VectorScale(VectorSubtract(Things[i].initialColor, sensor.paintColor), exp(-Things[i].meshTriangles[j].paintThickness/10)));
                     //Things[i].meshTriangles[j].vertexs[k]^.paintMapColor := VectorAdd(Things[i].meshTriangles[j].vertexs[k]^.paintMapColor,
                     //                                                        VectorScale(VectorSubtract(sensor.paintColor, Things[i].meshTriangles[j].vertexs[k]^.paintMapColor),
                     //                                                                    0.1*Things[i].meshTriangles[j].paintThickness));//jm: mudar a constante para ficar bonito (realista)

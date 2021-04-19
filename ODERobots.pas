@@ -104,6 +104,7 @@ type
     PaintBitmap: TBitmap;
     PaintBitmapCorner: TdVector3;
     isPaintTarget: bool;
+    initialColor: TVector4f;
     //paintThickness: TDoubleList;
     //paintHeatmap: TVectorList;
     //paintmap: TVectorList;

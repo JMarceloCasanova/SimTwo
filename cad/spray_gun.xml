@@ -25,7 +25,8 @@
       <rot_deg x='0' y='70' z='0'/>
       <color_rgb r='200' g='0' b='0'/>
       <paint_color_rgb r='0' g='100' b='255'/>
-      <paint_rate value='0.04'/>
+      <paint_rate value='0.0000033'/>  <!-- m^3/s = 1000L/s
+               200ml/minuto = 0.0002m^3/min = -->
       <paint_default_on value='true'/>
     </spraygun>
 

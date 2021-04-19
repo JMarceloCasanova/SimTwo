@@ -29,6 +29,7 @@ var
   Tol, tis: double;
 
   //JM
+  script_period: double;
   lr_mode: integer;
   ud_mode: integer;
 
@@ -36,7 +37,7 @@ var
   paintMode: paintModes;
 
   ext: TExtents;
-  traj1, traj2 : TTrajectory;
+  trajs : array [0..1] of TTrajectory;
   //spray gun
   //sg_x, sg_y, sg_z,
   sg : TPoint3D;
@@ -182,8 +183,10 @@ begin
   tis := 0;
 end;
 
-procedure ManualControl();
+procedure ManualControl(velocity: double);
+var delta_v: double;
 begin
+  delta_v := velocity*script_period;
 
   if RCButtonPressed(6, 9) then lr_mode:=1;
   if RCButtonPressed(6, 10) then lr_mode:=3;
@@ -197,60 +200,60 @@ begin
   case lr_mode of
     1: begin
         if KeyPressed(vk_left) then begin
-          sg.x := sg.x-0.05;
+          sg.x := sg.x-delta_v;
         end else if KeyPressed(vk_right) then begin
-          sg.x := sg.x+0.05;
+          sg.x := sg.x+delta_v;
         end
       end;
     3: begin
         if KeyPressed(vk_left) then begin
-          sg.y := sg.y-0.05;
+          sg.y := sg.y-delta_v;
         end else if KeyPressed(vk_right) then begin
-          sg.y := sg.y+0.05;
+          sg.y := sg.y+delta_v;
         end
       end;
     5: begin
         if KeyPressed(vk_left) then begin
-          sg.z := sg.z-0.05;
+          sg.z := sg.z-delta_v;
         end else if KeyPressed(vk_right) then begin
-          sg.z := sg.z+0.05;
+          sg.z := sg.z+delta_v;
         end
       end;
     7: begin
         if KeyPressed(vk_left) then begin
-          sg_theta := sg_theta+0.05;
+          sg_theta := sg_theta+delta_v;
         end else if KeyPressed(vk_right) then begin
-          sg_theta := sg_theta-0.05;
+          sg_theta := sg_theta-delta_v;
         end
       end;
   end;
   case ud_mode of
     2: begin
         if KeyPressed(vk_down) then begin
-          sg.x := sg.x-0.05;
+          sg.x := sg.x-delta_v;
         end else if KeyPressed(vk_up) then begin
-          sg.x := sg.x+0.05;
+          sg.x := sg.x+delta_v;
         end
       end;
     4: begin
         if KeyPressed(vk_down) then begin
-          sg.y := sg.y-0.05;
+          sg.y := sg.y-delta_v;
         end else if KeyPressed(vk_up) then begin
-          sg.y := sg.y+0.05;
+          sg.y := sg.y+delta_v;
         end
       end;
     6: begin
         if KeyPressed(vk_down) then begin
-          sg.z := sg.z-0.05;
+          sg.z := sg.z-delta_v;
         end else if KeyPressed(vk_up) then begin
-          sg.z := sg.z+0.05;
+          sg.z := sg.z+delta_v;
         end
       end;
     8: begin
         if KeyPressed(vk_down) then begin
-          sg_theta := sg_theta-0.05;
+          sg_theta := sg_theta-delta_v;
         end else if KeyPressed(vk_up) then begin
-          sg_theta := sg_theta+0.05;
+          sg_theta := sg_theta+delta_v;
         end
       end;
     end;
@@ -451,51 +454,50 @@ begin
 
 end;
 
-procedure RunTrajectory(vel: double; traj: TTrajectory);
+procedure RunTrajectory(vel: double; trajIndex: integer);
 var dist: double;
     dirnorm: TPoint3D;
+    delta_v: double;
 begin
-  if traj.nextPoint = 0 then begin
-    traj.nextPoint := 1;
-    traj.nextpointPerone := 0;
-    sg := traj.points[0];
-  end else if traj.nextPoint > traj.count then begin
+  delta_v := vel*script_period;
+  if trajs[trajIndex].nextPoint = 0 then begin
+    trajs[trajIndex].nextPoint := 1;
+    trajs[trajIndex].nextpointPerone := 0;
+    sg := trajs[trajIndex].points[0];
+  end else if trajs[trajIndex].nextPoint > trajs[trajIndex].count then begin
     paintMode := pmNone;
   end;
 
-  if traj.nextpointPerone>0.95 then begin
-    traj.nextPoint := traj.nextPoint+1;
-    traj.nextpointPerone := 0;
+  if trajs[trajIndex].nextpointPerone>0.98 then begin
+    trajs[trajIndex].nextPoint := trajs[trajIndex].nextPoint+1;
+    trajs[trajIndex].nextpointPerone := 0;
   end;
 
-  dirnorm := normTPoint3D(diffTPoint3D(traj.points[traj.nextPoint], traj.points[traj.nextPoint-1]));
-  sg := AddTPoint3D(sg, scaleTPoint3D(dirnorm,vel));
-  traj.nextpointPerone := distTPoint3D(sg, traj.points[traj.nextPoint-1])/distTPoint3D(traj.points[traj.nextPoint], traj.points[traj.nextPoint-1]);
+  dirnorm := normTPoint3D(diffTPoint3D(trajs[trajIndex].points[trajs[trajIndex].nextPoint], trajs[trajIndex].points[trajs[trajIndex].nextPoint-1]));
+  sg := AddTPoint3D(sg, scaleTPoint3D(dirnorm, delta_v));
+  trajs[trajIndex].nextpointPerone := distTPoint3D(sg, trajs[trajIndex].points[trajs[trajIndex].nextPoint-1])/distTPoint3D(trajs[trajIndex].points[trajs[trajIndex].nextPoint], trajs[trajIndex].points[trajs[trajIndex].nextPoint-1]);
 
 end;
 
-procedure DrawTrajectory(traj: TTrajectory);
-var i, n: integer;
+procedure DrawTrajectory(trajIndex: integer);
+var i: integer;
 begin
   ClearTrail(0);
   SetTrailColor(0, 0, 255, 0);
-  n := traj.count;
-  if n>10 then begin
-    n := 10;
-    WriteLn('trajectory points, exceeds cell number');
+  for i:= 0 to (trajs[trajIndex].count-1) do begin
+    AddTrailNode(0, trajs[trajIndex].points[i].X, trajs[trajIndex].points[i].Y, trajs[trajIndex].points[i].z);
+    if i<10 then begin
+      SetRCValue(2,21+i, '[go]');
+      SetRCValue(3,21+i, FloatToStr(trajs[trajIndex].points[i].X));
+      SetRCValue(4,21+i, FloatToStr(trajs[trajIndex].points[i].Y));
+      SetRCValue(5,21+i, FloatToStr(trajs[trajIndex].points[i].Z));
+    end;
   end;
-  for i:= 0 to (n-1) do begin
-    AddTrailNode(0, traj.points[i].X, traj.points[i].Y, traj.points[i].z);
-    SetRCValue(2,21+i, '[go]');
-    SetRCValue(3,21+i, FloatToStr(traj.points[i].X));
-    SetRCValue(4,21+i, FloatToStr(traj.points[i].Y));
-    SetRCValue(5,21+i, FloatToStr(traj.points[i].Z));
-  end;
-  SetRCValue(1, 22, IntToStr(traj.count));
-  SetRCValue(3,21, FloatToStr(traj.points[0].X));
-  SetRCValue(4,21, FloatToStr(traj.points[0].Y));
-  SetRCValue(5,21, FloatToStr(traj.points[0].Z));
-  sg := traj.points[0];
+  SetRCValue(1, 22, IntToStr(trajs[trajIndex].count));
+  SetRCValue(3,21, FloatToStr(trajs[trajIndex].points[0].X));
+  SetRCValue(4,21, FloatToStr(trajs[trajIndex].points[0].Y));
+  SetRCValue(5,21, FloatToStr(trajs[trajIndex].points[0].Z));
+  sg := trajs[trajIndex].points[0];
 end;
 
 function CalculateBoxRaster(BoxSelectFace: faces; BoxOffset: double; BoxUStep, BoxVExtend: double): TTrajectory;
@@ -584,13 +586,13 @@ begin
     if GetRCText(10,16) <> '' then begin
       loadMat := MLoad(GetRCText(10,16));
       //MatrixToRange(11, 18, loadMat);
-      traj2.count := MNumRows(loadMat);
+      trajs[1].count := MNumRows(loadMat);
       for i:=0 to MNumRows(loadMat)-1 do begin
-        traj2.points[i].X := MGetV(loadMat, i, 0);
-        traj2.points[i].Y := MGetV(loadMat, i, 1);
-        traj2.points[i].Z := MGetV(loadMat, i, 2);
+        trajs[1].points[i].X := MGetV(loadMat, i, 0);
+        trajs[1].points[i].Y := MGetV(loadMat, i, 1);
+        trajs[1].points[i].Z := MGetV(loadMat, i, 2);
       end;
-      DrawTrajectory(traj2);
+      DrawTrajectory(1);
     end;
   end;
 
@@ -620,11 +622,11 @@ begin
       BoxOffset := 0.5;
       BoxUStep := 0.1;
       BoxVExtend := 0.3;
-      traj1 := CalculateBoxRaster(BoxSelectFace, BoxOffset, BoxUStep, BoxVExtend);
-      DrawTrajectory(traj1);
+      trajs[0] := CalculateBoxRaster(BoxSelectFace, BoxOffset, BoxUStep, BoxVExtend);
+      DrawTrajectory(0);
     end else if RCButtonPressed(3,10) then begin
       paintMode := pmLoadedTraj;
-      DrawTrajectory(traj2);
+      DrawTrajectory(1);
     end else if RCButtonPressed(3,11) then begin
       paintMode := pmNone;
       ClearTrail(0);
@@ -633,22 +635,22 @@ begin
     if paintMode = pmBoxRaster then begin
       SetRCValue(4, 8, 'Box Raster');
       //WriteLn('e');
-      //RunTrajectory(0.015, traj1);
-      RunTrajectory(0.1, traj1);
+      //RunTrajectory(0.015, trajs[0]);
+      RunTrajectory(0.3, 0);
     end else if paintMode=pmLoadedTraj then begin
       SetRCValue(4, 8, 'Loaded Traj');
-      for i:=0 to traj2.count-1 do begin
+      for i:=0 to trajs[1].count-1 do begin
         if RCButtonPressed(2,21+i) then begin
-          sg := traj2.points[i];
+          sg := trajs[1].points[i];
         end;
       end;
       //WriteLn('e');
       //RunTrajectory(0.015, traj2);
-      RunTrajectory(0.1, traj2);
+      RunTrajectory(0.3, 1);
     end;
-    for i:=0 to traj1.count-1 do begin
+    for i:=0 to trajs[0].count-1 do begin
       if RCButtonPressed(2,21+i) then begin
-        sg := traj1.points[i];
+        sg := trajs[0].points[i];
       end;
     end;
   end else if controlMode = cmManual then begin
@@ -657,7 +659,7 @@ begin
     SetRCBackColor(2,10, $7FFFFFFF);
     SetRCBackColor(2,11, $7FFFFFFF);
     SetRCBackColor(3, 8, $7FAAAAAA);
-    ManualControl();
+    ManualControl(0.1);
   end else if controlMode = cmUDPServer then begin
     SetRCValue(2,8,'UDPServer');
     if connection then begin 
@@ -792,12 +794,13 @@ begin
   Tol := 0.2;
 
   //JM
+  script_period := ScriptPeriod();
   lr_mode:=1;
   ud_mode:= 4;
   //spray gun
   sg.x:=0;
   sg.y:=-1.5;
-  sg.z:=0.6;
+  sg.z:=0.8;
   sg_theta:=0;
   controlMode := cmManual;
   paintMode := pmNone;

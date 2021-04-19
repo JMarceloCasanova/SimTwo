@@ -1,7 +1,7 @@
 object FParams: TFParams
-  Left = 1253
+  Left = 1254
   Height = 679
-  Top = 159
+  Top = 160
   Width = 281
   Caption = 'Config'
   ClientHeight = 679
