@@ -23,7 +23,7 @@
     <cell r="2" c="4" text="[Place]" />
     <cell r="2" c="6" text="Connection" />
     <cell r="2" c="7" text="Not Connected" />
-    <cell r="2" c="8" text="Manual" />
+    <cell r="2" c="8" text="UDPServer" />
     <cell r="2" c="15" text="UDP Send Port" />
     <cell r="2" c="16" text="9810" />
     <cell r="3" c="4" text="-2E-6" />
@@ -72,13 +72,13 @@
     <cell r="10" c="16" text="trajectory1.txt" />
     <cell r="11" c="4" text="[SprayOff]" />
     <cell r="11" c="7" text="max" />
-    <cell r="11" c="8" text="1.26" />
-    <cell r="11" c="9" text="0.66" />
-    <cell r="11" c="10" text="0.16" />
+    <cell r="11" c="8" text="0.71" />
+    <cell r="11" c="9" text="0.71" />
+    <cell r="11" c="10" text="1.00" />
     <cell r="12" c="7" text="min" />
-    <cell r="12" c="8" text="-1.26" />
-    <cell r="12" c="9" text="-0.81" />
-    <cell r="12" c="10" text="-0.05" />
+    <cell r="12" c="8" text="-0.71" />
+    <cell r="12" c="9" text="-0.71" />
+    <cell r="12" c="10" text="0.00" />
     <cell r="14" c="7" text="Stats" />
     <cell r="14" c="8" text="[update]" />
     <cell r="15" c="4" text="B6 Rot" />
@@ -102,45 +102,45 @@
     <cell r="16" c="14" text="3.325553" />
     <cell r="16" c="15" text="0.211585" />
     <cell r="2" c="21" text="[go]" />
-    <cell r="3" c="21" text="-0.362533990899" />
-    <cell r="4" c="21" text="-0.247002717459" />
-    <cell r="5" c="21" text="-0.395989485187" />
+    <cell r="3" c="21" text="-0.964001179461" />
+    <cell r="4" c="21" text="-0.167369855884" />
+    <cell r="5" c="21" text="0.708333015442" />
     <cell r="2" c="22" text="[go]" />
-    <cell r="3" c="22" text="-0.362533990899" />
-    <cell r="4" c="22" text="0.832454386747" />
-    <cell r="5" c="22" text="-0.575239253039" />
+    <cell r="3" c="22" text="0.167369940177" />
+    <cell r="4" c="22" text="0.964001263755" />
+    <cell r="5" c="22" text="0.708333015442" />
     <cell r="2" c="23" text="[go]" />
-    <cell r="3" c="23" text="-0.262533996859" />
-    <cell r="4" c="23" text="0.832454386747" />
-    <cell r="5" c="23" text="-0.367621580039" />
+    <cell r="3" c="23" text="0.238080593008" />
+    <cell r="4" c="23" text="0.893290610924" />
+    <cell r="5" c="23" text="0.708333015442" />
     <cell r="2" c="24" text="[go]" />
-    <cell r="3" c="24" text="-0.262533996859" />
-    <cell r="4" c="24" text="-0.247002717459" />
-    <cell r="5" c="24" text="-0.188371812187" />
+    <cell r="3" c="24" text="-0.893290526630" />
+    <cell r="4" c="24" text="-0.238080508714" />
+    <cell r="5" c="24" text="0.708333015442" />
     <cell r="2" c="25" text="[go]" />
-    <cell r="3" c="25" text="-0.162533973017" />
-    <cell r="4" c="25" text="-0.247002717459" />
-    <cell r="5" c="25" text="0.019245922688" />
+    <cell r="3" c="25" text="-0.822579831653" />
+    <cell r="4" c="25" text="-0.308791203692" />
+    <cell r="5" c="25" text="0.708333015442" />
     <cell r="2" c="26" text="[go]" />
-    <cell r="3" c="26" text="-0.162533973017" />
-    <cell r="4" c="26" text="0.832454386747" />
-    <cell r="5" c="26" text="-0.160003845164" />
+    <cell r="3" c="26" text="0.308791287985" />
+    <cell r="4" c="26" text="0.822579915947" />
+    <cell r="5" c="26" text="0.708333015442" />
     <cell r="2" c="27" text="[go]" />
-    <cell r="3" c="27" text="-0.062533978978" />
-    <cell r="4" c="27" text="0.832454386747" />
-    <cell r="5" c="27" text="0.047613827836" />
+    <cell r="3" c="27" text="0.379501961889" />
+    <cell r="4" c="27" text="0.751869242043" />
+    <cell r="5" c="27" text="0.708333015442" />
     <cell r="2" c="28" text="[go]" />
-    <cell r="3" c="28" text="-0.062533978978" />
-    <cell r="4" c="28" text="-0.247002717459" />
-    <cell r="5" c="28" text="0.226863595688" />
+    <cell r="3" c="28" text="-0.751869157749" />
+    <cell r="4" c="28" text="-0.379501877596" />
+    <cell r="5" c="28" text="0.708333015442" />
     <cell r="2" c="29" text="[go]" />
-    <cell r="3" c="29" text="0.037466015062" />
-    <cell r="4" c="29" text="-0.247002717459" />
-    <cell r="5" c="29" text="0.434481268688" />
+    <cell r="3" c="29" text="-0.681158483845" />
+    <cell r="4" c="29" text="-0.450212551500" />
+    <cell r="5" c="29" text="0.708333015442" />
     <cell r="2" c="30" text="[go]" />
-    <cell r="3" c="30" text="0.037466015062" />
-    <cell r="4" c="30" text="0.832454386747" />
-    <cell r="5" c="30" text="0.255231500836" />
-    <cell r="1" c="22" text="136" />
+    <cell r="3" c="30" text="0.450212635793" />
+    <cell r="4" c="30" text="0.681158568139" />
+    <cell r="5" c="30" text="0.708333015442" />
+    <cell r="1" c="22" text="158" />
   </cells>
 </sheet>

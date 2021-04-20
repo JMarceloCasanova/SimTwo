@@ -85,13 +85,28 @@ class triangle(object):
         return txt
 
 class aabb():
-    def __init__(self):
+    def __init__(self, part=None, triangles=None, rot_mat=np.eye(3)):
         self.min_x = 999999
         self.max_x = -999999
         self.min_y = 999999
         self.max_y = -999999
         self.min_z = 999999
         self.max_z = -999999
+        if (part is not None) and (triangles is not None):
+            for j in part:
+                center = rot_mat @ triangles[j].center
+                if center[0] < self.min_x:
+                    self.min_x = center[0]
+                if center[0] > self.max_x:
+                    self.max_x = center[0]
+                if center[1] < self.min_y:
+                    self.min_y = center[1]
+                if center[1] > self.max_y:
+                    self.max_y = center[1]
+                if center[2] < self.min_z:
+                    self.min_z = center[2]
+                if center[2] > self.max_z:
+                    self.max_z = center[2]
 
     def reset(self):
         self.min_x = 999999
@@ -113,7 +128,7 @@ class aabb():
             f.write(str(self.max_y)+" ")
             f.write(str(self.max_z)+"\n")
         
-def load_triangles():
+def load_triangles(filename = "triangles"):
     send("ReadTrianglesCount")
     count = int(read())
     #print(count)
@@ -142,7 +157,7 @@ def load_triangles():
             for j in range(num_neighbors):
                 triangles[i+it].neighbors.append(int(values.pop(0)))
             index.append(int(values.pop(0)))
-    np.save("triangles", triangles, allow_pickle=True)
+    np.save(filename, triangles, allow_pickle=True)
     print("loaded and saved " + str(len(triangles)) +" triangles")
 
 def disconnect():
@@ -210,13 +225,16 @@ def CalculatePatchyTrajectory(parts, triangles, save_extents=True):
     complete_traj = np.zeros((0, 3))
     for part in parts:
         align_rot_axis = np.cross(triangles[part[0]].normal, np.array([0,0,1]))
-        align_rot_axis = align_rot_axis/np.sqrt(np.sum(align_rot_axis**2))
-
-        phi = angle(triangles[i].normal, np.array([0,0,1]))
-        W = np.array([[0, -align_rot_axis[2], align_rot_axis[1]],\
-                        [align_rot_axis[2], 0, -align_rot_axis[0]],\
-                        [-align_rot_axis[1], align_rot_axis[0], 0]])
-        align_rot_mat_z = np.eye(3) + np.sin(phi)*W + (1-np.cos(phi))*W*W
+        if np.sqrt(np.sum(align_rot_axis**2)) < 0.0001:
+            align_rot_axis = np.array([0,0,1])
+            phi = 0
+        else:
+            align_rot_axis = align_rot_axis/np.sqrt(np.sum(align_rot_axis**2))
+            phi = angle(triangles[part[0]].normal, np.array([0,0,1]))
+        W = np.array([[0,                  -align_rot_axis[2], align_rot_axis[1]],\
+                      [align_rot_axis[2],  0,                  -align_rot_axis[0]],\
+                      [-align_rot_axis[1], align_rot_axis[0],  0]])
+        align_rot_mat_z = np.eye(3) + np.sin(phi)*W + (1-np.cos(phi))*W@W
         
         align_rot_mat = np.eye(3)
         min_volume = 99999999
@@ -269,14 +287,62 @@ def CalculatePatchyTrajectory(parts, triangles, save_extents=True):
         
     return complete_traj
     
+def CalculateCrudePatchyTrajectory(parts, triangles, save_extents=True):
+    complete_traj = np.zeros((0, 3))
+    print("calculation trajectory for "+str(len(parts))+" parts")
+    for part in parts:
+        print()
+        print()
+        print("new Part:")
+        print()
+        print("triangles[part[0]].normal")
+        print(triangles[part[0]].normal)
+        align_rot_axis = np.cross(triangles[part[0]].normal, np.array([0,0,1]))
+        if np.sqrt(np.sum(align_rot_axis**2)) < 0.0001:
+            align_rot_axis = np.array([0,0,1])
+            phi = 0
+        else:
+            align_rot_axis = align_rot_axis/np.sqrt(np.sum(align_rot_axis**2))
+            phi = angle(triangles[part[0]].normal, np.array([0,0,1]))
+        print("align_rot_axis")
+        print(align_rot_axis)
+        print("phi")
+        print(phi)
+        W = np.array([[0,                  -align_rot_axis[2], align_rot_axis[1]],\
+                      [align_rot_axis[2],  0,                  -align_rot_axis[0]],\
+                      [-align_rot_axis[1], align_rot_axis[0],  0]])
+        align_rot_mat_z = np.eye(3) + np.sin(phi)*W + (1-np.cos(phi))*W@W
+        
+        align_rot_mat = align_rot_mat_z 
+        
+        #Got align_rot_mat and min_extents
+        BoxSelectFace = 'fTop'
+        BoxOffset = 0.5
+        BoxUStep = 0.1
+        BoxVExtend = 0.3
+        print("align rot mat:")
+        print(align_rot_mat)
+        print("test vector(1,1,1)")
+        print(align_rot_mat @ np.array([1,1,1]))
+        print("det(align_rot_mat) " + str(np.linalg.det(align_rot_mat)))
+        traj = CalculateBoxRaster(BoxOffset, BoxUStep, BoxVExtend, aabb(part, triangles, align_rot_mat))
+        #reset_rot_mat = np.linalg.inv(align_rot_mat)
+        reset_rot_mat = np.transpose(align_rot_mat)
+        #print(traj)
+        #traj = np.array([np.matmul(reset_rot_mat, traj[i]) for i in range(np.shape(traj)[0])])# Am I this good?
+        traj = np.array([(reset_rot_mat @ traj[i]) for i in range(np.shape(traj)[0])])# Am I this good?
+        #print(traj)
+        complete_traj = np.append(complete_traj, traj, axis=0)
+        
+    return complete_traj
 
 if __name__ == "__main__":
-    if (not os.path.isfile('triangles.npy')) or False:
+    if (not os.path.isfile('triangles_cube45.npy')):
         connect()
-        load_triangles()
+        load_triangles("triangles_cube45")
         disconnect()
 
-    triangles = np.load("triangles.npy", allow_pickle=True)
+    triangles = np.load("triangles_cube45.npy", allow_pickle=True)
     print(len(triangles))
     
     parts = subdivision(np.pi/2, triangles)
@@ -308,9 +374,12 @@ if __name__ == "__main__":
 
 
     traj = CalculatePatchyTrajectory(parts, triangles)
+    #traj = CalculateCrudePatchyTrajectory(parts, triangles)
 
     with open('cad/trajectory1.txt', 'w') as f:
         for i in range(np.shape(traj)[0]):
             for j in range(3):
                 f.write(str(traj[i][j])+" ")
             f.write("\n")
+
+    print("done!")
