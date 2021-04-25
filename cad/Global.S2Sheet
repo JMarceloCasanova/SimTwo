@@ -23,7 +23,7 @@
     <cell r="2" c="4" text="[Place]" />
     <cell r="2" c="6" text="Connection" />
     <cell r="2" c="7" text="Not Connected" />
-    <cell r="2" c="8" text="UDPServer" />
+    <cell r="2" c="8" text="Manual" />
     <cell r="2" c="15" text="UDP Send Port" />
     <cell r="2" c="16" text="9810" />
     <cell r="3" c="4" text="-2E-6" />
@@ -31,7 +31,7 @@
     <cell r="3" c="7" text="idle" />
     <cell r="3" c="8" text="PaintModes:" backcolor="$7FAAAAAA" />
     <cell r="3" c="9" text="[BoxRaster]" />
-    <cell r="4" c="8" text="Box Raster" />
+    <cell r="4" c="8" text="Loaded Traj" />
     <cell r="4" c="15" text="done" />
     <cell r="4" c="16" text="[disconnect]" />
     <cell r="5" c="8" text="JM" />
@@ -59,7 +59,7 @@
     <cell r="7" c="16" text="filename" />
     <cell r="8" c="4" text="[HeatmapMode]" />
     <cell r="8" c="15" text="[LoadResultColors]" />
-    <cell r="8" c="16" text="ResultColors4.txt" />
+    <cell r="8" c="16" text="cube45_1_result.txt" />
     <cell r="9" c="4" text="[ResultMode]" />
     <cell r="9" c="15" text="[LoadExtents]" />
     <cell r="9" c="16" text="extents_0" />
@@ -69,7 +69,7 @@
     <cell r="10" c="9" text="y" />
     <cell r="10" c="10" text="z" />
     <cell r="10" c="15" text="[LoadTrajectory]" />
-    <cell r="10" c="16" text="trajectory1.txt" />
+    <cell r="10" c="16" text="cube45_1_traj.txt" />
     <cell r="11" c="4" text="[SprayOff]" />
     <cell r="11" c="7" text="max" />
     <cell r="11" c="8" text="0.71" />
@@ -93,54 +93,68 @@
     <cell r="16" c="4" text="1.000" />
     <cell r="16" c="5" text="0.000" />
     <cell r="16" c="6" text="0.001" />
-    <cell r="16" c="8" text="0.434282" />
-    <cell r="16" c="9" text="0.904258" />
-    <cell r="16" c="10" text="2.052518" />
-    <cell r="16" c="11" text="0.736957" />
-    <cell r="16" c="12" text="0.000032" />
+    <cell r="16" c="8" text="0.000000" />
+    <cell r="16" c="9" text="0.000000" />
+    <cell r="16" c="10" text="0.000000" />
+    <cell r="16" c="11" text="0.000000" />
+    <cell r="16" c="12" text="10000.000000" />
     <cell r="16" c="13" text="0.000000" />
-    <cell r="16" c="14" text="3.325553" />
-    <cell r="16" c="15" text="0.211585" />
+    <cell r="16" c="14" text="0.000000" />
+    <cell r="16" c="15" text="0.000000" />
     <cell r="2" c="21" text="[go]" />
-    <cell r="3" c="21" text="-0.964001179461" />
-    <cell r="4" c="21" text="-0.167369855884" />
-    <cell r="5" c="21" text="0.708333015442" />
+    <cell r="3" c="21" text="-0.981159000000" />
+    <cell r="4" c="21" text="-0.981159000000" />
+    <cell r="5" c="21" text="1.300000000000" />
     <cell r="2" c="22" text="[go]" />
-    <cell r="3" c="22" text="0.167369940177" />
-    <cell r="4" c="22" text="0.964001263755" />
-    <cell r="5" c="22" text="0.708333015442" />
+    <cell r="3" c="22" text="-0.981158971786" />
+    <cell r="4" c="22" text="-0.981158971786" />
+    <cell r="5" c="22" text="1.300000011921" />
     <cell r="2" c="23" text="[go]" />
-    <cell r="3" c="23" text="0.238080593008" />
-    <cell r="4" c="23" text="0.893290610924" />
-    <cell r="5" c="23" text="0.708333015442" />
+    <cell r="3" c="23" text="-1.105423075178" />
+    <cell r="4" c="23" text="-0.308790824370" />
+    <cell r="5" c="23" text="0.510000000000" />
     <cell r="2" c="24" text="[go]" />
-    <cell r="3" c="24" text="-0.893290526630" />
-    <cell r="4" c="24" text="-0.238080508714" />
-    <cell r="5" c="24" text="0.708333015442" />
+    <cell r="3" c="24" text="-1.105423075178" />
+    <cell r="4" c="24" text="-0.308790824370" />
+    <cell r="5" c="24" text="1.258333027363" />
     <cell r="2" c="25" text="[go]" />
-    <cell r="3" c="25" text="-0.822579831653" />
-    <cell r="4" c="25" text="-0.308791203692" />
-    <cell r="5" c="25" text="0.708333015442" />
+    <cell r="3" c="25" text="-1.034712401274" />
+    <cell r="4" c="25" text="-0.379501498274" />
+    <cell r="5" c="25" text="1.258333027363" />
     <cell r="2" c="26" text="[go]" />
-    <cell r="3" c="26" text="0.308791287985" />
-    <cell r="4" c="26" text="0.822579915947" />
-    <cell r="5" c="26" text="0.708333015442" />
+    <cell r="3" c="26" text="-1.034712401274" />
+    <cell r="4" c="26" text="-0.379501498274" />
+    <cell r="5" c="26" text="0.510000000000" />
     <cell r="2" c="27" text="[go]" />
-    <cell r="3" c="27" text="0.379501961889" />
-    <cell r="4" c="27" text="0.751869242043" />
-    <cell r="5" c="27" text="0.708333015442" />
+    <cell r="3" c="27" text="-0.964001727370" />
+    <cell r="4" c="27" text="-0.450212172178" />
+    <cell r="5" c="27" text="0.510000000000" />
     <cell r="2" c="28" text="[go]" />
-    <cell r="3" c="28" text="-0.751869157749" />
-    <cell r="4" c="28" text="-0.379501877596" />
-    <cell r="5" c="28" text="0.708333015442" />
+    <cell r="3" c="28" text="-0.964001727370" />
+    <cell r="4" c="28" text="-0.450212172178" />
+    <cell r="5" c="28" text="1.258333027363" />
     <cell r="2" c="29" text="[go]" />
-    <cell r="3" c="29" text="-0.681158483845" />
-    <cell r="4" c="29" text="-0.450212551500" />
-    <cell r="5" c="29" text="0.708333015442" />
+    <cell r="3" c="29" text="-0.893291053466" />
+    <cell r="4" c="29" text="-0.520922846082" />
+    <cell r="5" c="29" text="1.258333027363" />
     <cell r="2" c="30" text="[go]" />
-    <cell r="3" c="30" text="0.450212635793" />
-    <cell r="4" c="30" text="0.681158568139" />
-    <cell r="5" c="30" text="0.708333015442" />
-    <cell r="1" c="22" text="158" />
+    <cell r="3" c="30" text="-0.893291053466" />
+    <cell r="4" c="30" text="-0.520922846082" />
+    <cell r="5" c="30" text="0.510000000000" />
+    <cell r="1" c="22" text="121" />
+    <cell r="9" c="11" text="MRot" />
+    <cell r="10" c="12" text="0" />
+    <cell r="10" c="13" text="0" />
+    <cell r="10" c="14" text="0" />
+    <cell r="11" c="14" text="0" />
+    <cell r="12" c="13" text="0" />
+    <cell r="12" c="12" text="-1" />
+    <cell r="11" c="12" text="0" />
+    <cell r="11" c="13" text="1" />
+    <cell r="12" c="14" text="1" />
+    <cell r="5" c="14" text="[Rot]" />
+    <cell r="10" c="11" text="[reset]" />
+    <cell r="3" c="10" text="[LoadedT]" />
+    <cell r="1" c="1" text="39" />
   </cells>
 </sheet>

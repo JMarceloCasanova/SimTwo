@@ -63,19 +63,40 @@
     <const name='wrist_jpa_x' value='-0.0362' />
     <const name='wrist_jpa_y' value='-0.0605' />
     <const name='wrist_jpa_z' value='0.0' />
-    <const name='wrist_jpb_x' value='0' />
-    <const name='wrist_jpb_y' value='0' />
-    <const name='wrist_jpb_z' value='0' />
+    <const name='wrist_jpb_x' value='0.1275' />
+    <const name='wrist_jpb_y' value='0.012' />
+    <const name='wrist_jpb_z' value='0.0' />
 
-    <const name='tool_bb_x' value='0.0165' />
-    <const name='tool_bb_y' value='0.112' />
-    <const name='tool_bb_z' value='0.112' />
-    <const name='tool_jpa_x' value='0' />
-    <const name='tool_jpa_y' value='0' />
-    <const name='tool_jpa_z' value='0' />
-    <const name='tool_jpb_x' value='0' />
-    <const name='tool_jpb_y' value='0' />
-    <const name='tool_jpb_z' value='0' />
+    <const name='tool_bb_x' value='0.3025' />
+    <const name='tool_bb_y' value='0.208904' />
+    <const name='tool_bb_z' value='0.3855' />
+    <const name='tool_jpa_x' value='-0.144976' />
+    <const name='tool_jpa_y' value='0.044452' />
+    <const name='tool_jpa_z' value='-0.022598' />
+    <const name='tool_jpb_x' value='0.120192' />
+    <const name='tool_jpb_y' value='-0.05279' />
+    <const name='tool_jpb_z' value='-0.043161' />~
+
+    <const name='tableOrigin_x' value='5' />
+    <const name='tableOrigin_y' value='0.0' />
+    <const name='tableOrigin_z' value='0.0' />
+
+    <const name='table_bb_x' value='0.817460449' />
+    <const name='table_bb_y' value='1.079365234' />
+    <const name='table_bb_z' value='0.614286' />
+    <const name='table_jpb_x' value='-0.000033' />
+    <const name='table_jpb_y' value='0.130809' />
+    <const name='table_jpb_z' value='0.614286/2' />
+
+    <const name='tableSupport_bb_x' value='0.799743286' />
+    <const name='tableSupport_bb_y' value='0.799743286' />
+    <const name='tableSupport_bb_z' value='0.333' />
+    <const name='tableSupport_jpa_x' value='0.0' />
+    <const name='tableSupport_jpa_y' value='0.0' />
+    <const name='tableSupport_jpa_z' value='-0.333/2' />
+    <const name='tableSupport_jpb_x' value='0' />
+    <const name='tableSupport_jpb_y' value='0' />
+    <const name='tableSupport_jpb_z' value='0' />
   </defines>
   
   <solids>
@@ -134,7 +155,7 @@
     <cuboid>
       <ID value='wrist'/>
       <mass value='150'/>
-      <size x='lowerArm_bb_x' y='lowerArm_bb_y' z='lowerArm_bb_z'/>
+      <size x='wrist_bb_x' y='wrist_bb_y' z='wrist_bb_z'/>
       <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x-elbow_jpa_x+elbow_jpb_x-lowerArm_jpa_x+lowerArm_jpb_x-wrist_jpa_x' 
            y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y-wrist_jpa_y' 
            z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z+elbow_jpb_z-lowerArm_jpa_z+lowerArm_jpb_z-wrist_jpa_z'/>
@@ -142,6 +163,36 @@
       <mesh file='MH50/wrist.obj' shadow='0' scale='0.001'/>
     </cuboid>
   
+    <cuboid>
+      <ID value='tool'/>
+      <mass value='0.001'/>
+      <size x='tool_bb_x' y='tool_bb_y' z='tool_bb_z'/>
+      <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x-elbow_jpa_x+elbow_jpb_x-lowerArm_jpa_x+lowerArm_jpb_x-wrist_jpa_x+wrist_jpb_x-tool_jpa_x' 
+           y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y-wrist_jpa_y+wrist_jpb_y-tool_jpa_y' 
+           z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z+elbow_jpb_z-lowerArm_jpa_z+lowerArm_jpb_z-wrist_jpa_z+wrist_jpb_z-tool_jpa_z'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <mesh file='MH50/spindle_spray_centered.obj' shadow='0' scale='0.001'/>
+    </cuboid>
+
+
+
+    <cuboid>
+      <ID value='table'/>
+      <mass value='200'/>
+      <size x='table_bb_x' y='table_bb_y' z='table_bb_z'/>
+      <pos x='tableOrigin_x' y='tableOrigin_y' z='tableOrigin_z+table_bb_z/2'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <mesh file='MH50/R250.obj' shadow='0' scale='0.001'/>
+    </cuboid>
+
+    <cuboid>
+      <ID value='tableSupport'/>
+      <mass value='150'/>
+      <size x='tableSupport_bb_x' y='tableSupport_bb_y' z='tableSupport_bb_z'/>
+      <pos x='tableOrigin_x+table_jpb_x-tableSupport_jpa_x' y='tableOrigin_y+table_jpb_y-tableSupport_jpa_y' z='tableOrigin_z+(table_bb_z/2)+table_jpb_z-tableSupport_jpa_z'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <mesh file='MH50/tableSupport.obj' shadow='0' scale='0.001'/>
+    </cuboid>
   </solids>
 
   <shells>
@@ -213,16 +264,70 @@
 
     <joint>
       <ID value='lowerArm_wrist'/>
-      <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x-elbow_jpa_x+elbow_jpb_x-wrist_jpa_x+wrist_jpb_x' 
-           y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-wrist_jpa_y+wrist_jpb_y' 
-           z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z+elbow_jpb_z-wrist_jpa_z+wrist_jpb_z'/>
-      <axis x='1' y='0' z='0'/>
+      <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x-elbow_jpa_x+elbow_jpb_x-lowerArm_jpa_x+lowerArm_jpb_x' 
+           y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y' 
+           z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z+elbow_jpb_z-lowerArm_jpa_z+lowerArm_jpb_z'/>
+      <axis x='0' y='1' z='0'/>
       <connect B1='wrist' B2='lowerArm'/>
       <!--<limits Min='-180' Max='180'/>-->
       <type value='Hinge'/>
     </joint>
 
+    <joint>
+      <ID value='wrist_tool'/>
+      <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x-elbow_jpa_x+elbow_jpb_x-lowerArm_jpa_x+lowerArm_jpb_x-wrist_jpa_x+wrist_jpb_x' 
+           y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y-wrist_jpa_y+wrist_jpb_y' 
+           z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z+elbow_jpb_z-lowerArm_jpa_z+lowerArm_jpb_z-wrist_jpa_z+wrist_jpb_z'/>
+      <!--
+      <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x-elbow_jpa_x+elbow_jpb_x-lowerArm_jpa_x+lowerArm_jpb_x' 
+           y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y' 
+           z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z+elbow_jpb_z-lowerArm_jpa_z+lowerArm_jpb_z'/>
+      -->
+      <axis x='0' y='1' z='0'/>
+      <connect B1='tool' B2='wrist'/>
+      <!--<limits Min='-180' Max='180'/>-->
+      <type value='Fixed'/>
+    </joint>
+
+
+
+
+
+
+    <joint>
+      <ID value='world_table'/>
+      <pos x='tableOrigin_x' y='tableOrigin_y' z='tableOrigin_z+table_bb_z'/>
+      <connect B1='table' B2='world'/>
+      <type value='Fixed'/>
+    </joint>
+
+    <joint>
+      <ID value='table_tableSupport'/>
+      <pos x='tableOrigin_x+table_jpb_x' y='tableOrigin_y+table_jpb_y' z='tableOrigin_z+table_bb_z/2+table_jpb_z'/>
+      <axis x='0' y='0' z='1'/>
+      <connect B1='tableSupport' B2='table'/>
+      <!--<limits Min='-180' Max='180'/>-->
+      <type value='Hinge'/>
+    </joint>
+
   </articulations>
+
+  <sensors>
+
+    <spraygun>
+      <beam length='0.5' initial_width='0' final_width='0.1'/>
+      <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x-elbow_jpa_x+elbow_jpb_x-lowerArm_jpa_x+lowerArm_jpb_x-wrist_jpa_x+wrist_jpb_x-tool_jpa_x+tool_jpb_x' 
+           y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y-wrist_jpa_y+wrist_jpb_y-tool_jpa_y+tool_jpb_y' 
+           z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z+elbow_jpb_z-lowerArm_jpa_z+lowerArm_jpb_z-wrist_jpa_z+wrist_jpb_z-tool_jpa_z+tool_jpb_z'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='200' g='0' b='0'/>
+      <paint_color_rgb r='0' g='100' b='255'/>
+      <paint_rate value='0.0000033'/>  <!-- m^3/s = 1000L/s
+               200ml/minuto = 0.0002m^3/min = -->
+      <paint_default_on value='true'/>
+    </spraygun>
+
+  </sensors>
 
 </robot>
 
