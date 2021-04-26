@@ -2,6 +2,7 @@
 <sheet>
   <columns>
     <defaultcol width="50" />
+    <col num="3" width="63" />
     <col num="4" width="95" />
     <col num="5" width="21" />
     <col num="6" width="63" />
@@ -20,16 +21,14 @@
     <cell r="1" c="12" text="[None]" />
     <cell r="1" c="15" text="UDP IP" />
     <cell r="1" c="16" text="127.0.0.1" />
-    <cell r="2" c="4" text="[Place]" />
     <cell r="2" c="6" text="Connection" />
     <cell r="2" c="7" text="Not Connected" />
-    <cell r="2" c="8" text="Manual" />
+    <cell r="2" c="8" text="PaintModes" />
     <cell r="2" c="15" text="UDP Send Port" />
     <cell r="2" c="16" text="9810" />
-    <cell r="3" c="4" text="-2E-6" />
     <cell r="3" c="6" text="State:" />
     <cell r="3" c="7" text="idle" />
-    <cell r="3" c="8" text="PaintModes:" backcolor="$7FAAAAAA" />
+    <cell r="3" c="8" text="PaintModes:" backcolor="$7FFFFFFF" />
     <cell r="3" c="9" text="[BoxRaster]" />
     <cell r="4" c="8" text="Loaded Traj" />
     <cell r="4" c="15" text="done" />
@@ -81,7 +80,7 @@
     <cell r="12" c="10" text="0.00" />
     <cell r="14" c="7" text="Stats" />
     <cell r="14" c="8" text="[update]" />
-    <cell r="15" c="4" text="B6 Rot" />
+    <cell r="15" c="4" text="toolRot" />
     <cell r="15" c="8" text="AvgSprayThickness" />
     <cell r="15" c="9" text="SDSprayThickness" />
     <cell r="15" c="10" text="PosAvgSprayThickness" />
@@ -92,7 +91,7 @@
     <cell r="15" c="15" text="SprayCoverage" />
     <cell r="16" c="4" text="1.000" />
     <cell r="16" c="5" text="0.000" />
-    <cell r="16" c="6" text="0.001" />
+    <cell r="16" c="6" text="0.000" />
     <cell r="16" c="8" text="0.000000" />
     <cell r="16" c="9" text="0.000000" />
     <cell r="16" c="10" text="0.000000" />
@@ -155,6 +154,45 @@
     <cell r="5" c="14" text="[Rot]" />
     <cell r="10" c="11" text="[reset]" />
     <cell r="3" c="10" text="[LoadedT]" />
-    <cell r="1" c="1" text="39" />
+    <cell r="1" c="1" text="28" />
+    <cell r="2" c="1" text="Joint" />
+    <cell r="2" c="2" text="Pos (deg)" />
+    <cell r="3" c="1" text="0" />
+    <cell r="4" c="1" text="1" />
+    <cell r="5" c="1" text="2" />
+    <cell r="6" c="1" text="3" />
+    <cell r="7" c="1" text="4" />
+    <cell r="8" c="1" text="5" />
+    <cell r="11" c="2" text="-0.5065502" />
+    <cell r="12" c="2" text="0.01352605" />
+    <cell r="13" c="2" text="1.973005" />
+    <cell r="16" c="2" text="-0.2340736" />
+    <cell r="17" c="2" text="-0.0189212" />
+    <cell r="18" c="2" text="1.995603" />
+    <cell r="17" c="4" text="0.000" />
+    <cell r="17" c="5" text="1.000" />
+    <cell r="17" c="6" text="0.000" />
+    <cell r="18" c="4" text="0.000" />
+    <cell r="18" c="5" text="0.000" />
+    <cell r="18" c="6" text="1.000" />
+    <cell r="3" c="2" text="0" />
+    <cell r="4" c="2" text="-5.51E-7" />
+    <cell r="5" c="2" text="0" />
+    <cell r="6" c="2" text="-0.0000112" />
+    <cell r="7" c="2" text="-1.04E-6" />
+    <cell r="8" c="2" text="-6.03E-6" />
+    <cell r="10" c="2" text="wristPos" />
+    <cell r="15" c="2" text="toolPos" />
+    <cell r="10" c="1" text="[Ik(Pos)]" />
+    <cell r="11" c="1" text="0" />
+    <cell r="12" c="1" text="0" />
+    <cell r="13" c="1" text="0" />
+    <cell r="10" c="3" text="ReqThetas" />
+    <cell r="11" c="3" text="0" />
+    <cell r="12" c="3" text="0" />
+    <cell r="13" c="3" text="0" />
+    <cell r="14" c="3" text="0" />
+    <cell r="15" c="3" text="0" />
+    <cell r="16" c="3" text="0" />
   </cells>
 </sheet>

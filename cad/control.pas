@@ -1,6 +1,5 @@
 const
  NumJoints = 6;
- NumScrews = 1;
 type
   faces = (fTop, fBottom, fLeft, fRight, fBack, fFront);
   controlModes = (cmManual, cmPaintModes, cmUDPServer, cmNone);
@@ -16,18 +15,17 @@ type
 // Global Variables
 var
 
-  irobot, iScrew, iB5, iB6, iHead: integer;
-  d1, d2, d3: double;
+  irobot, iwrist, itool: integer;
+  A, B, C: double;
+  robBase: TPoint3D;
   
   R01, R12, R23: Matrix;
   R03: Matrix;
 
   JointPos: array[0..NumJoints - 1] of double;
-  ScrewH: array[0..NumScrews - 1] of double;
 
-  state: string;
   ReqThetas: matrix;
-  Tol, tis: double;
+  Tol: double;
 
   //JM
   script_period: double;
@@ -65,6 +63,12 @@ begin
   result.y := a.y + b.y;
   result.z := a.z + b.z;
 end;
+function subTPoint3D(a, b:TPoint3D):TPoint3D;
+begin
+  result.x := a.x - b.x;
+  result.y := a.y - b.y;
+  result.z := a.z - b.z;
+end;
 function scaleTPoint3D(a:TPoint3D; scale: double):TPoint3D;
 begin
   result.x := a.x * scale;
@@ -86,6 +90,19 @@ begin
   result.x := a.x/dist;
   result.y := a.y/dist;
   result.z := a.z/dist;
+end;
+function TPoint3DtoMat(A:TPoint3D): Matrix;
+begin
+  result := Mzeros(3,1);
+  MSetV(result, 0,0,A.X);
+  MSetV(result, 1,0,A.Y);
+  MSetV(result, 2,0,A.Z);
+end;
+function MattoTPoint3D(A: Matrix): TPoint3D;
+begin
+  result.X := MGetV(A, 0,0);
+  result.Y := MGetV(A, 1,0);
+  result.Z := MGetV(A, 2,0);
 end;
 
 function DHMat(a, alpha, d, theta: double): Matrix;
@@ -136,23 +153,48 @@ begin
   result := R;
 end;
 
-procedure UpdateScrew(index: integer);
-var w: double;
-begin
-  w := GetAxisSpeed(index, 1); // second axis has the head rotation
-  SetRCValue(3, 4, format('%.2g',[w]));
-  if abs(w) > 0.1 then begin
-    ScrewH[index - 1] := ScrewH[index - 1] + w/1000;
-    SetAxisPosRef(index, 0, ScrewH[index - 1]);
-  end;
-
-end;
-
 
 // Pace here the Inverse Kinematics calculations
-function IK(Xtool, Rtool: matrix; Ltool: double): matrix;
+function IK(toolPos: TPoint3D; toolRot: matrix): matrix;
+var D: double; //A upperArm B elbow_offset C elbow_and_lowerArm
+    theta1, theta2, theta3, theta4, theta5, theta6: double;
+    beta: double;
+    Ow : TPoint3D;//Wrist center
+    configuration: Integer;
+    toolDist: TPoint3D;
+    R03, R36: matrix;
 begin
+  toolPos := subTPoint3D(toolPos, robBase);
+
+  toolDist.X := 0.265168;
+  toolDist.Y := -0.097242;
+  toolDist.Z := -0.020563;
+  Ow := MattoTPoint3D( Msub(TPoint3DtoMat(toolPos),  MMult(toolRot, TPoint3DtoMat(toolDist))) );
+
+  configuration := 1; //upper
+  //configuration := -1; //lower
+  D := sqrt(B*B+C*C);
+  theta1 := atan2(Ow.Y, Ow.X);
+  beta := atan2(C,B);
+  theta3 := configuration*( beta - arccos( (Ow.X*Ow.X+Ow.Y*Ow.Y + Ow.Z*Ow.Z - A*A-D*D) / (2*A*D) ) );
+  theta2 := atan2(Ow.Y, Ow.X) + configuration*atan2(D*sin(beta-theta3), A-D*cos(beta-theta3)) -PI/2;
+
+  R03 := Meye(3);
+  MsetV(R03, 0, 0, cos(theta1)*cos(theta2+theta3));
+  MsetV(R03, 0, 1, sin(theta1)*cos(theta2+theta3));
+  MsetV(R03, 0, 2, sin(theta2+theta3));
+  MsetV(R03, 1, 0, sin(theta1));
+  MsetV(R03, 1, 1, -cos(theta1));
+  MsetV(R03, 1, 2, 0);
+  MsetV(R03, 2, 0, cos(theta1)*sin(theta2+theta3));
+  MsetV(R03, 2, 1, sin(theta1)*sin(theta2+theta3));
+  MsetV(R03, 2, 2, cos(theta2+theta3));
+
+  R36 := MMult(Mtran(R03), toolRot);
   result := Mzeros(6, 1);
+  MSetV(result, 0, 0, theta1);
+  MSetV(result, 1, 0, theta2);
+  MSetV(result, 2, 0, theta3);
 end;
 
 
@@ -163,6 +205,8 @@ begin
   for i := 0 to 5 do begin
     SetAxisPosRef(iRobot, i, Mgetv(Thetas, i, 0));
   end;
+  WriteLn('setThetas');
+  MatrixToRange(11, 3, Thetas);
 end;
 
 
@@ -177,12 +221,6 @@ begin
   result := err;
 end;
 
-
-procedure SetNewState(newState: string);
-begin
-  State := newState;
-  tis := 0;
-end;
 
 procedure ManualControl(velocity: double);
 var delta_v: double;
@@ -469,8 +507,7 @@ begin
 end;
 
 procedure RunTrajectory(vel: double; trajIndex: integer);
-var dist: double;
-    dirnorm: TPoint3D;
+var dirnorm: TPoint3D;
     delta_v: double;
 begin
   SetRCValue(1,1,IntToStr(trajs[trajIndex].nextPoint));
@@ -576,13 +613,9 @@ end;
 
 
 procedure Control;
-var i, j: integer;
-    B5Pos, B6Pos: Matrix;
-    B6Rot, B6RotCalc: Matrix;
-    xw, yw, zw: double;
-    RTool, XTool, XWrist, LTool: matrix;
-    HeadPos, HeadRot: matrix;
-
+var i: integer;
+    wristPos, toolPos: Matrix;
+    toolRot: Matrix;
     BoxSelectFace: faces;
     BoxOffset: double;
     BoxUStep, BoxVExtend: double;
@@ -590,7 +623,6 @@ var i, j: integer;
     loadMat: Matrix;
     target_pos:TPoint3D;
 begin
-//jm
   if RCButtonPressed(6, 4) then ResetPaintTargetPaint(0);
   if RCButtonPressed(7, 4) then SetPaintTargetPaintMode(0, pmPaint);
   if RCButtonPressed(8, 4) then SetPaintTargetPaintMode(0, pmHeatmap);
@@ -753,23 +785,17 @@ begin
     SetRCValue(15, 15, 'SprayCoverage');
     SetRCValue(16, 15, format('%.6f',[CalculateSprayCoverage(0)]));
   end;
-  //SetRobotPos(2, sg.x, sg.y, sg.z, sg_theta);
-  //end jm
 
-  {UpdateScrew(1);
+  //Robot Control
+  
+  wristPos := GetSolidPosMat(iRobot, iwrist);
+  MatrixToRange(11, 2, wristPos);
 
-  B5Pos := GetSolidPosMat(iRobot, iB5);
-  MatrixToRange(11, 2, B5Pos);
+  toolPos := GetSolidPosMat(iRobot, itool);
+  MatrixToRange(16, 2, toolPos);
 
-  B6Pos := GetSolidPosMat(iRobot, iB6);
-  MatrixToRange(16, 2, B6Pos);
-
-  B6rot := GetSolidRotMat(iRobot, iB6);
-  MatrixToRangeF(16, 4, B6Rot, '%.3f');
-
-  HeadPos := GetSolidPosMat(iScrew, iHead);
-  HeadRot := GetSolidRotMat(iScrew, iHead);
-
+  toolrot := GetSolidRotMat(iRobot, itool);
+  MatrixToRangeF(16, 4, toolRot, '%.3f');
 
   // Read joint positions
   for i := 0 to NumJoints -1 do begin
@@ -781,64 +807,46 @@ begin
     SetRCValue(3 + i, 2, format('%.3g',[Deg(JointPos[i])]));
   end;
 
-  if RCButtonPressed(2, 4) then begin
-    SetRobotPos(iScrew, 0.4 + (random01()- 0.1) * 0.2, -0.1 + (random01()- 0.1) * 0.2, 0, 0);
-  end;
-
   // control equations
   // ...
 
-  if (state = 'idle') and RCButtonPressed(10,4) then begin
-    SetNewState('above');
-  end else if (state = 'above') and (JointError(ReqThetas) < Tol) and (tis > 5.0) then begin
-    SetNewState('lock');
+  if RCButtonPressed(10, 1) then begin
+    ReqThetas := RangeToMatrix(11,1,3,1);
+    ReqThetas := Ik(MattoTPoint3D(ReqThetas), Meye(3));
   end;
+  SetThetas(ReqThetas);
 
-  if state = 'idle' then begin
-    ReqThetas := Mzeros(6, 1);
-    SetThetas(ReqThetas);
-  end else if state = 'above' then begin
-    ReqThetas := Ik(HeadPos, HeadRot, 0.15);
-    SetThetas(ReqThetas);
-  end else if state = 'lock' then begin
-    ReqThetas := Ik(HeadPos, HeadRot, 0.8);
-    SetThetas(ReqThetas);
-  end;
 
-}
-  tis := tis + 0.04;
-
-  SetRCValue(3, 7, state);
 end;
 
 
 procedure Initialize;
 var i: integer;
 begin
-  irobot := 0;
-  iScrew := 1;
+  irobot := 1;
 
-  {iB5 := GetSolidIndex(irobot, 'B5');
-  iB6 := GetSolidIndex(irobot, 'B6');
+  iwrist := GetSolidIndex(irobot, 'wrist');
+  itool := GetSolidIndex(irobot, 'tool');
 
-  iHead := GetSolidIndex(iScrew, 'screw_head');
-
+  SetRCValue(10, 1, '[Ik(Pos)]');
+  SetRCValue(10, 2, 'wristPos');
+  SetRCValue(15, 2, 'toolPos');
+  SetRCValue(15, 4, 'toolRot');
   SetRCValue(2, 1, 'Joint');
   SetRCValue(2, 2, 'Pos (deg)');
   for i := 0 to NumJoints -1 do begin
     SetRCValue(3 + i, 1, format('%d',[i]));
   end;
 
-  for i := 0 to NumScrews -1 do begin
-    Screwh[i] := GetAxisPos(1 + i, 0);
-  end;
-
-  d1 := 0.55;
-  d2 := 0.4;
-  d3 := 0.37;
-}
-  state := 'idle';
+  robBase.X := -2 + 0.08685;
+  robBase.Y := 0 + 0.0025;
+  robBase.Z := 0 + 0.1560025 + 0.312005/2;
+  A := 1.445008;
+  B := 0.560;
+  C := 0.653 + 0.784 + 0.255/2 -0.0362;
   Tol := 0.2;
+
+  ReqThetas := Mzeros(6, 1);
 
   //JM
   script_period := ScriptPeriod();

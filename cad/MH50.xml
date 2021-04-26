@@ -160,17 +160,19 @@
            y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y-wrist_jpa_y' 
            z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z+elbow_jpb_z-lowerArm_jpa_z+lowerArm_jpb_z-wrist_jpa_z'/>
       <rot_deg x='0' y='0' z='0'/>
+      <drag stokes='1e-2' roll='1e-1'/>
       <mesh file='MH50/wrist.obj' shadow='0' scale='0.001'/>
     </cuboid>
   
     <cuboid>
       <ID value='tool'/>
-      <mass value='0.001'/>
+      <mass value='10'/>
       <size x='tool_bb_x' y='tool_bb_y' z='tool_bb_z'/>
       <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x-elbow_jpa_x+elbow_jpb_x-lowerArm_jpa_x+lowerArm_jpb_x-wrist_jpa_x+wrist_jpb_x-tool_jpa_x' 
            y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y-wrist_jpa_y+wrist_jpb_y-tool_jpa_y' 
            z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z+elbow_jpb_z-lowerArm_jpa_z+lowerArm_jpb_z-wrist_jpa_z+wrist_jpb_z-tool_jpa_z'/>
       <rot_deg x='0' y='0' z='0'/>
+      <drag stokes='1e-2' roll='1e-1'/>
       <mesh file='MH50/spindle_spray_centered.obj' shadow='0' scale='0.001'/>
     </cuboid>
 
@@ -209,7 +211,7 @@
       <gear ratio='200' be='1e-1' ke='800'/>
       <friction bv='0.02' fc='0.01'/>
       <encoder ppr='1000' mean='0' stdev='0'/>
-      <controller mode='pidposition' kp='100' ki='0.1' kd='50' kf='0.0' active='1' period='10'/>
+      <controller mode='pidposition' kp='100' ki='0.1' kd='15' kf='0.0' active='1' period='10'/>
       <spring k='0' zeropos='0'/>
     </default>
     
@@ -278,15 +280,11 @@
       <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x-elbow_jpa_x+elbow_jpb_x-lowerArm_jpa_x+lowerArm_jpb_x-wrist_jpa_x+wrist_jpb_x' 
            y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y-wrist_jpa_y+wrist_jpb_y' 
            z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z+elbow_jpb_z-lowerArm_jpa_z+lowerArm_jpb_z-wrist_jpa_z+wrist_jpb_z'/>
-      <!--
-      <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x-elbow_jpa_x+elbow_jpb_x-lowerArm_jpa_x+lowerArm_jpb_x' 
-           y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y' 
-           z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z+elbow_jpb_z-lowerArm_jpa_z+lowerArm_jpb_z'/>
-      -->
-      <axis x='0' y='1' z='0'/>
+      <!--<draw radius='0.015' height='1' rgb24='8F0000'/>-->
+      <axis x='1' y='0' z='0'/>
       <connect B1='tool' B2='wrist'/>
       <!--<limits Min='-180' Max='180'/>-->
-      <type value='Fixed'/>
+      <type value='Hinge'/>
     </joint>
 
 
@@ -316,9 +314,10 @@
 
     <spraygun>
       <beam length='0.5' initial_width='0' final_width='0.1'/>
-      <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x-elbow_jpa_x+elbow_jpb_x-lowerArm_jpa_x+lowerArm_jpb_x-wrist_jpa_x+wrist_jpb_x-tool_jpa_x+tool_jpb_x' 
-           y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y-wrist_jpa_y+wrist_jpb_y-tool_jpa_y+tool_jpb_y' 
-           z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z+elbow_jpb_z-lowerArm_jpa_z+lowerArm_jpb_z-wrist_jpa_z+wrist_jpb_z-tool_jpa_z+tool_jpb_z'/>
+      <solid id='tool'/>
+      <pos x='tool_jpb_x' 
+           y='tool_jpb_y' 
+           z='tool_jpb_z'/>
       <rot_deg x='0' y='0' z='0'/>
       <color_rgb r='200' g='0' b='0'/>
       <paint_color_rgb r='0' g='100' b='255'/>
