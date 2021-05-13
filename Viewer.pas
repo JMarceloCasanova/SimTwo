@@ -4228,8 +4228,8 @@ begin
 
   space := dQuadTreeSpaceCreate(nil, Center, Extents, 5);}
   contactgroup := dJointGroupCreate(0);
-  //dWorldSetGravity(world, 0, 0, -9.81);
-  dWorldSetGravity(world, 0, 0, 0);
+  dWorldSetGravity(world, 0, 0, -9.81);
+  //dWorldSetGravity(world, 0, 0, 0);
 
   Ode_CFM := 1e-5;
   Ode_ERP := 0.4;

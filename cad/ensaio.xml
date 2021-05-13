@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<defines>
+    <const name='posz' value='1.04' />
+    <cosnt name='offset' value='0.01' />
+</defines>
+<things>
+    <cylinder>
+      <ID value='paper_ensaio'/>
+      <painting_target/>
+      <mass value='1'/>
+      <mesh file='ensaio_paper_c.stl' shadow='0' scale='1'/>
+      <size x='0.1' y='0.1' z='0.1'/>
+      <pos x='0' y='-0.05' z='1.04+0.01'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <color_rgb r='100' g='100' b='100'/>
+    </cylinder>
+    <cylinder>
+      <ID value='base_ensaio'/>
+      <painting_target/>
+      <mass value='1'/>
+      <mesh file='ensaio_base.stl' shadow='0' scale='1'/>
+      <size x='0.1' y='0.1' z='0.1'/>
+      <pos x='0' y='-0.05' z='1.04'/>
+      <rot_deg x='0' y='0' z='0'/>
+      <!--<color_rgb r='194' g='160' b='118'/>-->
+      <color_rgb r='97' g='80' b='59'/>
+    </cylinder>
+</things>
+

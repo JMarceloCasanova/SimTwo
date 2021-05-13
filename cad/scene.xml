@@ -34,7 +34,9 @@
 
   <sensors file='sensors.xml'/>
 
-  <things file='cube.xml'/>
+  <things file='ensaio.xml'/>
+
+  <!--<things file='cube.xml'/>-->
 
   <!--<noobstacles file='obstacles.xml'/>
 
@@ -50,7 +52,7 @@
   
   <robot>
     <ID name='MH50'/>
-    <pos x='-2' y='0' z='0'/>
+    <pos x='0' y='0' z='0'/>
     <rot_deg x='0' y='0' z='0.001'/>
 
     <body file='MH50.xml'/>

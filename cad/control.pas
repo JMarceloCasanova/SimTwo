@@ -16,9 +16,10 @@ type
 var
 
   irobot, iwrist, itool: integer;
-  A, B, C: double;
+  A, B, C, d1, d2: double;
   robBase: TPoint3D;
-  
+  DHParams: matrix;
+
   R01, R12, R23: Matrix;
   R03: Matrix;
 
@@ -122,22 +123,6 @@ begin
 end;
 
 
-function RotZMat(theta: double): Matrix;
-var ct, st: double;
-    R: Matrix;
-begin
-  ct := cos(theta);
-  st := sin(theta);
-
-  R := Meye(3);
-  MSetV(R, 0, 0, ct); MSetV(R, 0, 1,-st);  MSetV(R, 0, 2, 0);
-  MSetV(R, 1, 0, st); MSetV(R, 1, 1, ct);  MSetV(R, 1, 2, 0);
-  MSetV(R, 2, 0,  0); MSetV(R, 2, 1, 0 );  MSetV(R, 2, 2, 1);
-
-  result := R;
-end;
-
-
 function RotXMat(theta: double): Matrix;
 var ct, st: double;
     R: Matrix;
@@ -154,30 +139,77 @@ begin
 end;
 
 
-// Pace here the Inverse Kinematics calculations
-function IK(toolPos: TPoint3D; toolRot: matrix): matrix;
+function RotYMat(theta: double): Matrix;
+var ct, st: double;
+    R: Matrix;
+begin
+  ct := cos(theta);
+  st := sin(theta);
+
+  R := Meye(3);
+  MSetV(R, 0, 0, ct); MSetV(R, 0, 1, 0);  MSetV(R, 0, 2, st);
+  MSetV(R, 1, 0, 0); MSetV(R, 1, 1, 1);  MSetV(R, 1, 2, 0);
+  MSetV(R, 2, 0,  -st); MSetV(R, 2, 1, 0);  MSetV(R, 2, 2, ct);
+
+  result := R;
+end;
+
+
+function RotZMat(theta: double): Matrix;
+var ct, st: double;
+    R: Matrix;
+begin
+  ct := cos(theta);
+  st := sin(theta);
+
+  R := Meye(3);
+  MSetV(R, 0, 0, ct); MSetV(R, 0, 1,-st);  MSetV(R, 0, 2, 0);
+  MSetV(R, 1, 0, st); MSetV(R, 1, 1, ct);  MSetV(R, 1, 2, 0);
+  MSetV(R, 2, 0,  0); MSetV(R, 2, 1, 0 );  MSetV(R, 2, 2, 1);
+
+  result := R;
+end;
+
+
+function IK(toolPosPoint: TPoint3D; toolRot: matrix): matrix;
 var D: double; //A upperArm B elbow_offset C elbow_and_lowerArm
     theta1, theta2, theta3, theta4, theta5, theta6: double;
     beta: double;
-    Ow : TPoint3D;//Wrist center
+    wristPos, toolDist, toolPos: matrix;
+    wristPosPoint: TPoint3D;
     configuration: Integer;
-    toolDist: TPoint3D;
     R03, R36: matrix;
-begin
-  toolPos := subTPoint3D(toolPos, robBase);
 
-  toolDist.X := 0.265168;
-  toolDist.Y := -0.097242;
-  toolDist.Z := -0.020563;
-  Ow := MattoTPoint3D( Msub(TPoint3DtoMat(toolPos),  MMult(toolRot, TPoint3DtoMat(toolDist))) );
+    temp_matrix: matrix;
+begin
+  toolPos := MZeros(3, 1);
+  toolPos := MSub(TPoint3DtoMat(toolPosPoint), TPoint3DtoMat(robBase));
+
+  toolDist := MZeros(3, 1);
+  MsetV(toolDist, 0, 0,  0.265168);
+  MsetV(toolDist, 0, 0,  -0.097242);
+  MsetV(toolDist, 0, 0,  -0.020563);
+  wristPos := MZeros(3, 1);
+  wristPos := Msub(toolPos,  MMult(toolRot, toolDist));
+  temp_matrix := MAdd(wristPos, TPoint3DtoMat(robBase));
+  MatrixToRange(11, 3, temp_matrix);
 
   configuration := 1; //upper
   //configuration := -1; //lower
+  wristPosPoint := MattoTPoint3D(wristPos);
   D := sqrt(B*B+C*C);
-  theta1 := atan2(Ow.Y, Ow.X);
+  theta1 := atan2(wristPosPoint.Y, wristPosPoint.X);
   beta := atan2(C,B);
-  theta3 := configuration*( beta - arccos( (Ow.X*Ow.X+Ow.Y*Ow.Y + Ow.Z*Ow.Z - A*A-D*D) / (2*A*D) ) );
-  theta2 := atan2(Ow.Y, Ow.X) + configuration*atan2(D*sin(beta-theta3), A-D*cos(beta-theta3)) -PI/2;
+  theta3 := configuration*( beta - arccos( (sqrt(wristPosPoint.X*wristPosPoint.X+wristPosPoint.Y*wristPosPoint.Y) + wristPosPoint.Z*wristPosPoint.Z - A*A-D*D) / (2*A*D) ) );
+  theta2 := atan2(wristPosPoint.Y, wristPosPoint.X) - configuration*atan2(D*sin(beta-theta3), A+D*cos(beta-theta3));
+  //theta2 := theta2 - PI/2;
+  //theta2 := theta2 + PI/2;
+  //theta2 := -theta2 + PI/2;
+  theta2 := -theta2 - PI/2;
+  //theta3 := theta3 - PI/2;
+  //theta3 := theta3 + PI/2;
+  //theta3 := -theta3 + PI/2;
+  //theta3 := -theta3 - PI/2;
 
   R03 := Meye(3);
   MsetV(R03, 0, 0, cos(theta1)*cos(theta2+theta3));
@@ -189,24 +221,101 @@ begin
   MsetV(R03, 2, 0, cos(theta1)*sin(theta2+theta3));
   MsetV(R03, 2, 1, sin(theta1)*sin(theta2+theta3));
   MsetV(R03, 2, 2, cos(theta2+theta3));
+  //ou R03
+  R03 := Mmult(Mmult(RotZMat(theta1), RotYMat(theta2)), RotYMat(theta3));
+  //MatrixToRange(,, R03);
 
   R36 := MMult(Mtran(R03), toolRot);
+  //MatrixToRange(,, R36);
+  //4 x0, 5 y, 6 x1
+  if Mgetv(R36, 0, 0) < 1 then begin
+    if Mgetv(R36, 0, 0) > -1 then begin
+      theta5 := arccos(Mgetv(R36, 0, 0));
+      theta4 := atan2(Mgetv(R36, 1, 0), -Mgetv(R36, 2, 0));
+      theta6 := atan2(Mgetv(R36, 0, 1), Mgetv(R36, 0, 2));
+    end
+    else begin
+      theta5 := pi;
+      theta4 := -atan2(-Mgetv(R36, 1, 2), Mgetv(R36, 1, 1));
+      theta6 := 0;
+    end;
+  end
+  else begin
+    theta5 := 0;
+    theta4 := atan2(-Mgetv(R36, 1, 2), Mgetv(R36, 1, 1));
+    theta6 := 0;
+  end;
+
   result := Mzeros(6, 1);
   MSetV(result, 0, 0, theta1);
   MSetV(result, 1, 0, theta2);
   MSetV(result, 2, 0, theta3);
+  MSetV(result, 3, 0, theta4);
+  MSetV(result, 4, 0, theta5);
+  MSetV(result, 5, 0, theta6);
 end;
 
+
+function DK(Thetas: matrix): matrix;
+var M: array of matrix;
+    T, toolOrientation: matrix;
+    i: Integer;
+begin
+  // Use funtion DHMat():
+  //      A1 = DHMat(a1,alpha1,d1,theta1):
+  // Example ot multiplication of a matrix by tha transpose of another matrix
+  // P := MMult(P, Mtran(grad_f_X));
+  // All matriuces function starts with "M". Press "M" and then use Ctrl+Space to find it.
+
+  // DHParams thetas  
+
+
+  SetLength(M, MNumRows(DHParams));
+  T := Meye(4);// Homogeneous Transf
+  Msetv(DHParams, 0, 3, Mgetv(Thetas, 0, 0));  // Theta
+  Msetv(DHParams, 1, 3, pi/2+Mgetv(Thetas, 1, 0));
+  Msetv(DHParams, 2, 3, Mgetv(Thetas, 2, 0));
+  //theta_fixed
+  Msetv(DHParams, 4, 3, Mgetv(Thetas, 3, 0));
+  Msetv(DHParams, 5, 3, Mgetv(Thetas, 4, 0));
+  Msetv(DHParams, 6, 3, Mgetv(Thetas, 5, 0));
+  for i:=0 to MNumRows(DHParams) - 1 do begin
+    M[i] := Mzeros(4, 4);
+    M[i] := DHMat(Mgetv(DHParams, i, 0), Mgetv(DHParams, i, 1), Mgetv(DHParams, i, 2), Mgetv(DHParams, i, 3));
+    T := MMult(T, M[i]);
+  end;
+
+  // Orientation Matrix
+  toolOrientation := Mzeros(3, 3);
+  toolOrientation := MCrop(T, 0, 0, 2, 2);
+  MatrixToRangeF(20, 4, toolOrientation, '%.3f');
+
+  // XYZ
+  result := Mzeros(3, 1);
+  Msetv(result, 0, 0, Mgetv(T, 0, 3));
+  Msetv(result, 1, 0, Mgetv(T, 1, 3));
+  Msetv(result, 2, 0, Mgetv(T, 2, 3));
+
+  Result := MAdd(result, TPoint3DtoMat(robBase));
+
+  MatrixToRangeF(16, 3, result, '%.3f');
+end;
 
 
 procedure SetThetas(Thetas: matrix);
 var i: integer;
 begin
   for i := 0 to 5 do begin
-    SetAxisPosRef(iRobot, i, Mgetv(Thetas, i, 0));
+    if (i=1) or (i=2) or (i=4) then
+    begin
+      SetAxisPosRef(iRobot, i+1, -Mgetv(Thetas, i, 0));
+    end
+    else
+    begin
+      SetAxisPosRef(iRobot, i+1, Mgetv(Thetas, i, 0));//0 is the fixed joint word_base  
+    end;
   end;
-  WriteLn('setThetas');
-  MatrixToRange(11, 3, Thetas);
+  MatrixToRange(3, 3, Thetas);
 end;
 
 
@@ -789,10 +898,10 @@ begin
   //Robot Control
   
   wristPos := GetSolidPosMat(iRobot, iwrist);
-  MatrixToRange(11, 2, wristPos);
+  MatrixToRangeF(11, 2, wristPos, '%.3f');
 
   toolPos := GetSolidPosMat(iRobot, itool);
-  MatrixToRange(16, 2, toolPos);
+  MatrixToRangeF(16, 2, toolPos, '%.3f');
 
   toolrot := GetSolidRotMat(iRobot, itool);
   MatrixToRangeF(16, 4, toolRot, '%.3f');
@@ -811,11 +920,18 @@ begin
   // ...
 
   if RCButtonPressed(10, 1) then begin
-    ReqThetas := RangeToMatrix(11,1,3,1);
+    ReqThetas := RangeToMatrix(11, 1, 3, 1);//ReqThetas being used as xyz
     ReqThetas := Ik(MattoTPoint3D(ReqThetas), Meye(3));
   end;
   SetThetas(ReqThetas);
 
+  if RCButtonPressed(15, 1) then begin
+    DK(ReqThetas);
+  end;
+
+  if RCButtonPressed(1,3) then begin
+    ReqThetas := RangeToMatrix(3, 5, 6, 1);
+  end;
 
 end;
 
@@ -823,17 +939,24 @@ end;
 procedure Initialize;
 var i: integer;
 begin
-  irobot := 1;
-
+  script_period := ScriptPeriod();
+  
+  irobot := GetRobotIndex('MH50');
+  WriteLn(intToStr(irobot));
   iwrist := GetSolidIndex(irobot, 'wrist');
   itool := GetSolidIndex(irobot, 'tool');
 
   SetRCValue(10, 1, '[Ik(Pos)]');
+  SetRCValue(15, 1, '[DK(ReqThetas)]');
   SetRCValue(10, 2, 'wristPos');
   SetRCValue(15, 2, 'toolPos');
+  SetRCValue(15, 3, 'PredToolPos');//miss
   SetRCValue(15, 4, 'toolRot');
+  SetRCValue(19, 4, 'PredToolRot');//miss
   SetRCValue(2, 1, 'Joint');
   SetRCValue(2, 2, 'Pos (deg)');
+  SetRCValue(2, 3, 'ReqThetas');
+  SetRCValue(10, 3, 'PredWristPos');
   for i := 0 to NumJoints -1 do begin
     SetRCValue(3 + i, 1, format('%d',[i]));
   end;
@@ -841,15 +964,47 @@ begin
   robBase.X := -2 + 0.08685;
   robBase.Y := 0 + 0.0025;
   robBase.Z := 0 + 0.1560025 + 0.312005/2;
-  A := 1.445008;
-  B := 0.560;
-  C := 0.653 + 0.784 + 0.255/2 -0.0362;
+  A := 1.17;
+  B := 0.21;
+  C := 0.523 + 0.7024; //to Wrist
   Tol := 0.2;
 
   ReqThetas := Mzeros(6, 1);
 
-  //JM
-  script_period := ScriptPeriod();
+  d1 := 0.281;
+  d2 := 1.17; //=A
+  DHParams := Mzeros(7, 4);
+  Msetv(DHParams, 0, 0, 0);   // a      1
+  Msetv(DHParams, 0, 1, pi/2);  // Alpha
+  Msetv(DHParams, 0, 2, d1);  // d
+  Msetv(DHParams, 0, 3, 0);  // Theta
+  Msetv(DHParams, 1, 0, A);   // a      2
+  Msetv(DHParams, 1, 1, 0);  // Alpha
+  Msetv(DHParams, 1, 2, 0);  // d
+  Msetv(DHParams, 1, 3, 0);  // Theta
+  Msetv(DHParams, 2, 0, B);   // a      3a
+  Msetv(DHParams, 2, 1, pi/2);  // Alpha
+  Msetv(DHParams, 2, 2, 0);  // d
+  Msetv(DHParams, 2, 3, 0);  // Theta
+  Msetv(DHParams, 3, 0, 0);   // a      3b
+  Msetv(DHParams, 3, 1, 0);  // Alpha
+  Msetv(DHParams, 3, 2, C);  // d
+  Msetv(DHParams, 3, 3, 0);  // Theta FIXED
+  Msetv(DHParams, 4, 0, 0);   // a      4
+  Msetv(DHParams, 4, 1, -pi/2);  // Alpha
+  Msetv(DHParams, 4, 2, 0);  // d
+  Msetv(DHParams, 4, 3, 0);  // Theta
+  Msetv(DHParams, 5, 0, 0);   // a      5
+  Msetv(DHParams, 5, 1, pi/2);  // Alpha
+  Msetv(DHParams, 5, 2, 0);  // d
+  Msetv(DHParams, 5, 3, 0);  // Theta
+  Msetv(DHParams, 6, 0, 0);   // a      6
+  Msetv(DHParams, 6, 1, 0);  // Alpha
+  Msetv(DHParams, 6, 2, 0.1275-(-0.144976)+0.120192);  // d
+  Msetv(DHParams, 6, 3, 0);  // Theta
+  //in the end DH add robBase
+
+
   lr_mode:=1;
   ud_mode:= 4;
   //spray gun

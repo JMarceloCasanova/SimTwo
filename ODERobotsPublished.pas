@@ -134,6 +134,9 @@ procedure SetSolidPos(R, i: integer; x, y, z: double);
 procedure SetSolidPosMat(R, i: integer; P: Matrix);
 procedure SetSolidRotationMat(R, i: integer; Rot: Matrix);
 
+procedure SetSolidLinearVel(R, i: integer; x, y, z: double);
+procedure SetSolidAngularVel(R, i: integer; x, y, z: double);
+
 function GetSolidPos(R, i: integer): TPoint3D;
 function GetSolidLinearVel(R, i: integer): TPoint3D;
 
@@ -741,6 +744,22 @@ begin
   with WorldODE.Robots[R].Solids[i] do begin
     if Body = nil then exit;
     dBodySetPosition(Body, x, y, z);
+  end;
+end;
+
+procedure SetSolidLinearVel(R, i: integer; x, y, z: double);
+begin
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    dBodySetLinearVel(Body, x, y, z);
+  end;
+end;
+
+procedure SetSolidAngularVel(R, i: integer; x, y, z: double);
+begin
+  with WorldODE.Robots[R].Solids[i] do begin
+    if Body = nil then exit;
+    dBodySetAngularVel(Body, x, y, z);
   end;
 end;
 

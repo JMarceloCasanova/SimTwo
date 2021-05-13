@@ -6,6 +6,7 @@ import numpy as np
 from tqdm import tqdm
 import os.path
 import random
+import christofides
 
 UDP_IP = "127.0.0.1"
 UDP_REMOTE_PORT = 9808
@@ -398,7 +399,171 @@ def CalculatePatchyTrajectory(parts, triangles, save_extents=True):
             print()
 
     return complete_traj
-    
+
+def CalculatePatchyTrajectoryChristofides(parts, triangles, save_extents=True):
+    complete_traj = np.zeros((0, 6))
+    complete_traj_parts = []
+
+    total_extents = aabb(triangles=triangles)
+    total_extents.offset(0.3)
+    connection_radius = vec_length(np.array([total_extents.max_x, total_extents.max_y, total_extents.max_z]) - total_extents.center())
+    print("connection_radius")
+    print(connection_radius)
+
+    for part in parts:
+        if np.shape(complete_traj)[0] == 0:
+            rob_piece_home = np.array([[total_extents.min_x, total_extents.min_y, total_extents.max_z, 0, 0, -1]])
+            complete_traj = np.append(complete_traj, rob_piece_home, axis=0)
+        
+        align_rot_axis = np.cross(triangles[part[0]].normal, np.array([0,0,1]))
+        if np.sqrt(np.sum(align_rot_axis**2)) < 0.0001:
+            align_rot_axis = np.array([0,0,1])
+            phi = 0
+        else:
+            align_rot_axis = align_rot_axis/np.sqrt(np.sum(align_rot_axis**2))
+            phi = angle(triangles[part[0]].normal, np.array([0,0,1]))
+        W = np.array([[0,                  -align_rot_axis[2], align_rot_axis[1]],\
+                      [align_rot_axis[2],  0,                  -align_rot_axis[0]],\
+                      [-align_rot_axis[1], align_rot_axis[0],  0]])
+        align_rot_mat_z = np.eye(3) + np.sin(phi)*W + (1-np.cos(phi))*W@W
+        
+        align_rot_mat = np.eye(3)
+        min_volume = 99999999
+        aligned_phi = 0
+        min_extents = aabb()
+        for phi in np.arange(0, 2*np.pi, np.pi/180):
+            align_rot_mat_temp = np.array([[np.cos(phi), -np.sin(phi), 0],\
+                                            [np.sin(phi), np.cos(phi), 0],\
+                                            [0, 0, 1]])
+            extents = aabb()
+            for j in part:
+                #new_center = np.matmul(align_rot_mat_temp,np.matmul(align_rot_mat_z,triangles[j].center))
+                new_center = align_rot_mat_temp @ align_rot_mat_z @ triangles[j].center
+                if new_center[0] < extents.min_x:
+                    extents.min_x = new_center[0]
+                if new_center[0] > extents.max_x:
+                    extents.max_x = new_center[0]
+                if new_center[1] < extents.min_y:
+                    extents.min_y = new_center[1]
+                if new_center[1] > extents.max_y:
+                    extents.max_y = new_center[1]
+                if new_center[2] < extents.min_z:
+                    extents.min_z = new_center[2]
+                if new_center[2] > extents.max_z:
+                    extents.max_z = new_center[2]
+            if extents.max_z-extents.min_z < 0.001: #avoid volume==0
+                extents.min_z = extents.max_z - 0.1
+            volume = extents.volume()
+            if volume < min_volume:
+                min_volume = volume
+                aligned_phi = phi
+                min_extents = extents
+                #align_rot_mat = np.matmul(align_rot_mat_temp, align_rot_mat_z) #Don't mess this up!
+                align_rot_mat = align_rot_mat_temp @ align_rot_mat_z #Don't mess this up!
+        if save_extents:
+            min_extents.write_file("extents_"+str(np.where(parts==part)))
+
+        #Got align_rot_mat and min_extents
+        BoxSelectFace = 'fTop'
+        BoxOffset = 0.5
+        BoxUStep = 0.1
+        BoxVExtend = 0.3
+        traj = CalculateBoxRaster(BoxOffset, BoxUStep, BoxVExtend, min_extents)
+        #reset_rot_mat = np.linalg.inv(align_rot_mat)
+        reset_rot_mat = np.transpose(align_rot_mat)
+        #print(traj)
+        traj = np.array([(reset_rot_mat @ traj[i]) for i in range(np.shape(traj)[0])])# Am I this good?
+        for point in traj:
+            if point[2] < 0.01:
+                point[2] = 0.01
+        traj_normal = -triangles[part[0]].normal[np.newaxis]
+        traj = np.append(traj, np.repeat(traj_normal, np.shape(traj)[0],axis=0), axis=1 )
+
+        
+        
+        if (traj_normal[0][2] != 1):
+            #complete_traj = np.append(complete_traj, connection_traj, axis=0)
+            #complete_traj = np.append(complete_traj, traj, axis=0)
+            complete_traj_parts.append(traj)
+            print()
+            print()
+            print("new Part:")
+            print()
+            print("triangles[part[0]].normal")
+            print(triangles[part[0]].normal)
+            #print("align_rot_axis")
+            #print(align_rot_axis)
+            #print("phi")
+            #print(phi)
+            #print("min_volume")
+            #print(min_volume)
+            #print("align rot mat:")
+            #print(align_rot_mat)
+            #print("test vector(1,1,1)")
+            #print(align_rot_mat @ np.array([1,1,1]))
+            #print("det(align_rot_mat) " + str(np.linalg.det(align_rot_mat)))
+            #print("traj")
+            #print(traj)
+            #print("n_steps")
+            #print(n_steps)
+            #print("spherical_dist_ang")
+            #print(spherical_dist_ang)
+            #print("target_step_angle")
+            #print(target_step_angle)
+            #print("step_angle")
+            #print(step_angle)
+            #print("start_point")
+            #print(start_point)
+            #print("end_point")
+            #print(end_point)
+            #print("connection_traj")
+            #print(connection_traj)
+        else:
+            print()
+            print()
+            print("down part")
+            print()
+
+    tsp_points = []
+    for traj in complete_traj_parts:
+        traj_center = cartesian_to_spherical((traj[0][0:3] + traj[-1][0:3])/2)[1:3]
+        print("center")
+        print(traj_center)
+        tsp_points.append(traj_center)
+    length, path = christofides.tsp(tsp_points)
+    path = list(dict.fromkeys(path)) #to remove duplicates (in the end)
+
+    for i in path:
+        #connection between trajs
+        start_point = complete_traj[np.shape(complete_traj)[0]-1]
+        end_point = complete_traj_parts[i]
+        start_point_spherical = cartesian_to_spherical(start_point[0:3])
+        end_point_spherical = cartesian_to_spherical(end_point[0:3])
+        spherical_dist_ang = end_point_spherical[1:3] - start_point_spherical[1:3]
+        target_step_angle = np.array([np.pi/10, np.pi/10])
+        n_steps = max(np.max(spherical_dist_ang/target_step_angle), np.min(spherical_dist_ang/target_step_angle), key=abs).astype(int)
+        step_angle = spherical_dist_ang/n_steps
+        if n_steps < 0:
+            step_angle = -1*step_angle
+            n_steps = -1*n_steps
+        connection_traj = np.zeros((n_steps,3), dtype=np.float32)
+        for i in range(0, n_steps):
+            connection_traj[i] = spherical_to_cartesian( np.append(connection_radius, start_point_spherical[1:3]+(i*step_angle)))
+        connection_traj = np.append(connection_traj, np.repeat(np.array([[0,0,-1]]), np.shape(connection_traj)[0],axis=0), axis=1  )
+        
+
+        complete_traj = np.append(complete_traj, connection_traj, axis=0)
+        complete_traj = np.append(complecomplete_traj_parts[i], traj, axis=0)
+
+    print("length")
+    print(length)
+    print("path")
+    print(path)
+
+
+
+    return complete_traj
+
 def CalculateCrudePatchyTrajectory(parts, triangles, save_extents=True):
     complete_traj = np.zeros((0, 3))
     print("calculation trajectory for "+str(len(parts))+" parts")
@@ -449,7 +614,7 @@ def CalculateCrudePatchyTrajectory(parts, triangles, save_extents=True):
     return complete_traj
 
 if __name__ == "__main__":
-    paint_target = "cube45_1"
+    paint_target = "cube45_chris"
 
     paint_target_tri = "cad/" + paint_target + "_tri.npy"
     if (not os.path.isfile(paint_target_tri)):
@@ -474,7 +639,7 @@ if __name__ == "__main__":
 
     #max_part = parts.index(sorted(parts, key=len)[-2])
     ##max_part = parts.index(max(parts, key=len))
-#
+
     #part_color = np.array([random.randint(0,254),random.randint(0,254),random.randint(0,254)], dtype=np.float64)
     #max_color = np.array([random.randint(0,254),random.randint(0,254),random.randint(0,254)], dtype=np.float64)
     #for part in parts:
@@ -492,8 +657,9 @@ if __name__ == "__main__":
                 f.write(str(triangles[i].color[j])+" ")
             f.write("\n")
 
-    traj = CalculatePatchyTrajectory(parts, triangles)
+    #traj = CalculatePatchyTrajectory(parts, triangles)
     #traj = CalculateCrudePatchyTrajectory(parts, triangles)
+    traj = CalculatePatchyTrajectoryChristofides(parts, triangles)
 
     paint_target_traj = "cad/"+paint_target+"_traj.txt"
     with open(paint_target_traj, 'w') as f:

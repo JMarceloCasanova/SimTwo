@@ -104,6 +104,8 @@ begin
  CL.AddDelphiFunction('Procedure SetSolidPos( R, i : integer; x, y, z : double)');
  CL.AddDelphiFunction('Procedure SetSolidPosMat( R, i : integer; P : Matrix)');
  CL.AddDelphiFunction('Procedure SetSolidRotationMat( R, i : integer; Rot : Matrix)');
+ CL.AddDelphiFunction('Procedure SetSolidLinearVel( R, i : integer; x, y, z : double)');
+ CL.AddDelphiFunction('Procedure SetSolidAngularVel( R, i : integer; x, y, z : double)');
  CL.AddDelphiFunction('Function GetSolidPos( R, i : integer) : TPoint3D');
  CL.AddDelphiFunction('Function GetSolidLinearVel( R, i : integer) : TPoint3D');
  CL.AddDelphiFunction('Function GetSolidPosMat( R, i : integer) : Matrix');
@@ -378,6 +380,8 @@ begin
  S.RegisterDelphiFunction(@SetSolidPos, 'SetSolidPos', cdRegister);
  S.RegisterDelphiFunction(@SetSolidPosMat, 'SetSolidPosMat', cdRegister);
  S.RegisterDelphiFunction(@SetSolidRotationMat, 'SetSolidRotationMat', cdRegister);
+ S.RegisterDelphiFunction(@SetSolidLinearVel, 'SetSolidLinearVel', cdRegister);
+ S.RegisterDelphiFunction(@SetSolidAngularVel, 'SetSolidAngularVel', cdRegister);
  S.RegisterDelphiFunction(@GetSolidPos, 'GetSolidPos', cdRegister);
  S.RegisterDelphiFunction(@GetSolidLinearVel, 'GetSolidLinearVel', cdRegister);
  S.RegisterDelphiFunction(@GetSolidPosMat, 'GetSolidPosMat', cdRegister);

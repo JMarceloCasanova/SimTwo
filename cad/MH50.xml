@@ -6,7 +6,7 @@
   <defines>
     <const name='eps' value='0.0001' />
 
-    <const name='robOrigin_x' value='0' />
+    <const name='robOrigin_x' value='-2' />
     <const name='robOrigin_y' value='0' />
     <const name='robOrigin_z' value='0' />
 
@@ -74,10 +74,11 @@
     <const name='tool_jpa_y' value='0.044452' />
     <const name='tool_jpa_z' value='-0.022598' />
     <const name='tool_jpb_x' value='0.120192' />
-    <const name='tool_jpb_y' value='-0.05279' />
-    <const name='tool_jpb_z' value='-0.043161' />~
+    <!--<const name='tool_jpb_y' value='-0.05279' /> -->
+    <const name='tool_jpb_y' value='-0.06' />
+    <const name='tool_jpb_z' value='-0.043161' />
 
-    <const name='tableOrigin_x' value='5' />
+    <const name='tableOrigin_x' value='0' />
     <const name='tableOrigin_y' value='0.0' />
     <const name='tableOrigin_z' value='0.0' />
 
@@ -114,7 +115,7 @@
       <ID value='shoulder'/>
       <mass value='150'/>
       <size x='shoulder_bb_x' y='shoulder_bb_y' z='shoulder_bb_z'/>
-      <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x' y='robOrigin_x+base_jpb_y-shoulder_jpa_y' z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z'/>
+      <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x' y='robOrigin_y+base_jpb_y-shoulder_jpa_y' z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z'/>
       <rot_deg x='0' y='0' z='0'/>
       <mesh file='MH50/shoulder.obj' shadow='0' scale='0.001'/>
     </cuboid>
@@ -124,7 +125,7 @@
       <mass value='150'/>
       <size x='upperArm_bb_x' y='upperArm_bb_y' z='upperArm_bb_z'/>
       <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x' 
-           y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y' 
+           y='robOrigin_y+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y' 
            z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z'/>
       <rot_deg x='0' y='0' z='0'/>
       <mesh file='MH50/upperArm.obj' shadow='0' scale='0.001'/>
@@ -135,7 +136,7 @@
       <mass value='150'/>
       <size x='elbow_bb_x' y='elbow_bb_y' z='elbow_bb_z'/>
       <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x-elbow_jpa_x' 
-           y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y' 
+           y='robOrigin_y+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y' 
            z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z'/>
       <rot_deg x='0' y='0' z='0'/>
       <mesh file='MH50/elbow.obj' shadow='0' scale='0.001'/>
@@ -146,7 +147,7 @@
       <mass value='150'/>
       <size x='lowerArm_bb_x' y='lowerArm_bb_y' z='lowerArm_bb_z'/>
       <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x-elbow_jpa_x+elbow_jpb_x-lowerArm_jpa_x' 
-           y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y' 
+           y='robOrigin_y+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y' 
            z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z+elbow_jpb_z-lowerArm_jpa_z'/>
       <rot_deg x='0' y='0' z='0'/>
       <mesh file='MH50/lowerArm.obj' shadow='0' scale='0.001'/>
@@ -157,7 +158,7 @@
       <mass value='150'/>
       <size x='wrist_bb_x' y='wrist_bb_y' z='wrist_bb_z'/>
       <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x-elbow_jpa_x+elbow_jpb_x-lowerArm_jpa_x+lowerArm_jpb_x-wrist_jpa_x' 
-           y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y-wrist_jpa_y' 
+           y='robOrigin_y+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y-wrist_jpa_y' 
            z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z+elbow_jpb_z-lowerArm_jpa_z+lowerArm_jpb_z-wrist_jpa_z'/>
       <rot_deg x='0' y='0' z='0'/>
       <drag stokes='1e-2' roll='1e-1'/>
@@ -169,7 +170,7 @@
       <mass value='10'/>
       <size x='tool_bb_x' y='tool_bb_y' z='tool_bb_z'/>
       <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x-elbow_jpa_x+elbow_jpb_x-lowerArm_jpa_x+lowerArm_jpb_x-wrist_jpa_x+wrist_jpb_x-tool_jpa_x' 
-           y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y-wrist_jpa_y+wrist_jpb_y-tool_jpa_y' 
+           y='robOrigin_y+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y-wrist_jpa_y+wrist_jpb_y-tool_jpa_y' 
            z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z+elbow_jpb_z-lowerArm_jpa_z+lowerArm_jpb_z-wrist_jpa_z+wrist_jpb_z-tool_jpa_z'/>
       <rot_deg x='0' y='0' z='0'/>
       <drag stokes='1e-2' roll='1e-1'/>
@@ -204,7 +205,8 @@
 
   <articulations>
     <default>
-      <draw radius='0.015' height='0.25' rgb24='8F0000'/>
+      <!--<draw radius='0.015' height='0.25' rgb24='8F0000'/>-->
+      <draw radius='0.015' height='1' rgb24='8F0000'/>
       <ndraw radius='0.005' height='0.3' rgb24='8F0000'/>
       <motor ri='1.5' li='0.001'  ki='0.3' vmax='24' imax='10' active='1'/>
       <rotor J='1e-2' bv='1e-3' fc='0'/>
@@ -218,6 +220,9 @@
     <joint>
       <ID value='world_base'/>
       <pos x='robOrigin_x' y='robOrigin_y' z='robOrigin_z+base_bb_z'/>
+      <!-- x = -2
+           y = 0
+           z = 0.312005 = 0 + 0.312005-->
       <connect B1='base' B2='world'/>
       <type value='Fixed'/>
     </joint>
@@ -225,6 +230,9 @@
     <joint>
       <ID value='base_shoulder'/>
       <pos x='robOrigin_x+base_jpb_x' y='robOrigin_y+base_jpb_y' z='robOrigin_z+base_bb_z/2+base_jpb_z'/>
+      <!-- x = -1.91315 = -2 + 0.08685
+           y = 0.0025 = 0 + 0.0025
+           z = 0.312005 = 0 + 0.312005/2 + 0.1560025-->
       <axis x='0' y='0' z='1'/>
       <connect B1='shoulder' B2='base'/>
       <!--<limits Min='-180' Max='180'/>-->
@@ -234,8 +242,11 @@
     <joint>
       <ID value='shoulder_upperArm'/>
       <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x' 
-           y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y' 
+           y='robOrigin_y+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y' 
            z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z'/>
+      <!-- x = -1.76815 = -2 + 0.08685 - -0.0301 + 0.1149
+           y = -0.122 = 0 + 0.0025 - -0.00925 + -0.13375
+           z = 0.593005 = 0 + 0.312005/2 + 0.1560025 - -0.2455 + 0.0355 -->
       <axis x='0' y='1' z='0'/>
       <connect B1='upperArm' B2='shoulder'/>
       <!--<limits Min='-180' Max='180'/>-->
@@ -245,8 +256,11 @@
     <joint>
       <ID value='upperArm_elbow'/>
       <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x' 
-           y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y' 
+           y='robOrigin_y+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y' 
            z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z'/>
+      <!-- x = -1.76815 = -2 + 0.08685 - -0.0301 + 0.1149 - 0.0 + 0.0
+           y = -0.1285 = 0 + 0.0025 - -0.00925 + -0.13375 - 0.025161 + 0.018661
+           z = 1.763005 = 0 + 0.312005/2 + 0.1560025 - -0.2455 + 0.0355 - -0.572496 + 0.597504 -->
       <axis x='0' y='1' z='0'/>
       <connect B1='elbow' B2='upperArm'/>
       <!--<limits Min='-180' Max='180'/>-->
@@ -256,8 +270,11 @@
     <joint>
       <ID value='elbow_lowerArm'/>
       <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x-elbow_jpa_x+elbow_jpb_x' 
-           y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y' 
+           y='robOrigin_y+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y' 
            z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z+elbow_jpb_z'/>
+      <!-- x = -1.24515 = -2 + 0.08685 - -0.0301 + 0.1149 - 0.0 + 0.0 - -0.1965 + 0.3265
+           y = 0.0265 = 0 + 0.0025 - -0.00925 + -0.13375 - 0.025161 + 0.018661 - -0.168001 + -0.013001
+           z = 1.973005 = 0 + 0.312005/2 + 0.1560025 - -0.2455 + 0.0355 - -0.572496 + 0.597504 - -0.115 + 0.095 -->
       <axis x='1' y='0' z='0'/>
       <connect B1='lowerArm' B2='elbow'/>
       <!--<limits Min='-180' Max='180'/>-->
@@ -267,8 +284,11 @@
     <joint>
       <ID value='lowerArm_wrist'/>
       <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x-elbow_jpa_x+elbow_jpb_x-lowerArm_jpa_x+lowerArm_jpb_x' 
-           y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y' 
+           y='robOrigin_y+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y' 
            z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z+elbow_jpb_z-lowerArm_jpa_z+lowerArm_jpb_z'/>
+      <!-- x = -0.54275 = -2 + 0.08685 - -0.0301 + 0.1149 - 0.0 + 0.0 - -0.1965 + 0.3265 - -0.3879 + 0.3145
+           y = -0.047 = 0 + 0.0025 - -0.00925 + -0.13375 - 0.025161 + 0.018661 - -0.168001 + -0.013001 - 0.021338 + -0.052162
+           z = 1.973005 = 0 + 0.312005/2 + 0.1560025 - -0.2455 + 0.0355 - -0.572496 + 0.597504 - -0.115 + 0.095 - 0.002 + 0.002 -->
       <axis x='0' y='1' z='0'/>
       <connect B1='wrist' B2='lowerArm'/>
       <!--<limits Min='-180' Max='180'/>-->
@@ -278,7 +298,7 @@
     <joint>
       <ID value='wrist_tool'/>
       <pos x='robOrigin_x+base_jpb_x-shoulder_jpa_x+shoulder_jpb_x-upperArm_jpa_x+upperArm_jpb_x-elbow_jpa_x+elbow_jpb_x-lowerArm_jpa_x+lowerArm_jpb_x-wrist_jpa_x+wrist_jpb_x' 
-           y='robOrigin_x+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y-wrist_jpa_y+wrist_jpb_y' 
+           y='robOrigin_y+base_jpb_y-shoulder_jpa_y+shoulder_jpb_y-upperArm_jpa_y+upperArm_jpb_y-elbow_jpa_y+elbow_jpb_y-lowerArm_jpa_y+lowerArm_jpb_y-wrist_jpa_y+wrist_jpb_y' 
            z='robOrigin_z+(base_bb_z/2)+base_jpb_z-shoulder_jpa_z+shoulder_jpb_z-upperArm_jpa_z+upperArm_jpb_z-elbow_jpa_z+elbow_jpb_z-lowerArm_jpa_z+lowerArm_jpb_z-wrist_jpa_z+wrist_jpb_z'/>
       <!--<draw radius='0.015' height='1' rgb24='8F0000'/>-->
       <axis x='1' y='0' z='0'/>
@@ -302,6 +322,7 @@
     <joint>
       <ID value='table_tableSupport'/>
       <pos x='tableOrigin_x+table_jpb_x' y='tableOrigin_y+table_jpb_y' z='tableOrigin_z+table_bb_z/2+table_jpb_z'/>
+      <draw radius='0.015' height='0.2' rgb24='8F0000'/>
       <axis x='0' y='0' z='1'/>
       <connect B1='tableSupport' B2='table'/>
       <!--<limits Min='-180' Max='180'/>-->
